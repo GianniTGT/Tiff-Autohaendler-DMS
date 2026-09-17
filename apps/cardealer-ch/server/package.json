@@ -5,8 +5,8 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js",
+    "dev": "node --env-file-if-exists=../../../.env --watch src/index.js",
+    "start": "node --env-file-if-exists=../../../.env src/index.js",
     "test": "node --env-file-if-exists=../../../.env --test",
     "test:boundary": "node --test test/tenant-boundary.test.mjs"
   },
