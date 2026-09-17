@@ -124,4 +124,21 @@ test('Rechnungen: MWST-Berechnung, Nummernkreis, PDF', { skip: !hasDb }, async (
     const buffer = await collectPdfBuffer(doc)
     assert.equal(buffer.subarray(0, 5).toString('ascii'), '%PDF-')
   })
+
+  await t.test('renderInvoicePdf funktioniert auch mit QR-IBAN, wenn der Kundsch. die Adresse fehlt (Hinweis statt Absturz)', async () => {
+    // Regression: eine Partei ohne Adresse lieferte hier `null` (nicht
+    // `undefined`) an swissqrbill, dessen interner Cleaner an
+    // `Object.entries(null)` abstürzte statt einen Fehler zu werfen.
+    await adminPool.query('UPDATE tenants SET qr_iban = $1 WHERE id = $2', ['CH4431999123000889012', tenantId])
+    const addresslessParty = await createParty(tenantId, { kind: 'person', firstName: 'Ohne', lastName: 'Adresse' })
+    const created = await createInvoice(tenantId, {
+      partyId: addresslessParty.id,
+      issueDate: '2026-06-07',
+      lines: [{ description: 'Ohne Kundenadresse', quantity: 1, unitPriceRappen: 100_000 }],
+    })
+    const fetched = await getInvoice(tenantId, created.id)
+    const doc = renderInvoicePdf(fetched)
+    const buffer = await collectPdfBuffer(doc)
+    assert.equal(buffer.subarray(0, 5).toString('ascii'), '%PDF-')
+  })
 })

@@ -11,7 +11,7 @@
  * keinen Spaltennamen einschleusen.
  */
 import { withTenant } from '@tiff/core-db'
-import { computeEconomics } from '@tiff/core-billing'
+import { computeEconomics, findTaxRate, notionalInputTax } from '@tiff/core-billing'
 
 export const FIELD_MAP = Object.freeze({
   vin: 'vin',
@@ -51,6 +51,8 @@ export const FIELD_MAP = Object.freeze({
   soldPriceRappen: 'sold_price_rappen',
   vatScheme: 'vat_scheme',
   purchaseFrom: 'purchase_from',
+  purchaseVatRappen: 'purchase_vat_rappen',
+  notionalInputTaxRappen: 'notional_input_tax_rappen',
   status: 'status',
   purchasedAt: 'purchased_at',
   soldAt: 'sold_at',
@@ -102,9 +104,28 @@ export async function getVehicle(tenantId, id) {
   })
 }
 
+/**
+ * Fiktiver Vorsteuerabzug (MWSTG Art. 28a) — berechnet, nicht eingetippt.
+ * Nur beim Privatkauf gültig, und der Satz gilt am Kaufdatum, nicht heute
+ * (ANFORDERUNGEN.md §6, packages/core-billing/src/tax.js). Wer die Werte
+ * beim Aufruf mitgibt, überschreibt trotzdem nichts von Hand — die Zahl ist
+ * die Beweislage gegenüber der ESTV und muss aus der Formel kommen, nicht
+ * aus einem Formularfeld, das jemand versehentlich ändert.
+ */
+async function computeNotionalInputTaxRappen(client, { vatScheme, purchaseFrom, purchasePriceRappen, purchasedAt }) {
+  if (vatScheme !== 'notional_input_tax' || purchaseFrom !== 'private' || purchasePriceRappen == null) {
+    return 0
+  }
+  const dateForRate = purchasedAt ?? new Date().toISOString().slice(0, 10)
+  const taxRatesResult = await client.query('SELECT * FROM tax_rates')
+  const rate = findTaxRate(taxRatesResult.rows, 'standard', dateForRate)
+  return rate ? notionalInputTax(purchasePriceRappen, rate.rate_percent) : 0
+}
+
 export async function createVehicle(tenantId, fields) {
   return withTenant(tenantId, async (client) => {
-    const { columns, placeholders, values } = toRow(fields)
+    const notionalInputTaxRappen = await computeNotionalInputTaxRappen(client, fields)
+    const { columns, placeholders, values } = toRow({ ...fields, notionalInputTaxRappen })
     const result = await client.query(
       `INSERT INTO vehicles (id, tenant_id, ${columns.join(', ')})
        VALUES (gen_random_uuid(), $${values.length + 1}, ${placeholders.join(', ')})
@@ -117,11 +138,21 @@ export async function createVehicle(tenantId, fields) {
 
 export async function updateVehicle(tenantId, id, fields) {
   return withTenant(tenantId, async (client) => {
-    const { columns, values } = toRow(fields)
-    if (columns.length === 0) {
-      const result = await client.query('SELECT * FROM vehicles WHERE id = $1', [id])
-      return result.rows[0] ? camelizeRow(result.rows[0]) : null
-    }
+    const existingResult = await client.query(
+      'SELECT vat_scheme, purchase_from, purchase_price_rappen, purchased_at FROM vehicles WHERE id = $1',
+      [id],
+    )
+    const existing = existingResult.rows[0]
+    if (!existing) return null
+
+    const notionalInputTaxRappen = await computeNotionalInputTaxRappen(client, {
+      vatScheme: fields.vatScheme ?? existing.vat_scheme,
+      purchaseFrom: fields.purchaseFrom ?? existing.purchase_from,
+      purchasePriceRappen: fields.purchasePriceRappen ?? existing.purchase_price_rappen,
+      purchasedAt: fields.purchasedAt ?? existing.purchased_at,
+    })
+
+    const { columns, values } = toRow({ ...fields, notionalInputTaxRappen })
     const setClause = columns.map((col, i) => `${col} = $${i + 1}`).join(', ')
     const result = await client.query(
       `UPDATE vehicles SET ${setClause} WHERE id = $${values.length + 1} RETURNING *`,

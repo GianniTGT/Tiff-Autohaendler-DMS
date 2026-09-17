@@ -76,22 +76,34 @@ E-Mail und Passwort.
 
 ## Stand
 
-**Phase 1 nach `ANFORDERUNGEN.md` §9 ist erreichbar, Ende zu Ende geprüft:**
-Login (Mandanten-Slug + E-Mail + Passwort, RLS-sichere Sitzung), Fahrzeuge
-erfassen und auflisten (CH-Felder), Kunden/Lieferanten erfassen und
-durchsuchen, Rechnung mit MWST-Berechnung und Nummernkreis erzeugen, PDF mit
-QR-Zahlteil ausgeben — im Browser durchgeklickt (Login → Fahrzeug erfassen →
-sehen → abmelden) und per Integrationstests gegen eine echte PostgreSQL-
-Instanz abgesichert (65 Tests, RLS-Mandantentrennung inklusive).
+**Phase 1 und Phase 2 nach `ANFORDERUNGEN.md` §9 sind erreicht, Ende zu Ende
+geprüft:** Login (Mandanten-Slug + E-Mail + Passwort, RLS-sichere Sitzung),
+Fahrzeuge erfassen/auflisten (CH-Felder, fiktiver Vorsteuerabzug automatisch
+berechnet), Kunden/Lieferanten erfassen/durchsuchen, Rechnung mit
+MWST-Berechnung und Nummernkreis, PDF mit QR-Zahlteil, Zahlungen manuell oder
+per `camt.054`-Import (automatischer Abgleich über die QR-Referenz,
+idempotent), Mahnwesen (1./2./3. Mahnung mit Verzugszins nach OR 104),
+MWST-Auswertung effektiv/Saldosteuersatz, Belegarchiv (PDF-Hash, geprüft statt
+überschrieben) — im Browser durchgeklickt und mit 105 automatisierten Tests
+abgesichert (66 davon im Server, gegen eine echte PostgreSQL-Instanz inkl.
+RLS-Mandantentrennung).
+
+Zwei echte Fehler kamen dabei ans Licht, die eine reine Unit-Test-Suite ohne
+echte Datenbank nie gefunden hätte: ein `node-pg-migrate`-Default mit
+doppelten Anführungszeichen (verletzte den `status`-Constraint) und ein
+Absturz in `swissqrbill`, wenn die Kundenadresse fehlt (Postgres liefert
+`null`, nicht `undefined`) — beide behoben, mit Regressionstest.
 
 **Kaufvertrag und Ankaufsvertrag enthalten noch keinen rechtsgültigen
 Text** — siehe `LEGAL_REVIEW_STATUS` in `packages/core-docs/src/kaufvertrag.js`,
 das muss vor dem ersten echten Vertrag von einem Schweizer Anwalt geprüft
 werden. Die Rechnungs-QR-Referenz ist technisch korrekt (gegen das offizielle
 SIX-Beispiel getestet), aber ohne bestellte QR-IBAN provisorisch — siehe
-ANFORDERUNGEN.md §10.
+ANFORDERUNGEN.md §10. Die MWST-Auswertung ist nach bestem Wissen aus MWSTG
+Art. 28a/24a gebaut, aber nicht von einem Treuhänder bestätigt.
 
-**Noch nicht gebaut** (Phase 2 nach ANFORDERUNGEN.md §9): Zahlungsabgleich
-(camt.054), Mahnwesen, MWST-Auswertung, Belegarchiv mit Hash. Offerte, Auftrag,
-Lieferschein, Mahnung und Gutschrift existieren als Datenbanktabelle (siehe
-`documents.type`), sind aber noch nicht verdrahtet — nur `invoice` ist es.
+**Noch nicht gebaut** (Phase 3 nach ANFORDERUNGEN.md §9): AutoScout24-Anbindung,
+eigene Website-Anbindung, echter Objektspeicher für PDF-Dateien (bisher nur
+der Hash archiviert, nicht die Datei selbst). Offerte, Auftrag, Lieferschein
+und Gutschrift existieren als Datenbanktabelle (siehe `documents.type`), sind
+aber noch nicht verdrahtet — nur `invoice` und `reminder` sind es.

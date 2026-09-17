@@ -12,6 +12,27 @@ import { PAGE, letterhead, sectionBar, fieldRow, needSpace, footers, contentWidt
 import { formatMoney } from '@tiff/core-billing'
 import { buildQrBill } from '@tiff/core-billing/src/qr-invoice.js'
 
+/**
+ * `swissqrbill` verlangt vollständige Adressfelder und stürzt sonst intern
+ * ab (`Object.entries(null)` in dessen Cleaner) statt einen Fehler zu
+ * werfen — Postgres liefert eine fehlende Spalte als `null`, nicht
+ * `undefined`, und genau das hat das ausgelöst (gefunden beim ersten Test
+ * mit einer Partei ohne hinterlegte Adresse). Deshalb hier vorher prüfen
+ * und einen Hinweis drucken statt eines 500ers.
+ */
+function describeMissingQrBillData(tenant, party) {
+  if (!tenant.qr_iban) {
+    return 'Für diesen Mandanten ist noch keine QR-IBAN hinterlegt. Siehe ANFORDERUNGEN.md §10 — QR-IBAN bei der Bank bestellen.'
+  }
+  if (!tenant.address_street || !tenant.address_zip || !tenant.address_city) {
+    return 'Die Adresse des Betriebs ist unvollständig hinterlegt (Einstellungen ergänzen).'
+  }
+  if (!party || !party.address_street || !party.address_zip || !party.address_city) {
+    return 'Die Adresse der Kundschaft ist unvollständig hinterlegt.'
+  }
+  return null
+}
+
 function partyName(party) {
   if (!party) return ''
   return party.company_name || [party.first_name, party.last_name].filter(Boolean).join(' ')
@@ -57,9 +78,23 @@ function drawLineItems(doc, lines) {
   }
 }
 
-/** @returns {PDFDocument} noch nicht `.end()`-et — der Aufrufer pipet und beendet. */
+/**
+ * @returns {PDFDocument} noch nicht `.end()`-et — der Aufrufer pipet und beendet.
+ *
+ * `info.CreationDate` wird bewusst auf `created_at` des Belegs fest gesetzt,
+ * nicht dem pdfkit-Default (der aktuelle Zeitpunkt): ohne das würde jede
+ * erneute Erzeugung derselben Rechnung ein anderes PDF ergeben, obwohl
+ * inhaltlich nichts sich geändert hat — und der Hash aus archive.js
+ * (Belegarchiv, ANFORDERUNGEN.md §9) wäre bei jedem Abruf ein anderer,
+ * obwohl das Dokument "dasselbe" bleiben soll.
+ */
 export function renderInvoicePdf(invoice) {
-  const doc = new PDFDocument({ size: PAGE.size, margins: PAGE.margins, bufferPages: true })
+  const doc = new PDFDocument({
+    size: PAGE.size,
+    margins: PAGE.margins,
+    bufferPages: true,
+    info: { CreationDate: new Date(invoice.created_at) },
+  })
   const tenant = invoice.tenant
   const dealer = {
     name: tenant.legal_name,
@@ -93,7 +128,9 @@ export function renderInvoicePdf(invoice) {
 
   footers(doc, { dealer, docNo: invoice.number })
 
-  if (tenant.qr_iban) {
+  const missingQrBillReason = describeMissingQrBillData(tenant, invoice.party)
+
+  if (!missingQrBillReason) {
     const qrBill = buildQrBill(
       {
         legalName: tenant.legal_name,
@@ -104,9 +141,9 @@ export function renderInvoicePdf(invoice) {
       },
       {
         name: partyName(invoice.party) || '—',
-        addressStreet: invoice.party?.address_street,
-        addressZip: invoice.party?.address_zip,
-        addressCity: invoice.party?.address_city,
+        addressStreet: invoice.party.address_street,
+        addressZip: invoice.party.address_zip,
+        addressCity: invoice.party.address_city,
       },
       { totalRappen: invoice.total_rappen, reference: invoice.qr_reference },
     )
@@ -118,9 +155,7 @@ export function renderInvoicePdf(invoice) {
       .font('Helvetica-Oblique')
       .fontSize(9)
       .text(
-        'Kein QR-Zahlteil: für diesen Mandanten ist noch keine QR-IBAN hinterlegt. ' +
-          'Die Rechnung ist gültig, muss aber vorerst anders bezahlt werden. ' +
-          'Siehe ANFORDERUNGEN.md §10 — QR-IBAN bei der Bank bestellen.',
+        `Kein QR-Zahlteil: ${missingQrBillReason} Die Rechnung ist gültig, muss aber vorerst anders bezahlt werden.`,
         doc.page.margins.left,
         doc.page.margins.top,
         { width: contentWidth(doc) },
@@ -128,4 +163,16 @@ export function renderInvoicePdf(invoice) {
   }
 
   return doc
+}
+
+/** Wie renderInvoicePdf(), aber fertig eingesammelt — für Hash/Archiv, wo die volle Länge vorher feststehen muss. */
+export function renderInvoicePdfBuffer(invoice) {
+  return new Promise((resolve, reject) => {
+    const doc = renderInvoicePdf(invoice)
+    const chunks = []
+    doc.on('data', (chunk) => chunks.push(chunk))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+    doc.end()
+  })
 }

@@ -8,6 +8,7 @@
     "test": "node --test"
   },
   "dependencies": {
+    "fast-xml-parser": "^4.5.0",
     "swissqrbill": "^4.2.0"
   }
 }

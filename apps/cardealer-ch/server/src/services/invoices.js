@@ -13,7 +13,13 @@ import { findTaxRate } from '@tiff/core-billing'
 // dort). Serverseitiger Code darf und muss den direkten Pfad nehmen.
 import { buildQrrReference } from '@tiff/core-billing/src/qr-invoice.js'
 
-const DOCUMENT_NUMBER_PREFIX = Object.freeze({
+export function addDays(isoDate, days) {
+  const d = new Date(`${isoDate}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+export const DOCUMENT_NUMBER_PREFIX = Object.freeze({
   offer: 'OF',
   order: 'AU',
   delivery_note: 'LS',
@@ -29,7 +35,7 @@ const DOCUMENT_NUMBER_PREFIX = Object.freeze({
  * zugewiesene Nummer `next_value - 1` ist — so liefert derselbe Ausdruck für
  * die erste UND jede folgende Rechnung dieselbe, richtige Zahl.
  */
-async function nextDocumentNumber(client, tenantId, documentType, year) {
+export async function nextDocumentNumber(client, tenantId, documentType, year) {
   const result = await client.query(
     `INSERT INTO number_sequences (id, tenant_id, document_type, year, next_value)
      VALUES (gen_random_uuid(), $1, $2, $3, 2)
@@ -63,6 +69,11 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
     const taxRates = taxRatesResult.rows
 
     const effectiveIssueDate = issueDate ?? new Date().toISOString().slice(0, 10)
+    // "zahlbar innert 30 Tagen" ist die in der Offerte an den Piloten
+    // genannte Zahlungsfrist (business/offerte/offerte-bit-automobile.html)
+    // und der branchenübliche CH-Standard — als Default, nicht als Zwang:
+    // wer eine andere Frist braucht, gibt dueDate explizit mit.
+    const effectiveDueDate = dueDate ?? addDays(effectiveIssueDate, 30)
     const year = Number(effectiveIssueDate.slice(0, 4))
     const { number } = await nextDocumentNumber(client, tenantId, 'invoice', year)
 
@@ -104,7 +115,7 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
         partyId ?? null,
         number,
         effectiveIssueDate,
-        dueDate ?? null,
+        effectiveDueDate,
         vehicleId ?? null,
         subtotalRappen,
         vatRappen,

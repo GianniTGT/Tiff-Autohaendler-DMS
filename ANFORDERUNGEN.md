@@ -174,11 +174,24 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Rechnung raus" ist erreicht. Ankaufsvertrag/Kaufvertrag existieren als PDF-Gerüst, aber ohne
   geprüften Rechtstext (§7). Im Browser durchgeklickt und mit 65 automatisierten Tests
   (inkl. Mandantentrennung gegen echtes PostgreSQL) abgesichert.
-- **Phase 2 (offen):** Zahlungsabgleich (`camt.054`), Mahnwesen, MWST-Auswertung effektiv/Saldo,
-  Belegarchiv mit Hash; Offerte/Auftrag/Lieferschein/Mahnung/Gutschrift ans bestehende
-  `documents`-Schema anschliessen (bisher nur `invoice` verdrahtet)
+- **Phase 2 (erledigt, Ende-zu-Ende geprüft):** Zahlungen manuell erfassen (Restbetrag schliesst
+  die Rechnung automatisch), `camt.054`-Import mit automatischem Abgleich über die QR-Referenz
+  (idempotent — dieselbe Datei zweimal eingelesen bucht nicht doppelt), Mahnwesen (1./2./3.
+  Mahnung, Verzugszins nach OR 104 mit 5%, Sperre nach der 3.), MWST-Auswertung effektiv
+  (Umsatzsteuer minus fiktiver Vorsteuerabzug, der jetzt am Fahrzeug automatisch berechnet statt
+  eingetippt wird) und Saldosteuersatz (Pauschalsatz auf den Umsatz), Belegarchiv (SHA-256-Hash
+  bei der ersten PDF-Erzeugung gespeichert, jede weitere Erzeugung geprüft statt überschrieben —
+  braucht ein deterministisches PDF, siehe die `CreationDate`-Begründung in `invoice-pdf.js`).
+  105 Tests (66 im Server allein), zwei echte Fehler dabei gefunden und behoben, die eine reine
+  Unit-Test-Suite nie gefunden hätte: `node-pg-migrate`s String-Defaults verdoppelten
+  Anführungszeichen im SQL (`status_check`-Constraint schlug fehl), und `swissqrbill` stürzte
+  bei einer Kundenadresse mit `null`-Feldern ab (Postgres liefert `null`, nicht `undefined`) —
+  jetzt ein Hinweis statt eines 500ers, mit Regressionstest.
+  Offerte/Auftrag/Lieferschein/Gutschrift bleiben unverdrahtet — nur `invoice` und `reminder`
+  sind es.
 - **Phase 3 (offen):** AutoScout24-Anbindung (Push, siehe §5), eigene Website-Anbindung an
-  `Tiff-Cardealer-Theme-Swiss`
+  `Tiff-Cardealer-Theme-Swiss`, Objektspeicher für die tatsächlichen PDF-Dateien (bisher nur der
+  Hash, siehe archive.js)
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 
