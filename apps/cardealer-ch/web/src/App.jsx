@@ -1,22 +1,46 @@
-import { formatMoney } from '@tiff/core-billing'
+import { useEffect, useState } from 'react'
+import { api } from './api.js'
 import { t } from './i18n/index.js'
+import Login from './components/Login.jsx'
+import VehicleList from './components/VehicleList.jsx'
 
-/**
- * Phase-0-Platzhalter: zeigt, dass core-billing (Geld in Rappen, CHF-Format)
- * und die de-CH-Übersetzungsschicht aus dem Browser heraus funktionieren.
- * Login, Fahrzeugliste und die übrigen Bildschirme aus ANFORDERUNGEN.md §9
- * Phase 1 sind der nächste Schritt, kein Teil dieses Grundgerüsts.
- */
 export default function App() {
+  const [session, setSession] = useState(undefined) // undefined = wird geprüft, null = abgemeldet
+
+  useEffect(() => {
+    api
+      .get('/api/auth/me')
+      .then(setSession)
+      .catch(() => setSession(null))
+  }, [])
+
+  async function handleLogout() {
+    await api.post('/api/auth/logout')
+    setSession(null)
+  }
+
+  if (session === undefined) {
+    return <p className="p-6 text-gray-500">{t('common.loading')}</p>
+  }
+
+  if (session === null) {
+    return <Login onLoggedIn={setSession} />
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
-      <p className="mt-2 text-gray-600">
-        {t('dashboard.emptyBody')}
-      </p>
-      <p className="mt-4 text-sm text-gray-500">
-        Beispiel Geldformat ({t('vehicle.fields.askingPrice')}): {formatMoney(1_250_000)}
-      </p>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
+        <span className="font-bold text-gray-900">{t('app.name')}</span>
+        <div className="text-sm text-gray-500 flex items-center gap-3">
+          <span>
+            {t('app.signedInAs')}: {t(`roles.${session.role}`)}
+          </span>
+          <button onClick={handleLogout} className="text-gray-900 underline">
+            {t('app.signOut')}
+          </button>
+        </div>
+      </header>
+      <VehicleList />
     </div>
   )
 }

@@ -4,9 +4,12 @@
  * genau einen Test, der über den Quelltext läuft und behauptet: es gibt
  * keinen Datenbankzugriff ausserhalb von withTenant()").
  *
- * Prüft: kein Routen-Modul importiert `getPool` direkt aus @tiff/core-db.
- * Jeder Datenbankzugriff muss über withTenant()/withoutTenant() laufen, die
- * ihrerseits getPool() kapseln.
+ * Prüft: kein Modul unter src/ (Routen, Services, Plugins, ...) importiert
+ * `getPool` direkt aus @tiff/core-db. Jeder Datenbankzugriff muss über
+ * withTenant()/withoutTenant() laufen, die ihrerseits getPool() kapseln —
+ * der Scan deckt bewusst den ganzen Baum ab, nicht nur src/routes/, seit
+ * services/auth.js dazukam: die Grenze gilt für jede Schicht, die die DB
+ * anfasst, nicht nur für die HTTP-Handler selbst.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -15,7 +18,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-const routesDir = path.join(here, '..', 'src', 'routes')
+const srcDir = path.join(here, '..', 'src')
 
 function collectJsFiles(dir) {
   return readdirSync(dir).flatMap((entry) => {
@@ -25,9 +28,9 @@ function collectJsFiles(dir) {
   })
 }
 
-test('no route module imports getPool directly — every DB access goes through withTenant()', () => {
+test('no module under src/ imports getPool directly — every DB access goes through withTenant()', () => {
   const offenders = []
-  for (const file of collectJsFiles(routesDir)) {
+  for (const file of collectJsFiles(srcDir)) {
     const src = readFileSync(file, 'utf8')
     if (/\bgetPool\b/.test(src)) offenders.push(file)
   }

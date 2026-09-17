@@ -164,12 +164,20 @@ Funktion `canSeeCompanyTotals(role)`, nie `role !== 'x'` über sechs Bildschirme
 
 Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
 
-- **Phase 0 (dieser erste Commit-Batch):** Monorepo-Grundgerüst, Mandanten/RLS, Geld in Rappen,
+- **Phase 0 (erledigt):** Monorepo-Grundgerüst, Mandanten/RLS (inkl. der Nachbesserung um
+  `tiff_migrator`/`tiff_app` als getrennte Rollen — ein Tabellenbesitzer ist sonst von RLS befreit,
+  siehe `packages/core-db/migrations/1700000000004_runtime-role-hardening.js`), Geld in Rappen,
   `tax_rates`, CH-Fahrzeugschema, Rollen-Kern, i18n-Grundgerüst (nur Deutsch)
-- **Phase 1:** Login, Fahrzeuge (CH-Felder), Kunden/Lieferanten, Ankaufsvertrag, Kaufvertrag,
-  Rechnung mit QR-Zahlteil, MWST-Maschine — Leitsatz „Fahrzeug rein, Rechnung raus"
-- **Phase 2:** Zahlungsabgleich (`camt.054`), Mahnwesen, MWST-Auswertung effektiv/Saldo
-- **Phase 3:** AutoScout24-Anbindung (Push, siehe §5), eigene Website-Anbindung an
+- **Phase 1 (erledigt, Ende-zu-Ende geprüft):** Login (Mandanten-Slug-Auflösung, RLS-sichere
+  Sitzung), Fahrzeuge erfassen/auflisten (CH-Felder), Kunden/Lieferanten erfassen/durchsuchen,
+  Rechnung mit MWST-Berechnung, Nummernkreis und QR-Zahlteil als PDF — Leitsatz „Fahrzeug rein,
+  Rechnung raus" ist erreicht. Ankaufsvertrag/Kaufvertrag existieren als PDF-Gerüst, aber ohne
+  geprüften Rechtstext (§7). Im Browser durchgeklickt und mit 65 automatisierten Tests
+  (inkl. Mandantentrennung gegen echtes PostgreSQL) abgesichert.
+- **Phase 2 (offen):** Zahlungsabgleich (`camt.054`), Mahnwesen, MWST-Auswertung effektiv/Saldo,
+  Belegarchiv mit Hash; Offerte/Auftrag/Lieferschein/Mahnung/Gutschrift ans bestehende
+  `documents`-Schema anschliessen (bisher nur `invoice` verdrahtet)
+- **Phase 3 (offen):** AutoScout24-Anbindung (Push, siehe §5), eigene Website-Anbindung an
   `Tiff-Cardealer-Theme-Swiss`
 
 ## 10. Was ein Mensch klären muss (nicht Code)

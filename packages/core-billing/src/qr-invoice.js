@@ -53,6 +53,45 @@ export function buildQrBill(tenant, debtor, invoice) {
   })
 }
 
+// Modulo-10-rekursiv — derselbe Prüfziffern-Algorithmus wie beim alten
+// ESR-Einzahlungsschein, jetzt für die QRR-Referenz (SIX Implementation
+// Guidelines). Tabellenbasiert, keine Bibliothek nötig.
+const MOD10_TABLE = [
+  [0, 9, 4, 6, 8, 2, 7, 1, 3, 5],
+  [9, 4, 6, 8, 2, 7, 1, 3, 5, 0],
+  [4, 6, 8, 2, 7, 1, 3, 5, 0, 9],
+  [6, 8, 2, 7, 1, 3, 5, 0, 9, 4],
+  [8, 2, 7, 1, 3, 5, 0, 9, 4, 6],
+  [2, 7, 1, 3, 5, 0, 9, 4, 6, 8],
+  [7, 1, 3, 5, 0, 9, 4, 6, 8, 2],
+  [1, 3, 5, 0, 9, 4, 6, 8, 2, 7],
+  [3, 5, 0, 9, 4, 6, 8, 2, 7, 1],
+  [5, 0, 9, 4, 6, 8, 2, 7, 1, 3],
+]
+const REMAINDER_TO_CHECK_DIGIT = [0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+
+export function mod10CheckDigit(digits) {
+  let carry = 0
+  for (const ch of String(digits)) {
+    carry = MOD10_TABLE[carry][Number(ch)]
+  }
+  return REMAINDER_TO_CHECK_DIGIT[carry]
+}
+
+/**
+ * Baut eine 27-stellige QRR-Referenz aus einer beliebigen Ziffernfolge (z.B.
+ * Mandanten-Kundennummer + Belegnummer) — links mit Nullen aufgefüllt auf 26
+ * Stellen, dann die Prüfziffer angehängt. Nur gültig, wenn der Mandant eine
+ * QR-IBAN hat (SCHWEIZ-SAAS.md §4.4) — sonst gibt es keine QRR-Referenz,
+ * sondern 'NON'.
+ */
+export function buildQrrReference(numericId) {
+  const digitsOnly = String(numericId).replace(/\D/g, '')
+  if (!digitsOnly) throw new Error('buildQrrReference() braucht mindestens eine Ziffer.')
+  const body = digitsOnly.padStart(26, '0').slice(-26)
+  return body + mod10CheckDigit(body)
+}
+
 /**
  * Swico-Syntax in der unstrukturierten Mitteilung, optional aber wirkungsvoll
  * (SCHWEIZ-SAAS.md §4.4): damit kann die Buchhaltungssoftware des Empfängers
