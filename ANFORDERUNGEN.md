@@ -189,9 +189,21 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   jetzt ein Hinweis statt eines 500ers, mit Regressionstest.
   Offerte/Auftrag/Lieferschein/Gutschrift bleiben unverdrahtet — nur `invoice` und `reminder`
   sind es.
-- **Phase 3 (offen):** AutoScout24-Anbindung (Push, siehe §5), eigene Website-Anbindung an
-  `Tiff-Cardealer-Theme-Swiss`, Objektspeicher für die tatsächlichen PDF-Dateien (bisher nur der
-  Hash, siehe archive.js)
+- **Phase 3 (erledigt, soweit ohne echte Zugangsdaten prüfbar):** AutoScout24-Anbindung
+  (Push-Richtung, siehe §5) — Feld-Mapping mit Whitelist-Test (Einkaufspreis/Käuferdaten kommen
+  nachweislich nie im Payload vor), HTTP-Client mit injizierbarem `fetch` (getestet ohne echte
+  Zugangsdaten), Marken-/Modell-Auflösung über AutoScout24s eigene Nachschlagewerke statt eine
+  Marken-Tabelle zu raten. Echter S3-kompatibler Objektspeicher für PDFs (nicht mehr nur der
+  Hash) — und dabei eine echte Lücke aus Phase 2 behoben: der Hash-Vergleich beim erneuten Abruf
+  hätte bei jedem künftigen Layout-Fix im PDF-Code jede historische Rechnung als
+  "Integritätsfehler" gemeldet; jetzt kommt ein archiviertes PDF aus dem Speicher, nie aus einer
+  erneuten Erzeugung. 143 Tests insgesamt (98 im Server).
+  **Zwei Dinge bleiben ungeprüft, weil dafür echte Zugangsdaten fehlen** (siehe §10): das
+  S3-Backend selbst lief nie gegen einen echten Anbieter (nur der lokale Dateisystem-Fallback ist
+  getestet), und das angenommene `{key, name}`-Format von AutoScout24s Marken-/Modell-Listen ist
+  aus der Dokumentation abgeleitet, nie gegen eine echte Antwort verifiziert.
+  Eigene Website-Anbindung an `Tiff-Cardealer-Theme-Swiss` bleibt offen — dafür existiert noch
+  keine Schweizer Website, an die synchronisiert werden könnte.
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 
@@ -203,4 +215,5 @@ Unverändert aus `SCHWEIZ-SAAS.md` §5, hier nochmals verdichtet:
 | Bank | QR-IBAN bestellen (dauert Tage bis Wochen), `camt.054`-Bezug klären |
 | Anwalt | Kaufvertrag, Gewährleistung, AGB, AVV, Datenschutzerklärung |
 | AutoScout24 | Zugangsmodell (pro Händler vs. Auftrag) und VIN-Abfragekosten klären (§5) |
+| Objektspeicher | Anbieter bestellen (Exoscale/cloudscale/Infomaniak, siehe SCHWEIZ-SAAS.md §2) und `OBJECT_STORAGE_*`-Zugangsdaten hinterlegen — bis dahin läuft der lokale Fallback, der bei jedem Container-Neustart verliert |
 | Pilotkunde (Sabit Kadriu) | Rollenzuschnitt bestätigen (§8), heutige Ablage (Excel/Papier?) für Import |

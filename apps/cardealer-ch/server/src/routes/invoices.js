@@ -1,6 +1,6 @@
 import { createInvoice, getInvoice } from '../services/invoices.js'
 import { renderInvoicePdfBuffer } from '../services/invoice-pdf.js'
-import { archivePdf, ArchiveIntegrityError } from '../services/archive.js'
+import { archivePdf, getArchivedPdf, ArchiveIntegrityError } from '../services/archive.js'
 import { recordPayment, listPayments } from '../services/payments.js'
 import { importCamt054 } from '../services/camt054-import.js'
 import { listOverdueInvoices, createReminder, getReminder } from '../services/reminders.js'
@@ -26,15 +26,23 @@ export async function registerInvoiceRoutes(app) {
     const invoice = await getInvoice(request.tenantId, request.params.id)
     if (!invoice) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
 
-    const buffer = await renderInvoicePdfBuffer(invoice)
-    try {
-      await archivePdf(request.tenantId, { documentId: invoice.id, userId: request.userId, pdfBuffer: buffer })
-    } catch (err) {
-      if (err instanceof ArchiveIntegrityError) {
-        request.log.error(err)
-        return reply.code(500).send({ ok: false, error: 'ARCHIVE_INTEGRITY_MISMATCH' })
+    // Schon archiviert? Dann kommt genau das PDF zurück, das damals
+    // ausgestellt wurde — aus dem Objektspeicher, nicht neu gerendert (siehe
+    // archive.js für den Grund: PDF-Rendering-Code darf sich ändern, ohne
+    // dass historische Belege sich dadurch "ändern").
+    const archived = await getArchivedPdf(request.tenantId, invoice.id)
+    let buffer = archived
+    if (!buffer) {
+      buffer = await renderInvoicePdfBuffer(invoice)
+      try {
+        await archivePdf(request.tenantId, { documentId: invoice.id, userId: request.userId, pdfBuffer: buffer })
+      } catch (err) {
+        if (err instanceof ArchiveIntegrityError) {
+          request.log.error(err)
+          return reply.code(500).send({ ok: false, error: 'ARCHIVE_INTEGRITY_MISMATCH' })
+        }
+        throw err
       }
-      throw err
     }
 
     reply.type('application/pdf')

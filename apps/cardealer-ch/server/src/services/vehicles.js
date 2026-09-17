@@ -58,6 +58,8 @@ export const FIELD_MAP = Object.freeze({
   soldAt: 'sold_at',
   sellerPartyId: 'seller_party_id',
   buyerPartyId: 'buyer_party_id',
+  autoscout24ListingId: 'autoscout24_listing_id',
+  autoscout24SyncedAt: 'autoscout24_synced_at',
   notes: 'notes',
 })
 

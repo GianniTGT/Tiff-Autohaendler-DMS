@@ -14,12 +14,17 @@ Architektur, MWST/QR-Rechnung/Verträge, Roadmap.
 packages/
   core-db/       Migrationen, withTenant(), Row-Level-Security
   core-auth/     Rollen (inhaber/verkauf/werkstatt/buchhaltung)
-  core-billing/  Geld (Rappen), MWST, Wirtschaftlichkeit, QR-Rechnung
+  core-billing/  Geld (Rappen), MWST, Wirtschaftlichkeit, QR-Rechnung, camt.054
   core-docs/     PDF-Layout, Kaufvertrag/Ankaufsvertrag-Gerüst
   core-ui/       Übersetzungs-Lookup (nur de-CH)
 apps/
   cardealer-ch/
-    server/      Node 22 + Fastify — src/routes (HTTP), src/services (DB via withTenant()), src/plugins (Auth/Cookies)
+    server/      Node 22 + Fastify
+      src/routes         HTTP-Handler
+      src/services       DB-Zugriff, ausschliesslich über withTenant()
+      src/plugins        Auth/Cookies
+      src/integrations   AutoScout24-Client + Objektspeicher — beide mit injizierbarem
+                          fetch/Backend, testbar ohne echte Zugangsdaten
     web/         React 18 + Vite + Tailwind
 ```
 
@@ -76,34 +81,40 @@ E-Mail und Passwort.
 
 ## Stand
 
-**Phase 1 und Phase 2 nach `ANFORDERUNGEN.md` §9 sind erreicht, Ende zu Ende
-geprüft:** Login (Mandanten-Slug + E-Mail + Passwort, RLS-sichere Sitzung),
-Fahrzeuge erfassen/auflisten (CH-Felder, fiktiver Vorsteuerabzug automatisch
-berechnet), Kunden/Lieferanten erfassen/durchsuchen, Rechnung mit
-MWST-Berechnung und Nummernkreis, PDF mit QR-Zahlteil, Zahlungen manuell oder
-per `camt.054`-Import (automatischer Abgleich über die QR-Referenz,
-idempotent), Mahnwesen (1./2./3. Mahnung mit Verzugszins nach OR 104),
-MWST-Auswertung effektiv/Saldosteuersatz, Belegarchiv (PDF-Hash, geprüft statt
-überschrieben) — im Browser durchgeklickt und mit 105 automatisierten Tests
-abgesichert (66 davon im Server, gegen eine echte PostgreSQL-Instanz inkl.
-RLS-Mandantentrennung).
+**Phase 1, 2 und 3 nach `ANFORDERUNGEN.md` §9 sind erreicht:** Login,
+Fahrzeuge/Kunden erfassen, Rechnung mit MWST und QR-Zahlteil, Zahlungen
+(manuell und per `camt.054`), Mahnwesen mit Verzugszins, MWST-Auswertung
+effektiv/Saldosteuersatz, Belegarchiv (echter Objektspeicher, nicht mehr nur
+ein Hash) und eine AutoScout24-Anbindung (Push-Richtung, Feld-Mapping und
+HTTP-Client fertig und getestet, aber nie gegen die echte API gelaufen — dafür
+fehlen Zugangsdaten, siehe unten). 143 automatisierte Tests, 98 davon im
+Server gegen eine echte PostgreSQL-Instanz inkl. RLS-Mandantentrennung.
 
-Zwei echte Fehler kamen dabei ans Licht, die eine reine Unit-Test-Suite ohne
-echte Datenbank nie gefunden hätte: ein `node-pg-migrate`-Default mit
-doppelten Anführungszeichen (verletzte den `status`-Constraint) und ein
-Absturz in `swissqrbill`, wenn die Kundenadresse fehlt (Postgres liefert
-`null`, nicht `undefined`) — beide behoben, mit Regressionstest.
+Drei echte Fehler kamen unterwegs ans Licht, die eine reine Unit-Test-Suite
+ohne echte Datenbank/Bibliotheken nie gefunden hätte:
+- ein `node-pg-migrate`-Default mit doppelten Anführungszeichen im SQL
+  (verletzte den `status`-Constraint bei jedem impliziten Insert),
+- ein Absturz in `swissqrbill`, wenn die Kundenadresse fehlt (Postgres liefert
+  `null`, nicht `undefined`),
+- Phase 2s Belegarchiv verglich beim erneuten Abruf einen frisch gerenderten
+  Hash — das hätte bei jedem künftigen PDF-Layout-Fix jede historische
+  Rechnung als "Integritätsfehler" gemeldet. Phase 3s Objektspeicher behebt
+  das: ein archiviertes PDF kommt aus dem Speicher, nie aus erneuter Erzeugung.
 
 **Kaufvertrag und Ankaufsvertrag enthalten noch keinen rechtsgültigen
 Text** — siehe `LEGAL_REVIEW_STATUS` in `packages/core-docs/src/kaufvertrag.js`,
 das muss vor dem ersten echten Vertrag von einem Schweizer Anwalt geprüft
-werden. Die Rechnungs-QR-Referenz ist technisch korrekt (gegen das offizielle
-SIX-Beispiel getestet), aber ohne bestellte QR-IBAN provisorisch — siehe
-ANFORDERUNGEN.md §10. Die MWST-Auswertung ist nach bestem Wissen aus MWSTG
-Art. 28a/24a gebaut, aber nicht von einem Treuhänder bestätigt.
+werden. Die MWST-Auswertung ist nach bestem Wissen aus MWSTG Art. 28a/24a
+gebaut, aber nicht von einem Treuhänder bestätigt.
 
-**Noch nicht gebaut** (Phase 3 nach ANFORDERUNGEN.md §9): AutoScout24-Anbindung,
-eigene Website-Anbindung, echter Objektspeicher für PDF-Dateien (bisher nur
-der Hash archiviert, nicht die Datei selbst). Offerte, Auftrag, Lieferschein
-und Gutschrift existieren als Datenbanktabelle (siehe `documents.type`), sind
+**Zwei Dinge sind gebaut, aber nie gegen echte Infrastruktur gelaufen** —
+mangels Zugangsdaten, nicht aus Nachlässigkeit: das S3-Objektspeicher-Backend
+(nur der lokale Dateisystem-Fallback ist getestet) und AutoScout24s
+Marken-/Modell-Nachschlagewerke (das angenommene Antwortformat steht in
+`integrations/autoscout24/lookup.js` und muss gegen die echte Preproduktion
+verifiziert werden, sobald Zugangsdaten bestehen).
+
+**Noch offen:** eigene Website-Anbindung an `Tiff-Cardealer-Theme-Swiss` (dafür
+existiert noch keine Schweizer Website). Offerte, Auftrag, Lieferschein und
+Gutschrift existieren als Datenbanktabelle (siehe `documents.type`), sind
 aber noch nicht verdrahtet — nur `invoice` und `reminder` sind es.
