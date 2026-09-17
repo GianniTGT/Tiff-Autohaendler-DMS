@@ -164,13 +164,46 @@ Funktion `canSeeCompanyTotals(role)`, nie `role !== 'x'` über sechs Bildschirme
 
 Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
 
-- **Phase 0 (dieser erste Commit-Batch):** Monorepo-Grundgerüst, Mandanten/RLS, Geld in Rappen,
+- **Phase 0 (erledigt):** Monorepo-Grundgerüst, Mandanten/RLS (inkl. der Nachbesserung um
+  `tiff_migrator`/`tiff_app` als getrennte Rollen — ein Tabellenbesitzer ist sonst von RLS befreit,
+  siehe `packages/core-db/migrations/1700000000004_runtime-role-hardening.js`), Geld in Rappen,
   `tax_rates`, CH-Fahrzeugschema, Rollen-Kern, i18n-Grundgerüst (nur Deutsch)
-- **Phase 1:** Login, Fahrzeuge (CH-Felder), Kunden/Lieferanten, Ankaufsvertrag, Kaufvertrag,
-  Rechnung mit QR-Zahlteil, MWST-Maschine — Leitsatz „Fahrzeug rein, Rechnung raus"
-- **Phase 2:** Zahlungsabgleich (`camt.054`), Mahnwesen, MWST-Auswertung effektiv/Saldo
-- **Phase 3:** AutoScout24-Anbindung (Push, siehe §5), eigene Website-Anbindung an
-  `Tiff-Cardealer-Theme-Swiss`
+- **Phase 1 (erledigt, Ende-zu-Ende geprüft):** Login (Mandanten-Slug-Auflösung, RLS-sichere
+  Sitzung), Fahrzeuge erfassen/auflisten (CH-Felder), Kunden/Lieferanten erfassen/durchsuchen,
+  Rechnung mit MWST-Berechnung, Nummernkreis und QR-Zahlteil als PDF — Leitsatz „Fahrzeug rein,
+  Rechnung raus" ist erreicht. Ankaufsvertrag/Kaufvertrag existieren als PDF-Gerüst, aber ohne
+  geprüften Rechtstext (§7). Im Browser durchgeklickt und mit 65 automatisierten Tests
+  (inkl. Mandantentrennung gegen echtes PostgreSQL) abgesichert.
+- **Phase 2 (erledigt, Ende-zu-Ende geprüft):** Zahlungen manuell erfassen (Restbetrag schliesst
+  die Rechnung automatisch), `camt.054`-Import mit automatischem Abgleich über die QR-Referenz
+  (idempotent — dieselbe Datei zweimal eingelesen bucht nicht doppelt), Mahnwesen (1./2./3.
+  Mahnung, Verzugszins nach OR 104 mit 5%, Sperre nach der 3.), MWST-Auswertung effektiv
+  (Umsatzsteuer minus fiktiver Vorsteuerabzug, der jetzt am Fahrzeug automatisch berechnet statt
+  eingetippt wird) und Saldosteuersatz (Pauschalsatz auf den Umsatz), Belegarchiv (SHA-256-Hash
+  bei der ersten PDF-Erzeugung gespeichert, jede weitere Erzeugung geprüft statt überschrieben —
+  braucht ein deterministisches PDF, siehe die `CreationDate`-Begründung in `invoice-pdf.js`).
+  105 Tests (66 im Server allein), zwei echte Fehler dabei gefunden und behoben, die eine reine
+  Unit-Test-Suite nie gefunden hätte: `node-pg-migrate`s String-Defaults verdoppelten
+  Anführungszeichen im SQL (`status_check`-Constraint schlug fehl), und `swissqrbill` stürzte
+  bei einer Kundenadresse mit `null`-Feldern ab (Postgres liefert `null`, nicht `undefined`) —
+  jetzt ein Hinweis statt eines 500ers, mit Regressionstest.
+  Offerte/Auftrag/Lieferschein/Gutschrift bleiben unverdrahtet — nur `invoice` und `reminder`
+  sind es.
+- **Phase 3 (erledigt, soweit ohne echte Zugangsdaten prüfbar):** AutoScout24-Anbindung
+  (Push-Richtung, siehe §5) — Feld-Mapping mit Whitelist-Test (Einkaufspreis/Käuferdaten kommen
+  nachweislich nie im Payload vor), HTTP-Client mit injizierbarem `fetch` (getestet ohne echte
+  Zugangsdaten), Marken-/Modell-Auflösung über AutoScout24s eigene Nachschlagewerke statt eine
+  Marken-Tabelle zu raten. Echter S3-kompatibler Objektspeicher für PDFs (nicht mehr nur der
+  Hash) — und dabei eine echte Lücke aus Phase 2 behoben: der Hash-Vergleich beim erneuten Abruf
+  hätte bei jedem künftigen Layout-Fix im PDF-Code jede historische Rechnung als
+  "Integritätsfehler" gemeldet; jetzt kommt ein archiviertes PDF aus dem Speicher, nie aus einer
+  erneuten Erzeugung. 143 Tests insgesamt (98 im Server).
+  **Zwei Dinge bleiben ungeprüft, weil dafür echte Zugangsdaten fehlen** (siehe §10): das
+  S3-Backend selbst lief nie gegen einen echten Anbieter (nur der lokale Dateisystem-Fallback ist
+  getestet), und das angenommene `{key, name}`-Format von AutoScout24s Marken-/Modell-Listen ist
+  aus der Dokumentation abgeleitet, nie gegen eine echte Antwort verifiziert.
+  Eigene Website-Anbindung an `Tiff-Cardealer-Theme-Swiss` bleibt offen — dafür existiert noch
+  keine Schweizer Website, an die synchronisiert werden könnte.
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 
@@ -182,4 +215,5 @@ Unverändert aus `SCHWEIZ-SAAS.md` §5, hier nochmals verdichtet:
 | Bank | QR-IBAN bestellen (dauert Tage bis Wochen), `camt.054`-Bezug klären |
 | Anwalt | Kaufvertrag, Gewährleistung, AGB, AVV, Datenschutzerklärung |
 | AutoScout24 | Zugangsmodell (pro Händler vs. Auftrag) und VIN-Abfragekosten klären (§5) |
+| Objektspeicher | Anbieter bestellen (Exoscale/cloudscale/Infomaniak, siehe SCHWEIZ-SAAS.md §2) und `OBJECT_STORAGE_*`-Zugangsdaten hinterlegen — bis dahin läuft der lokale Fallback, der bei jedem Container-Neustart verliert |
 | Pilotkunde (Sabit Kadriu) | Rollenzuschnitt bestätigen (§8), heutige Ablage (Excel/Papier?) für Import |

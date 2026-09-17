@@ -5,11 +5,14 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "migrate": "node-pg-migrate up --migrations-dir migrations --envPath ../../.env",
-    "migrate:down": "node-pg-migrate down --migrations-dir migrations --envPath ../../.env",
-    "migrate:create": "node-pg-migrate create --migrations-dir migrations"
+    "migrate": "node --env-file-if-exists=../../.env ../../node_modules/node-pg-migrate/bin/node-pg-migrate.js up --migrations-dir migrations -d MIGRATE_DATABASE_URL",
+    "migrate:down": "node --env-file-if-exists=../../.env ../../node_modules/node-pg-migrate/bin/node-pg-migrate.js down --migrations-dir migrations -d MIGRATE_DATABASE_URL",
+    "migrate:create": "node-pg-migrate create --migrations-dir migrations",
+    "test": "node --env-file-if-exists=../../.env --test",
+    "seed:dev-tenant": "node --env-file-if-exists=../../.env scripts/seed-dev-tenant.mjs"
   },
   "dependencies": {
+    "@tiff/core-auth": "*",
     "pg": "^8.13.0"
   },
   "devDependencies": {

@@ -2,12 +2,30 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGPASSWORD: postgres
+      MIGRATE_DATABASE_URL: postgres://tiff_migrator:devpass@localhost:5432/tiff_autohaendler_dms
+      DATABASE_URL: postgres://tiff_app:devpass@localhost:5432/tiff_autohaendler_dms
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,9 +33,23 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install
-      - name: Tests (alle Packages)
+
+      # Zwei Rollen, nicht eine — siehe README.md "Datenbank-Rollen" und
+      # packages/core-db/migrations/1700000000004_runtime-role-hardening.js.
+      # Ohne das liefe dieser Job unter derselben Falle durch, die der
+      # Integrationstest unten eigentlich aufdecken soll: eine Rolle, die
+      # ihre eigenen Tabellen besitzt, ist von RLS befreit.
+      - name: Datenbank-Rollen einrichten
+        run: psql -h localhost -U postgres -f packages/core-db/scripts/dev-setup.sql
+
+      - name: Migrationen
+        run: npm run migrate
+
+      - name: Tests (alle Packages, inkl. Mandanten-Isolation gegen echtes Postgres)
         run: npm test
+
       - name: Mandantengrenze (Boundary-Test)
         run: npm run test:boundary
+
       - name: Web-Build
         run: npm run build --workspace apps/cardealer-ch/web

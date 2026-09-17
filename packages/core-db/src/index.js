@@ -16,6 +16,14 @@ export function getPool() {
   return pool
 }
 
+/** Für Tests und einen sauberen Prozess-Exit — schliesst den Pool, falls einer offen ist. */
+export async function closePool() {
+  if (pool) {
+    await pool.end()
+    pool = undefined
+  }
+}
+
 /**
  * Jede Datenbankanfrage läuft durch diese Funktion. Sie setzt app.tenant_id
  * innerhalb der Transaktion (SET LOCAL, gilt nur für diese Transaktion) und

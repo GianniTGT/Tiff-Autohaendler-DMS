@@ -127,6 +127,7 @@
     "status": "Status",
     "profit": "Gewinn",
     "totalInvested": "Insgesamt investiert",
+    "unknown": "Unbekanntes Fahrzeug",
     "health": { "good": "Gesunde Marge", "thin": "Knappe Marge", "loss": "Mit Verlust" }
   },
   "customers": {

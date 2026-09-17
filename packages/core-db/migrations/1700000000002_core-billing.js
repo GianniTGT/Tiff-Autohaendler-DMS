@@ -42,7 +42,7 @@ export async function up(pgm) {
       check: "type IN ('offer', 'order', 'delivery_note', 'invoice', 'reminder', 'credit_note')",
     },
     number: { type: 'text', notNull: true }, // aus number_sequences gebildet, z.B. RE-2026-00042
-    status: { type: 'text', notNull: true, default: "'draft'" },
+    status: { type: 'text', notNull: true, default: 'draft' },
     issue_date: { type: 'date', notNull: true, default: pgm.func('current_date') },
     due_date: { type: 'date' },
     // Bezug auf das vorangehende Dokument in der Belegkette (Offerte -> Auftrag -> ... )
@@ -82,7 +82,7 @@ export async function up(pgm) {
     paid_at: { type: 'date', notNull: true },
     // camt.054-Import (Phase 2, ANFORDERUNGEN.md §9): die Bank liefert die
     // QR-Referenz zurück, darüber wird die Zahlung automatisch zugeordnet.
-    source: { type: 'text', notNull: true, default: "'manual'" }, // 'manual' | 'camt054'
+    source: { type: 'text', notNull: true, default: 'manual' }, // 'manual' | 'camt054'
     created_at: { type: 'timestamptz', notNull: true, default: pgm.func('now()') },
   })
   pgm.createIndex('payments', 'tenant_id')

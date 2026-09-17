@@ -5,16 +5,20 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js",
-    "test": "node --test",
+    "dev": "node --env-file-if-exists=../../../.env --watch src/index.js",
+    "start": "node --env-file-if-exists=../../../.env src/index.js",
+    "test": "node --env-file-if-exists=../../../.env --test",
     "test:boundary": "node --test test/tenant-boundary.test.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.687.0",
+    "@fastify/cookie": "^11.0.2",
     "@tiff/core-auth": "*",
     "@tiff/core-billing": "*",
     "@tiff/core-db": "*",
     "@tiff/core-docs": "*",
-    "fastify": "^5.1.0"
+    "fastify": "^5.1.0",
+    "fastify-plugin": "^5.0.1",
+    "pdfkit": "^0.19.1"
   }
 }

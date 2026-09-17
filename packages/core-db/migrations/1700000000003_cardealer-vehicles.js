@@ -76,7 +76,7 @@ export async function up(pgm) {
     vat_scheme: {
       type: 'text',
       notNull: true,
-      default: "'notional_input_tax'",
+      default: 'notional_input_tax',
       check: "vat_scheme IN ('standard', 'notional_input_tax', 'margin')",
     },
     purchase_from: {
@@ -91,7 +91,7 @@ export async function up(pgm) {
     status: {
       type: 'text',
       notNull: true,
-      default: "'in_stock'",
+      default: 'in_stock',
       check: "status IN ('in_stock', 'reserved', 'sold', 'written_off')",
     },
     purchased_at: { type: 'date' },

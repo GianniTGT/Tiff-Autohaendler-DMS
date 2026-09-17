@@ -8,3 +8,7 @@ build/
 .DS_Store
 coverage/
 .vite/
+
+# Lokaler Objektspeicher-Fallback (integrations/object-storage/store.js) —
+# nur für Entwicklung ohne S3-kompatible Zugangsdaten, nie für den Betrieb.
+data/objects/
