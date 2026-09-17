@@ -1,0 +1,166 @@
+{
+  "_hinweis": "Einzige Sprache dieses Produkts. Kein Sprachumschalter, kein en.json — siehe ANFORDERUNGEN.md §1. Kuratierter Startbestand aus Tiff-Cardealer-Manager/src/i18n/de.json (816 von 1249 Strings bereits Deutsch), bereinigt um US-Recht (titleStatus, odometerStatus, buyer.license) und Desktop-only-Inhalte (Wiederherstellungsschlüssel, Etikettendruck, Backup-Dialoge) — die entfallen mit dem lokalen SQLCipher-Modell (ANFORDERUNGEN.md §3).",
+  "app": {
+    "name": "Tiff Autohändler DMS",
+    "loading": "Wird geladen…",
+    "errorTitle": "Etwas ist schiefgelaufen",
+    "signedInAs": "Angemeldet als",
+    "signOut": "Abmelden",
+    "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+  },
+  "common": {
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "close": "Schliessen",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "yes": "Ja",
+    "no": "Nein",
+    "none": "—",
+    "loading": "Wird geladen…",
+    "notChosen": "Nicht gewählt",
+    "money": { "hide": "Zahlen ausblenden", "show": "Zahlen wieder anzeigen" }
+  },
+  "nav": {
+    "dashboard": "Übersicht",
+    "inventory": "Fahrzeuge",
+    "recon": "Werkstatt",
+    "customers": "Kunden",
+    "documents": "Dokumente",
+    "reports": "Auswertungen",
+    "calendar": "Kalender",
+    "settings": "Einstellungen"
+  },
+  "status": {
+    "in_stock": "Auf Lager",
+    "reserved": "Reserviert",
+    "sold": "Verkauft",
+    "written_off": "Abgeschrieben"
+  },
+  "roles": {
+    "inhaber": "Inhaber",
+    "verkauf": "Verkauf",
+    "werkstatt": "Werkstatt",
+    "buchhaltung": "Buchhaltung",
+    "describe": {
+      "inhaber": "Inhaber — Fahrzeugzahlen und Firmenzahlen",
+      "verkauf": "Verkauf — Fahrzeugzahlen, nie die Firmenzahlen",
+      "werkstatt": "Werkstatt — Aufträge und Kosten am Fahrzeug",
+      "buchhaltung": "Buchhaltung — Fahrzeugzahlen und Firmenzahlen, Rechnungen"
+    }
+  },
+  "costTypes": {
+    "part": "Teil",
+    "labor": "Arbeit",
+    "transport": "Transport",
+    "fee": "Gebühr",
+    "detail": "Aufbereitung"
+  },
+  "acquisitionSources": {
+    "auction": "Auktion",
+    "trade": "Eintausch",
+    "private": "Privat",
+    "dealer": "Händler"
+  },
+  "vatScheme": {
+    "standard": "Normalbesteuerung",
+    "notional_input_tax": "Fiktiver Vorsteuerabzug",
+    "margin": "Margenbesteuerung (nur Sammlerstücke)"
+  },
+  "seller": {
+    "fields": {
+      "name": "Vor- und Nachname",
+      "address": "Adresse",
+      "idDocumentType": "Ausweisart",
+      "idDocumentNumber": "Ausweisnummer",
+      "phone": "Telefon"
+    }
+  },
+  "login": {
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "invalid": "Anmeldename oder Passwort ist falsch.",
+    "forgot": "Passwort vergessen?"
+  },
+  "dashboard": {
+    "emptyTitle": "Noch keine Fahrzeuge",
+    "emptyBody": "Erfassen Sie das erste Fahrzeug über die Fahrgestellnummer oder die Stammnummer.",
+    "addVehicle": "+ Fahrzeug erfassen",
+    "kpi": {
+      "onLot": "Fahrzeuge auf Lager",
+      "cashTiedUp": "Kapital gebunden",
+      "projectedProfit": "Erwarteter Gewinn",
+      "soldThisYear": "Dieses Jahr verkauft"
+    }
+  },
+  "vehicle": {
+    "fields": {
+      "vin": "Fahrgestellnummer (VIN)",
+      "serialNumber": "Stammnummer",
+      "certificationNumber": "Typenscheinnummer",
+      "make": "Marke",
+      "model": "Modell",
+      "trim": "Ausführung",
+      "modelYear": "Modelljahr",
+      "firstRegistrationDate": "Erstzulassung",
+      "bodyType": "Karosserieform",
+      "fuelType": "Treibstoff",
+      "transmissionType": "Getriebe",
+      "driveType": "Antrieb",
+      "bodyColor": "Aussenfarbe",
+      "interiorColor": "Innenfarbe",
+      "doors": "Türen",
+      "seats": "Sitzplätze",
+      "powerKw": "Leistung (kW)",
+      "displacementCcm": "Hubraum (ccm)",
+      "mileageKm": "Kilometerstand",
+      "ownersCount": "Vorbesitzer",
+      "lastInspectionDate": "Letzte MFK",
+      "inspectionValidUntil": "MFK gültig bis",
+      "soldWithInspection": "Verkauf ab MFK",
+      "energyLabel": "Energieetikette",
+      "purchasePrice": "Einkaufspreis",
+      "askingPrice": "Angebotspreis",
+      "soldPrice": "Verkaufspreis"
+    },
+    "status": "Status",
+    "profit": "Gewinn",
+    "totalInvested": "Insgesamt investiert",
+    "health": { "good": "Gesunde Marge", "thin": "Knappe Marge", "loss": "Mit Verlust" }
+  },
+  "customers": {
+    "searchPlaceholder": "Suchen nach Name, Telefon, E-Mail oder Fahrzeug",
+    "empty": "Noch niemand erfasst.",
+    "noMatch": "Niemand passt dazu."
+  },
+  "documents": {
+    "title": "Dokumente",
+    "types": {
+      "offer": "Offerte",
+      "order": "Auftrag",
+      "delivery_note": "Lieferschein",
+      "invoice": "Rechnung",
+      "reminder": "Mahnung",
+      "credit_note": "Gutschrift",
+      "purchase_contract": "Ankaufsvertrag",
+      "sale_contract": "Kaufvertrag"
+    },
+    "createInvoice": "Rechnung erstellen",
+    "createSaleContract": "Kaufvertrag erstellen",
+    "createPurchaseContract": "Ankaufsvertrag erstellen",
+    "generated": "Das Dokument wurde erstellt.",
+    "failed": "Das Dokument konnte nicht erstellt werden."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "company": {
+      "title": "Der Betrieb",
+      "legalName": "Firma (Rechtsträger)",
+      "uid": "UID",
+      "vatLiable": "MWST-pflichtig",
+      "vatMethod": "Abrechnungsart",
+      "qrIban": "QR-IBAN"
+    }
+  }
+}

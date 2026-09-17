@@ -1,0 +1,22 @@
+{
+  "name": "tiff-autohaendler-dms",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tiff Autohändler DMS — Schweizer Dealer-Management-System für Occasionshändler (nur CH-Markt, nur Deutsch).",
+  "workspaces": [
+    "packages/*",
+    "apps/*/server",
+    "apps/*/web"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "migrate": "npm run migrate --workspace packages/core-db",
+    "dev:server": "npm run dev --workspace apps/cardealer-ch/server",
+    "dev:web": "npm run dev --workspace apps/cardealer-ch/web",
+    "test": "npm run test --workspaces --if-present",
+    "test:boundary": "npm run test:boundary --workspace apps/cardealer-ch/server --if-present"
+  },
+  "license": "UNLICENSED"
+}
