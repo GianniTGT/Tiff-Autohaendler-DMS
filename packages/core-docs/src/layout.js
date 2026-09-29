@@ -41,6 +41,9 @@ export const PAGE = {
 
 export const contentWidth = (doc) => doc.page.width - doc.page.margins.left - doc.page.margins.right
 
+/** Gemeinsame pdfkit-Konstruktoroptionen für jedes Dokument in core-docs. */
+export const PDF_OPTIONS = { size: PAGE.size, margins: PAGE.margins, bufferPages: true }
+
 /** `2026-08-07` -> `07.08.2026`, wie es auf dem Papier steht (de-CH). */
 export function shortDate(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? ''))
@@ -206,6 +209,65 @@ export function letterhead(doc, { dealer, title, docNo, date, onLogoError }) {
   doc.y = Math.max(dealerBottom, doc.y, top + 44) + 7
   doc.moveTo(left, doc.y).lineTo(right, doc.y).lineWidth(1.6).strokeColor(color).stroke()
   doc.y += 12
+}
+
+export const DRAFT_RED = '#B91C1C'
+export const DRAFT_BG = '#FEF2F2'
+
+/**
+ * Auffälliger Kasten direkt unter dem Briefkopf — ein Vertragsentwurf, der
+ * ausgedruckt in fremde Hände gerät, muss das auf den ersten Blick zeigen,
+ * nicht erst in einer einzelnen Klausel weiter unten.
+ */
+export function draftBanner(doc, status) {
+  needSpace(doc, 30)
+  const left = doc.page.margins.left
+  const w = contentWidth(doc)
+  const text = `ACHTUNG — ${status} — dieses Dokument hat keine Rechtsgültigkeit und darf keinem Kunden vorgelegt werden.`
+  const height = doc.font('Helvetica-Bold').fontSize(8).heightOfString(text, { width: w - 16 })
+  doc.rect(left, doc.y, w, height + 10).fill(DRAFT_BG)
+  doc
+    .fillColor(DRAFT_RED)
+    .font('Helvetica-Bold')
+    .fontSize(8)
+    .text(text, left + 8, doc.y + 5, { width: w - 16 })
+  doc.x = left
+  doc.y += height + 18
+}
+
+/**
+ * Eine nummerierte Vertragsklausel: fette Überschrift, Fliesstext darunter.
+ * `body` kann `{ draftNote }` enthalten — ein Hinweis (rot, kursiv), wo der
+ * Wortlaut noch von einem Anwalt zu prüfen/festzulegen ist, statt den
+ * gesamten Klauseltext als Platzhalter zu behandeln.
+ */
+export function clause(doc, { number, title, body, draftNote }) {
+  needSpace(doc, 36)
+  const left = doc.page.margins.left
+  const w = contentWidth(doc)
+  doc.x = left
+  doc
+    .fillColor(INK)
+    .font('Helvetica-Bold')
+    .fontSize(9)
+    .text(`§${number}  ${title}`, left, doc.y, { width: w })
+  doc.y += 3
+  doc
+    .fillColor(INK)
+    .font('Helvetica')
+    .fontSize(8.5)
+    .text(body, left, doc.y, { width: w, lineGap: 2, align: 'justify' })
+  doc.x = left
+  if (draftNote) {
+    doc.y += 3
+    doc
+      .fillColor(DRAFT_RED)
+      .font('Helvetica-Oblique')
+      .fontSize(7.5)
+      .text(`[ENTWURF — von Anwalt zu prüfen] ${draftNote}`, left, doc.y, { width: w, lineGap: 1.5 })
+    doc.x = left
+  }
+  doc.y += 9
 }
 
 /** Zuletzt geschrieben, weil "von N" erst nach dem letzten Abschnitt feststeht. Falle 3. */
