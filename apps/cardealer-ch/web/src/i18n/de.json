@@ -505,6 +505,24 @@
       "upload": "Logo hochladen",
       "remove": "Entfernen",
       "none": "Noch kein Logo hinterlegt."
+    },
+    "leads": {
+      "title": "Anfragen von der Website",
+      "intro": "Formulare Ihrer Website können Anfragen direkt hierher senden. Dazu braucht die Website einen Schlüssel; er kann nur Anfragen anlegen, nichts lesen.",
+      "origin": "Adresse der Website (für Browser-Formulare)",
+      "originHint": "z.B. https://www.meine-garage.ch — ohne Pfad. Nur von dieser Adresse nimmt der Browser Formulare an.",
+      "generate": "Schlüssel erzeugen",
+      "regenerate": "Neuen Schlüssel erzeugen",
+      "revoke": "Schlüssel widerrufen",
+      "active": "Ein Schlüssel ist aktiv.",
+      "inactive": "Noch kein Schlüssel.",
+      "shownOnce": "Dieser Schlüssel wird nur jetzt angezeigt. Bitte sofort kopieren und in der Website hinterlegen.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "confirmRegenerate": "Der bisherige Schlüssel wird sofort ungültig. Fortfahren?",
+      "endpoint": "Adresse des Eingangs",
+      "example": "Beispiel (Server-zu-Server)",
+      "fields": "Felder: name (Pflicht), email oder phone (eines Pflicht), message, type (inquiry, test_drive, trade_in, financing), vehicleId. Ein verstecktes Feld «website» muss leer bleiben (Spam-Schutz)."
     }
   },
   "reports": {

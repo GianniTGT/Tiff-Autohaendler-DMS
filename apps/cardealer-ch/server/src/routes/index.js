@@ -13,6 +13,7 @@ import { registerUserRoutes } from './users.js'
 import { registerPhotoRoutes } from './photos.js'
 import { registerArchiveRoutes } from './archive.js'
 import { registerReportRoutes } from './reports.js'
+import { registerPublicLeadRoutes } from './public-leads.js'
 
 /**
  * Jede Route, die Mandantendaten anfasst, muss durch withTenant() aus
@@ -36,4 +37,5 @@ export async function registerRoutes(app) {
   await registerPhotoRoutes(app)
   await registerArchiveRoutes(app)
   await registerReportRoutes(app)
+  await registerPublicLeadRoutes(app)
 }

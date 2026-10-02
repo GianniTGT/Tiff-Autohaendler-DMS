@@ -1,6 +1,7 @@
 import { canEditCompanySettings } from '@tiff/core-auth'
 import { getTenantSettings, updateTenantSettings } from '../services/tenant-settings.js'
 import { setLogo, getLogo, removeLogo } from '../services/tenant-logo.js'
+import { generateLeadKey, revokeLeadKey } from '../services/lead-intake.js'
 
 export async function registerTenantRoutes(app) {
   app.get('/api/tenant', { preHandler: app.requireAuth }, async (request) => ({
@@ -44,5 +45,21 @@ export async function registerTenantRoutes(app) {
       return reply.code(403).send({ ok: false, error: 'Nur der Inhaber darf das Logo ändern.' })
     }
     return { ok: true, removed: await removeLogo(request.tenantId) }
+  })
+
+  // Schlüssel für Anfragen von der Website: einmal anzeigen, nur den Hash speichern.
+  app.post('/api/tenant/lead-key', { preHandler: app.requireAuth }, async (request, reply) => {
+    if (!canEditCompanySettings(request.role)) {
+      return reply.code(403).send({ ok: false, error: 'Nur der Inhaber darf den Schlüssel erzeugen.' })
+    }
+    return reply.code(201).send({ ok: true, data: { key: await generateLeadKey(request.tenantId) } })
+  })
+
+  app.delete('/api/tenant/lead-key', { preHandler: app.requireAuth }, async (request, reply) => {
+    if (!canEditCompanySettings(request.role)) {
+      return reply.code(403).send({ ok: false, error: 'Nur der Inhaber darf den Schlüssel widerrufen.' })
+    }
+    await revokeLeadKey(request.tenantId)
+    return { ok: true }
   })
 }

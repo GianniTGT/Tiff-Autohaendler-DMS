@@ -20,6 +20,8 @@ export default function Settings({ onSettingsChanged }) {
   const [busy, setBusy] = useState(false)
   const [logoVersion, setLogoVersion] = useState(Date.now())
   const logoInput = useRef(null)
+  const [newKey, setNewKey] = useState(null)
+  const [copied, setCopied] = useState(false)
 
   const apply = (data) => {
     setTenant(data)
@@ -29,6 +31,7 @@ export default function Settings({ onSettingsChanged }) {
       vatMethod: data.vatMethod ?? '',
       netTaxRatePercent: data.netTaxRatePercent ?? '',
       qrIban: data.qrIban ?? '',
+      leadAllowedOrigin: data.leadAllowedOrigin ?? '',
       autoscout24ClientId: data.autoscout24ClientId ?? '',
       autoscout24SellerId: data.autoscout24SellerId ?? '',
       autoscout24ClientSecret: '', // wird nie zurückgegeben; leer lassen behält das gespeicherte
@@ -51,6 +54,21 @@ export default function Settings({ onSettingsChanged }) {
       setTenant({ ...(await api.get('/api/tenant')) })
       setLogoVersion(Date.now())
       onSettingsChanged?.()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function changeLeadKey(action) {
+    setBusy(true)
+    setError(null)
+    try {
+      const result = await action()
+      setNewKey(result?.key ?? null)
+      setCopied(false)
+      setTenant({ ...(await api.get('/api/tenant')) })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -172,6 +190,64 @@ export default function Settings({ onSettingsChanged }) {
             <input {...bind('qrIban')} placeholder="CH44 3199 9123 0008 8901 2" />
           </label>
           <p className="mt-1 text-xs text-steel">{t('settings.payment.qrIbanHint')}</p>
+        </Panel>
+
+        <Panel title={t('settings.leads.title')}>
+          <p className="mb-3 text-sm text-steel">{t('settings.leads.intro')}</p>
+          <label className="block">
+            <span className="field-label">{t('settings.leads.origin')}</span>
+            <input {...bind('leadAllowedOrigin')} placeholder="https://www.meine-garage.ch" />
+            <span className="text-xs text-steel">{t('settings.leads.originHint')}</span>
+          </label>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold">{tenant.hasLeadKey ? t('settings.leads.active') : t('settings.leads.inactive')}</span>
+            {!readOnly && (
+              <>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  disabled={busy}
+                  onClick={() => (!tenant.hasLeadKey || window.confirm(t('settings.leads.confirmRegenerate'))) && changeLeadKey(() => api.post('/api/tenant/lead-key'))}
+                >
+                  {tenant.hasLeadKey ? t('settings.leads.regenerate') : t('settings.leads.generate')}
+                </button>
+                {tenant.hasLeadKey && (
+                  <button type="button" className="btn-ghost text-danger" disabled={busy} onClick={() => changeLeadKey(() => api.del('/api/tenant/lead-key'))}>
+                    {t('settings.leads.revoke')}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {newKey && (
+            <div className="mt-3 space-y-2 rounded-lg border border-brand-gold bg-warn-bg p-3">
+              <p className="text-sm font-semibold text-warn">{t('settings.leads.shownOnce')}</p>
+              <div className="flex items-center gap-2">
+                <code className="block flex-1 break-all rounded bg-white p-2 font-mono text-xs">{newKey}</code>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => navigator.clipboard?.writeText(newKey).then(() => setCopied(true))}
+                >
+                  {copied ? t('settings.leads.copied') : t('settings.leads.copy')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tenant.hasLeadKey && (
+            <div className="mt-3 space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-steel">{t('settings.leads.endpoint')}</p>
+              <code className="block break-all rounded bg-tint p-2 font-mono text-xs">POST {window.location.origin}/api/public/leads/{tenant.slug}</code>
+              <p className="pt-1 text-xs font-semibold uppercase tracking-wider text-steel">{t('settings.leads.example')}</p>
+              <pre className="overflow-x-auto rounded bg-tint p-2 font-mono text-[11px] leading-snug">{`curl -X POST ${window.location.origin}/api/public/leads/${tenant.slug} \
+  -H "Content-Type: application/json" -H "X-Api-Key: <Schlüssel>" \
+  -d '{"name":"Max Muster","email":"max@example.ch","type":"test_drive","message":"Probefahrt?"}'`}</pre>
+              <p className="text-xs text-steel">{t('settings.leads.fields')}</p>
+            </div>
+          )}
         </Panel>
 
         <Panel title={t('settings.autoscout24.title')}>

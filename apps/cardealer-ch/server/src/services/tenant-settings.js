@@ -5,6 +5,7 @@
  */
 import { withTenant } from '@tiff/core-db'
 import { encryptSecret } from './secrets.js'
+import { normalizeOrigin } from './lead-intake.js'
 
 export const FIELD_MAP = Object.freeze({
   name: 'name',
@@ -17,6 +18,7 @@ export const FIELD_MAP = Object.freeze({
   addressZip: 'address_zip',
   addressCity: 'address_city',
   qrIban: 'qr_iban',
+  leadAllowedOrigin: 'lead_allowed_origin',
   autoscout24ClientId: 'autoscout24_client_id',
   autoscout24SellerId: 'autoscout24_seller_id',
   // Geheimnis: nur schreibbar, wird nie zurückgegeben (siehe camelize).
@@ -34,6 +36,8 @@ function camelize(row) {
   }
   out.autoscout24HasSecret = Boolean(row.autoscout24_client_secret)
   out.hasLogo = Boolean(row.logo_storage_key)
+  out.hasLeadKey = Boolean(row.lead_key_hash)
+  out.slug = row.slug // nur lesbar: der Betrieb braucht ihn für die Adresse des Anfragen-Eingangs
   return out
 }
 
@@ -55,6 +59,7 @@ export function isValidQrIban(value) {
 }
 
 function validate(fields) {
+  if (fields.leadAllowedOrigin) normalizeOrigin(fields.leadAllowedOrigin) // wirft bei ungültiger Adresse
   if ('legalName' in fields && !String(fields.legalName ?? '').trim()) throw new Error('Die Firma darf nicht leer sein.')
   if ('name' in fields && !String(fields.name ?? '').trim()) throw new Error('Der Name darf nicht leer sein.')
   if (fields.vatMethod != null && fields.vatMethod !== '' && !VAT_METHODS.includes(fields.vatMethod)) {
@@ -89,7 +94,7 @@ export async function updateTenantSettings(tenantId, fields) {
     if (WRITE_ONLY.has(key) && value === '') continue // leer lassen heisst: Geheimnis behalten
     columns.push(column)
     values.push(
-      key === 'qrIban' && value ? normalizeIban(value) : WRITE_ONLY.has(key) ? encryptSecret(value) : value === '' ? null : value,
+      key === 'qrIban' && value ? normalizeIban(value) : key === 'leadAllowedOrigin' && value ? normalizeOrigin(value) : WRITE_ONLY.has(key) ? encryptSecret(value) : value === '' ? null : value,
     )
   }
   if (columns.length === 0) return getTenantSettings(tenantId)
