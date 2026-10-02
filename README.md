@@ -79,6 +79,11 @@ npm run dev:web                       # Vite, proxied /api auf :3000
 Anmelden im Browser (`http://localhost:5173`) mit dem oben gewählten Slug,
 E-Mail und Passwort.
 
+**Windows-Schritt-für-Schritt-Anleitung (inkl. Testen vom Handy im selben
+WLAN):** siehe [`LOKAL-TESTEN.md`](./LOKAL-TESTEN.md). Ein Cloud-Server
+wird erst für den echten Pilotbetrieb mit externen Nutzern gebraucht —
+entwickelt und getestet wird lokal.
+
 ## Stand
 
 **Phase 1, 2 und 3 nach `ANFORDERUNGEN.md` §9 sind erreicht:** Login,
