@@ -8,8 +8,9 @@ import { listVehicles } from './vehicles.js'
 import { listOverdueInvoices } from './reminders.js'
 import { summarizeDashboard, dayKey } from './dashboard-calc.js'
 import { countNewLeads } from './leads.js'
+import { countOpenJobs } from './recon.js'
 
-async function costTotalsByVehicle(tenantId) {
+export async function costTotalsByVehicle(tenantId) {
   return withTenant(tenantId, async (client) => {
     const result = await client.query('SELECT vehicle_id, SUM(amount_rappen) AS total FROM vehicle_costs GROUP BY vehicle_id')
     return new Map(result.rows.map((r) => [r.vehicle_id, Number(r.total)]))
@@ -19,11 +20,12 @@ async function costTotalsByVehicle(tenantId) {
 export async function getDashboard(tenantId, role, now = new Date()) {
   const today = dayKey(now)
   const canSeeTotals = canSeeCompanyTotals(role)
-  const [vehicles, costsByVehicle, overdue, newLeads] = await Promise.all([
+  const [vehicles, costsByVehicle, overdue, newLeads, jobs] = await Promise.all([
     listVehicles(tenantId),
     costTotalsByVehicle(tenantId),
     listOverdueInvoices(tenantId, today),
     countNewLeads(tenantId),
+    countOpenJobs(tenantId, today),
   ])
   const summary = summarizeDashboard(vehicles, costsByVehicle, { today, canSeeTotals })
   return {
@@ -33,6 +35,7 @@ export async function getDashboard(tenantId, role, now = new Date()) {
       outstandingRappen: canSeeTotals ? overdue.reduce((s, i) => s + i.outstandingRappen, 0) : null,
     },
     newLeads,
+    openJobs: jobs,
     canSeeTotals,
   }
 }

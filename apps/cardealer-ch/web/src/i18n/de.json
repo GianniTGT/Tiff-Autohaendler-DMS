@@ -105,7 +105,9 @@
       "soldThisYear": "Dieses Jahr verkauft",
       "overdue": "Überfällige Rechnungen",
       "soldThisYearProfit": "Gewinn daraus",
-      "newLeads": "Neue Anfragen"
+      "newLeads": "Neue Anfragen",
+      "openJobs": "Offene Werkstattaufträge",
+      "openJobsOverdue": "{n} überfällig"
     },
     "title": "Übersicht",
     "sections": {
@@ -520,7 +522,36 @@
     "revenue": "Fakturierter Umsatz (inkl. MWST)",
     "payable": "Geschuldete MWST",
     "disclaimer": "Entwurf — von einem Treuhänder bestätigen lassen, bevor eine Abrechnung an die ESTV geht.",
-    "notConfigured": "Für diesen Betrieb ist noch keine MWST-Methode hinterlegt. Bitte unter Einstellungen festlegen (mit dem Treuhänder)."
+    "notConfigured": "Für diesen Betrieb ist noch keine MWST-Methode hinterlegt. Bitte unter Einstellungen festlegen (mit dem Treuhänder).",
+    "sales": {
+      "title": "Verkäufe und Gewinn",
+      "sold": "Verkauft",
+      "revenue": "Umsatz",
+      "profit": "Gewinn",
+      "margin": "Marge",
+      "avgDays": "Durchschnittliche Standzeit: {n} Tage",
+      "notComputable": "{n} Verkäufe ohne Einkaufs- oder Verkaufspreis sind in den Summen nicht enthalten.",
+      "empty": "Keine Verkäufe in diesem Zeitraum.",
+      "cols": {
+        "vehicle": "Fahrzeug",
+        "soldAt": "Verkauft",
+        "days": "Tage",
+        "price": "Verkaufspreis",
+        "invested": "Investiert",
+        "profit": "Gewinn"
+      }
+    },
+    "stock": {
+      "title": "Lagerbestand nach Alter",
+      "total": "{count} Fahrzeuge, {amount} gebunden",
+      "oldest": "Am längsten auf Lager",
+      "buckets": {
+        "d0_30": "0–30 Tage",
+        "d31_60": "31–60 Tage",
+        "d61_90": "61–90 Tage",
+        "d91_plus": "über 90 Tage"
+      }
+    }
   },
   "workshop": {
     "title": "Werkstatt",

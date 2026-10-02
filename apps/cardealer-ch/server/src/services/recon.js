@@ -142,3 +142,18 @@ export async function getBoard(tenantId, today) {
     return buildBoard(vehicles, byVehicle, today)
   })
 }
+
+/** Offene Aufträge (open/doing) und wie viele davon überfällig sind — für die Übersicht. */
+export async function countOpenJobs(tenantId, today) {
+  return withTenant(tenantId, async (client) => {
+    const row = (
+      await client.query(
+        `SELECT COUNT(*) AS open, COUNT(*) FILTER (WHERE due_date < $1::date) AS overdue
+           FROM recon_jobs j JOIN vehicles v ON v.id = j.vehicle_id
+          WHERE j.status IN ('open', 'doing') AND v.status IN ('in_stock', 'reserved')`,
+        [today],
+      )
+    ).rows[0]
+    return { open: Number(row.open), overdue: Number(row.overdue) }
+  })
+}
