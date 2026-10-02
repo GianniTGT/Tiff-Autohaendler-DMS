@@ -24,6 +24,16 @@ cd Tiff-Autohaendler-DMS
 npm install
 ```
 
+**Windows-PowerShell-Falle:** `psql` ist nach der PostgreSQL-Installation
+oft nicht im PATH — PowerShell meldet dann "wurde nicht als Name eines
+Cmdlet... erkannt". Falls das passiert, einmalig **für das aktuelle
+Terminal-Fenster** nachhelfen (Versionsnummer ggf. anpassen, prüfbar mit
+`Get-ChildItem "C:\Program Files\PostgreSQL"`):
+
+```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\16\bin"
+```
+
 **Datenbank-Rollen einrichten** (einmalig, mit dem Postgres-Superuser-
 Passwort von oben — siehe auch README.md "Datenbank-Rollen" für die
 Begründung, warum es zwei Rollen statt einer braucht):
@@ -32,8 +42,18 @@ Begründung, warum es zwei Rollen statt einer braucht):
 psql -h localhost -U postgres -f packages/core-db/scripts/dev-setup.sql
 ```
 
-**`.env`-Datei anlegen** (Kopie von `.env.example`, Passwort aus dem
-vorigen Schritt eintragen):
+**`.env`-Datei anlegen.** Wichtig: Das ist eine **Datei im Projektordner**,
+keine Befehle, die man ins Terminal tippt — `MIGRATE_DATABASE_URL=...` als
+PowerShell-Befehl eingegeben scheitert mit "CommandNotFoundException".
+Stattdessen:
+
+```powershell
+notepad .env
+```
+
+öffnet (und legt bei Bedarf an) die Datei. Dort folgende drei Zeilen
+hineinschreiben (Passwort aus dem vorigen Schritt eintragen), dann
+speichern und Notepad schliessen:
 
 ```
 MIGRATE_DATABASE_URL=postgres://tiff_migrator:DEIN_PASSWORT@localhost:5432/tiff_autohaendler_dms
