@@ -2,6 +2,7 @@ import { canEditCompanySettings } from '@tiff/core-auth'
 import { getTenantSettings, updateTenantSettings } from '../services/tenant-settings.js'
 import { setLogo, getLogo, removeLogo } from '../services/tenant-logo.js'
 import { generateLeadKey, revokeLeadKey } from '../services/lead-intake.js'
+import { clientMessage } from './http-errors.js'
 
 export async function registerTenantRoutes(app) {
   app.get('/api/tenant', { preHandler: app.requireAuth }, async (request) => ({
@@ -16,7 +17,7 @@ export async function registerTenantRoutes(app) {
     try {
       return { ok: true, data: await updateTenantSettings(request.tenantId, request.body ?? {}) }
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 
@@ -36,7 +37,7 @@ export async function registerTenantRoutes(app) {
     try {
       return reply.code(201).send({ ok: true, data: await setLogo(request.tenantId, request.body) })
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 

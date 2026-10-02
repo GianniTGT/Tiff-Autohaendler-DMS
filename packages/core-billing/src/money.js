@@ -26,10 +26,25 @@ export function formatMoney(rappen, { blank = '—' } = {}) {
   }).format(Number(rappen) / 100)
 }
 
-/** Franken-Eingabe (z.B. aus einem Formularfeld "12500.50") -> Rappen. */
+/**
+ * Franken-Eingabe -> Rappen. Versteht die Schweizer Schreibweisen
+ * (`12'500.50`, `12 500,50`, `12500,5`); alles andere ist ein Fehler.
+ *
+ * Wichtig: nie `NaN` zurückgeben. `JSON.stringify(NaN)` ergibt `null`, und ein
+ * `null` im Preisfeld löscht beim Speichern den bisherigen Preis — ohne
+ * Fehlermeldung.
+ */
 export function francsToRappen(value) {
   if (value == null || value === '') return null
-  return Math.round(Number(value) * 100)
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new Error('Ungültiger Betrag.')
+    return Math.round(value * 100)
+  }
+  const text = String(value).trim().replace(/[’' \s]/g, '').replace(',', '.')
+  if (!/^-?\d+(\.\d{1,2})?$/.test(text)) {
+    throw new Error(`«${String(value).trim()}» ist kein gültiger Betrag (z. B. 12500.50).`)
+  }
+  return Math.round(Number(text) * 100)
 }
 
 export function rappenToFrancs(rappen) {

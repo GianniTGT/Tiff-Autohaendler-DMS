@@ -9,7 +9,7 @@
     "apps/*/web"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.2"
   },
   "scripts": {
     "migrate": "npm run migrate --workspace packages/core-db",

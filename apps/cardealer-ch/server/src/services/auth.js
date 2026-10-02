@@ -61,7 +61,7 @@ export async function login({ tenantSlug, email, password }) {
 
   return withTenant(tenantId, async (client) => {
     const userResult = await client.query(
-      'SELECT id, password_hash, role, active FROM users WHERE email = $1',
+      'SELECT id, password_hash, role, active FROM users WHERE lower(email) = lower($1)',
       [email],
     )
     const user = userResult.rows[0]

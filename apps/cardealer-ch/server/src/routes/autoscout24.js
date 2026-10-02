@@ -6,6 +6,7 @@ import {
 } from '../services/autoscout24-sync.js'
 
 import { getListings } from '../services/listings.js'
+import { clientMessage } from './http-errors.js'
 
 export async function registerAutoScout24Routes(app) {
   app.get('/api/listings', { preHandler: app.requireAuth }, async (request) => ({
@@ -21,7 +22,7 @@ export async function registerAutoScout24Routes(app) {
       })
       return { ok: true, data: result }
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 
@@ -30,7 +31,7 @@ export async function registerAutoScout24Routes(app) {
       await activateAutoScout24Listing(request.tenantId, request.params.id)
       return { ok: true }
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 
@@ -39,7 +40,7 @@ export async function registerAutoScout24Routes(app) {
       await deactivateAutoScout24Listing(request.tenantId, request.params.id)
       return { ok: true }
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 
@@ -48,7 +49,7 @@ export async function registerAutoScout24Routes(app) {
       await removeAutoScout24Listing(request.tenantId, request.params.id)
       return { ok: true }
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 }

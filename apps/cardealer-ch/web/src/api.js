@@ -11,6 +11,16 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Läuft die Sitzung ab (12 h) oder wird die Person gesperrt, antwortet der Server mit 401. Die App muss das
+ * erfahren, sonst zeigt jede Aktion nur "SESSION_EXPIRED", statt zur Anmeldung zurückzuführen.
+ */
+function notifyIfSessionExpired(response, path) {
+  if (response.status === 401 && !path.startsWith('/api/auth/login')) {
+    window.dispatchEvent(new Event('tiff:session-expired'))
+  }
+}
+
 async function call(method, path, body) {
   const response = await fetch(path, {
     method,
@@ -19,7 +29,10 @@ async function call(method, path, body) {
     body: body ? JSON.stringify(body) : undefined,
   })
   const data = await response.json().catch(() => null)
-  if (!response.ok) throw new ApiError(response.status, data)
+  if (!response.ok) {
+    notifyIfSessionExpired(response, path)
+    throw new ApiError(response.status, data)
+  }
   return data?.data
 }
 
@@ -32,7 +45,10 @@ async function upload(path, file) {
     body: file,
   })
   const data = await response.json().catch(() => null)
-  if (!response.ok) throw new ApiError(response.status, data)
+  if (!response.ok) {
+    notifyIfSessionExpired(response, path)
+    throw new ApiError(response.status, data)
+  }
   return data?.data
 }
 

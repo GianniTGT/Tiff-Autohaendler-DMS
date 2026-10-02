@@ -22,6 +22,8 @@ import lockup from './assets/tiff-lockup-horizontal.png'
 // Wer Firmenzahlen sieht, steht in packages/core-auth/src/roles.js
 // (canSeeCompanyTotals). Hier nur die Menü-Sicht; der Server prüft selbst.
 const SEES_TOTALS = ['inhaber', 'buchhaltung']
+// Rechnungswesen, Verträge und Archiv: nicht die Werkstatt (roles.js: canBill)
+const NO_BILLING = ['werkstatt']
 
 const TABS = [
   { key: 'dashboard', label: 'nav.dashboard', Screen: Dashboard },
@@ -29,10 +31,10 @@ const TABS = [
   { key: 'listings', label: 'nav.listings', Screen: Listings },
   { key: 'leads', label: 'nav.leads', Screen: Leads },
   { key: 'customers', label: 'nav.customers', Screen: CustomerList },
-  { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList },
+  { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList, billingOnly: true },
   { key: 'recon', label: 'nav.recon', Screen: Workshop },
   { key: 'calendar', label: 'nav.calendar', Screen: Calendar },
-  { key: 'archive', label: 'nav.archive', Screen: Archive },
+  { key: 'archive', label: 'nav.archive', Screen: Archive, billingOnly: true },
   { key: 'reports', label: 'nav.reports', Screen: Reports, totalsOnly: true },
   { key: 'settings', label: 'nav.settings', Screen: Settings },
   { key: 'users', label: 'nav.users', Screen: Users, ownerOnly: true },
@@ -52,6 +54,17 @@ export default function App() {
       .get('/api/auth/me')
       .then(setSession)
       .catch(() => setSession(null))
+  }, [])
+
+  // Sitzung abgelaufen oder gesperrt (api.js meldet jedes 401): zurück zur Anmeldung.
+  useEffect(() => {
+    const onExpired = () => {
+      setSession(null)
+      setOpenVehicleId(null)
+      setOpenInvoiceId(null)
+    }
+    window.addEventListener('tiff:session-expired', onExpired)
+    return () => window.removeEventListener('tiff:session-expired', onExpired)
   }, [])
 
   useEffect(() => {
@@ -75,7 +88,7 @@ export default function App() {
     return <Login onLoggedIn={setSession} />
   }
 
-  const tabs = TABS.filter((x) => (!x.totalsOnly || SEES_TOTALS.includes(session.role)) && (!x.ownerOnly || session.role === 'inhaber'))
+  const tabs = TABS.filter((x) => (!x.totalsOnly || SEES_TOTALS.includes(session.role)) && (!x.ownerOnly || session.role === 'inhaber') && (!x.billingOnly || !NO_BILLING.includes(session.role)))
   const active = tabs.find((x) => x.key === tab) ?? tabs[0]
   const Screen = active.Screen
 
@@ -151,6 +164,7 @@ export default function App() {
       {openVehicleId && (
         <VehicleDetail
           vehicleId={openVehicleId}
+          role={session.role}
           onClose={() => setOpenVehicleId(null)}
           onChanged={() => setRefreshKey((k) => k + 1)}
         />

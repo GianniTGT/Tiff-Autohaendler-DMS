@@ -1,4 +1,5 @@
 import { acceptPublicLead, allowedOriginFor, IntakeError } from '../services/lead-intake.js'
+import { clientMessage } from './http-errors.js'
 
 /**
  * Öffentlicher Eingang für Anfragen der Betriebs-Website. Bewusst ohne
@@ -35,7 +36,7 @@ export async function registerPublicLeadRoutes(app) {
       })
       return reply.code(201).send({ ok: true })
     } catch (err) {
-      if (err instanceof IntakeError) return reply.code(err.status).send({ ok: false, error: err.message })
+      if (err instanceof IntakeError) return reply.code(err.status).send({ ok: false, error: clientMessage(err) })
       throw err
     }
   })

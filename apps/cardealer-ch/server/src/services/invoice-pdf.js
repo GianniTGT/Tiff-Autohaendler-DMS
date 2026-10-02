@@ -22,7 +22,7 @@ import { loadLogoBuffer } from './tenant-logo.js'
  * mit einer Partei ohne hinterlegte Adresse). Deshalb hier vorher prüfen
  * und einen Hinweis drucken statt eines 500ers.
  */
-export function describeMissingQrBillData(tenant, party) {
+export function describeMissingQrBillData(tenant, party, document = null) {
   if (!tenant.qr_iban) {
     return 'Für diesen Mandanten ist noch keine QR-IBAN hinterlegt. Siehe ANFORDERUNGEN.md §10 — QR-IBAN bei der Bank bestellen.'
   }
@@ -31,6 +31,11 @@ export function describeMissingQrBillData(tenant, party) {
   }
   if (!party || !party.address_street || !party.address_zip || !party.address_city) {
     return 'Die Adresse der Kundschaft ist unvollständig hinterlegt.'
+  }
+  // Eine Rechnung, die vor dem Hinterlegen der QR-IBAN entstand, hat keine QR-Referenz (Typ NON) und kann
+  // nachträglich keinen QR-Zahlteil mit Referenz bekommen.
+  if (document && !document.qr_reference) {
+    return 'Dieses Dokument wurde erstellt, bevor eine QR-IBAN hinterlegt war — es hat keine QR-Referenz. Bitte ein neues Dokument ausstellen.'
   }
   return null
 }
@@ -146,7 +151,7 @@ function renderBillPdf(invoice, { title }) {
 
   footers(doc, { dealer, docNo: invoice.number })
 
-  const missingQrBillReason = describeMissingQrBillData(tenant, invoice.party)
+  const missingQrBillReason = describeMissingQrBillData(tenant, invoice.party, invoice)
 
   if (!missingQrBillReason) {
     const qrBill = buildQrBill(

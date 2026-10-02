@@ -22,6 +22,16 @@ import { registerPublicLeadRoutes } from './public-leads.js'
  * `test/payload-privacy.test.mjs` im US-Repo (SCHWEIZ-SAAS.md §3).
  */
 export async function registerRoutes(app) {
+  // Ungültige IDs/Datumswerte lösen in Postgres Fehler der Klassen 22/23 aus. Das ist eine fehlerhafte
+  // Eingabe (400), kein Serverfehler — und der SQL-Text gehört nicht in die Antwort.
+  app.setErrorHandler((err, request, reply) => {
+    if (typeof err.code === 'string' && /^(22|23)/.test(err.code)) {
+      return reply.code(400).send({ ok: false, error: 'Ungültige Eingabe.' })
+    }
+    if (err.statusCode && err.statusCode < 500) return reply.code(err.statusCode).send({ ok: false, error: err.message })
+    request.log.error(err)
+    return reply.code(500).send({ ok: false, error: 'Interner Fehler.' })
+  })
   await app.register(authPlugin)
   await registerHealthRoutes(app)
   await registerAuthRoutes(app)

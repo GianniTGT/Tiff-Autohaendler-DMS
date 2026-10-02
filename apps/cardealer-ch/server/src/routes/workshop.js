@@ -1,8 +1,10 @@
 import { listJobs, createJob, updateJob, deleteJob, getBoard } from '../services/recon.js'
 import { getEvents, createAppointment, updateAppointment, deleteAppointment } from '../services/calendar.js'
+import { canBill } from '@tiff/core-auth'
 import { dayKey } from '../services/dashboard-calc.js'
+import { clientMessage } from './http-errors.js'
 
-const fail = (reply, err) => reply.code(400).send({ ok: false, error: err.message })
+const fail = (reply, err) => reply.code(400).send({ ok: false, error: clientMessage(err) })
 const notFound = (reply) => reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
 
 /** Werkstatt-Aufträge und Kalender — beide stehen allen Rollen offen und enthalten keine Preise ausser Auftragsschätzungen (Werkstatt-Sicht). */
@@ -48,7 +50,7 @@ export async function registerWorkshopRoutes(app) {
   app.get('/api/calendar', auth, async (request, reply) => {
     try {
       const { from, to } = request.query
-      return { ok: true, data: await getEvents(request.tenantId, { from, to, today: dayKey(new Date()) }) }
+      return { ok: true, data: await getEvents(request.tenantId, { from, to, today: dayKey(new Date()), includeInvoices: canBill(request.role) }) }
     } catch (err) {
       return fail(reply, err)
     }

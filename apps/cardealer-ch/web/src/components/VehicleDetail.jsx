@@ -110,7 +110,9 @@ function Row({ label, value, strong, tone }) {
   )
 }
 
-export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
+export default function VehicleDetail({ vehicleId, role, onClose, onChanged }) {
+  // Spiegelt roles.js: Werkstatt sieht weder Einkaufspreise noch Wirtschaftlichkeit, Verkauf und Verträge (der Server prüft selbst).
+  const isWorkshop = role === 'werkstatt'
   const [vehicle, setVehicle] = useState(null)
   const [economics, setEconomics] = useState(null)
   const [costs, setCosts] = useState([])
@@ -128,10 +130,10 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
     try {
       const [v, e, c, p, ic] = await Promise.all([
         api.get(`/api/vehicles/${vehicleId}`),
-        api.get(`/api/vehicles/${vehicleId}/economics`),
+        isWorkshop ? null : api.get(`/api/vehicles/${vehicleId}/economics`),
         api.get(`/api/vehicles/${vehicleId}/costs`),
         api.get('/api/parties'),
-        api.get(`/api/vehicles/${vehicleId}/contracts`),
+        isWorkshop ? [] : api.get(`/api/vehicles/${vehicleId}/contracts`),
       ])
       setIssued(ic)
       setVehicle(v)
@@ -270,6 +272,7 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
       {error && <Notice>{error}</Notice>}
       {message && <Notice tone="green">{message}</Notice>}
 
+      {!isWorkshop && (
       <Panel title={t('vehicle.detail.sections.economics')}>
         {economics && (
           <>
@@ -297,9 +300,10 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
           </p>
         )}
       </Panel>
+      )}
 
       <form onSubmit={save} className="space-y-5">
-        {SECTIONS.map(([section, list]) => (
+        {SECTIONS.filter(([section]) => !(isWorkshop && section === 'pricing')).map(([section, list]) => (
           <Panel key={section} title={t(`vehicle.detail.sections.${section}`)}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{list.map(renderField)}</div>
           </Panel>
@@ -351,6 +355,7 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
         </form>
       </Panel>
 
+      {!isWorkshop && (
       <Panel title={t('vehicle.detail.sections.sell')}>
         {isSold ? (
           <p className="text-sm">
@@ -384,6 +389,9 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
         )}
       </Panel>
 
+      )}
+
+      {!isWorkshop && (
       <Panel title={t('vehicle.detail.sections.contracts')}>
         <Notice tone="amber">{t('vehicle.detail.contracts.note')}</Notice>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -457,6 +465,7 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
           </ul>
         )}
       </Panel>
+      )}
     </Drawer>
   )
 }

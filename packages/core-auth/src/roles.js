@@ -41,3 +41,18 @@ export function canEditCompanySettings(role) {
 export function canManageUsers(role) {
   return role === 'inhaber'
 }
+
+/**
+ * Einkaufs- und Verkaufspreise, Wirtschaftlichkeit des einzelnen Fahrzeugs: wie im Manager
+ * (packages/core-billing/src/economics.js) sieht die verkaufende Person sie am Fahrzeug —
+ * ohne das kennt sie ihre Preisuntergrenze nicht. Die Werkstatt nicht: sie arbeitet an
+ * Aufträgen und Kosten, nicht am Geschäft. Firmen-Summen regelt canSeeCompanyTotals().
+ */
+export function canSeePurchasePrices(role) {
+  return role === 'inhaber' || role === 'buchhaltung' || role === 'verkauf'
+}
+
+/** Rechnungen, Zahlungen, Mahnungen, Verträge, Belegarchiv, Verkauf abschliessen: nicht die Werkstatt. */
+export function canBill(role) {
+  return role !== 'werkstatt'
+}

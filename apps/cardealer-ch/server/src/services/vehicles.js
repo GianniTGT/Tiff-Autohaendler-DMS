@@ -126,9 +126,27 @@ async function computeNotionalInputTaxRappen(client, { vatScheme, purchaseFrom, 
   return rate ? notionalInputTax(purchasePriceRappen, rate.rate_percent) : 0
 }
 
+const MONEY_FIELDS = ['purchasePriceRappen', 'askingPriceRappen', 'soldPriceRappen', 'purchaseVatRappen']
+
+/** Geldfelder sind ganze Rappen oder leer — alles andere wäre ein stiller Datenfehler (z. B. NaN -> null). */
+function badInput(message) {
+  return Object.assign(new Error(message), { statusCode: 400 })
+}
+
+function assertMoneyFields(fields) {
+  for (const key of MONEY_FIELDS) {
+    const v = fields[key]
+    if (v === undefined || v === null) continue
+    if (!Number.isInteger(Number(v)) || Number(v) < 0 || v === '') {
+      throw badInput(`${key}: Beträge müssen ganze Rappen (≥ 0) sein.`)
+    }
+  }
+}
+
 export async function createVehicle(tenantId, fields) {
+  assertMoneyFields(fields)
   return withTenant(tenantId, async (client) => {
-    const notionalInputTaxRappen = await computeNotionalInputTaxRappen(client, fields)
+    const notionalInputTaxRappen = await computeNotionalInputTaxRappen(client, { ...fields, vatScheme: fields.vatScheme ?? 'notional_input_tax' })
     const { columns, placeholders, values } = toRow({ ...fields, notionalInputTaxRappen })
     const result = await client.query(
       `INSERT INTO vehicles (id, tenant_id, ${columns.join(', ')})
@@ -141,6 +159,7 @@ export async function createVehicle(tenantId, fields) {
 }
 
 export async function updateVehicle(tenantId, id, fields) {
+  assertMoneyFields(fields)
   return withTenant(tenantId, async (client) => {
     const existingResult = await client.query(
       'SELECT vat_scheme, purchase_from, purchase_price_rappen, purchased_at FROM vehicles WHERE id = $1',
@@ -149,11 +168,14 @@ export async function updateVehicle(tenantId, id, fields) {
     const existing = existingResult.rows[0]
     if (!existing) return null
 
+    // Ein ausdrücklich gesendetes null (Feld geleert) gilt — es darf nicht auf den alten Wert zurückfallen,
+    // sonst bliebe die fiktive Vorsteuer (Beweislage gegenüber der ESTV) für einen gelöschten Preis stehen.
+    const merged = (key, column) => (fields[key] !== undefined ? fields[key] : existing[column])
     const notionalInputTaxRappen = await computeNotionalInputTaxRappen(client, {
-      vatScheme: fields.vatScheme ?? existing.vat_scheme,
-      purchaseFrom: fields.purchaseFrom ?? existing.purchase_from,
-      purchasePriceRappen: fields.purchasePriceRappen ?? existing.purchase_price_rappen,
-      purchasedAt: fields.purchasedAt ?? existing.purchased_at,
+      vatScheme: merged('vatScheme', 'vat_scheme'),
+      purchaseFrom: merged('purchaseFrom', 'purchase_from'),
+      purchasePriceRappen: merged('purchasePriceRappen', 'purchase_price_rappen'),
+      purchasedAt: merged('purchasedAt', 'purchased_at'),
     })
 
     const { columns, values } = toRow({ ...fields, notionalInputTaxRappen })

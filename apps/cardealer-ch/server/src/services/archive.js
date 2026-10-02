@@ -39,7 +39,7 @@ export async function archivePdf(tenantId, { documentId, userId, pdfBuffer, obje
   const hash = createHash('sha256').update(pdfBuffer).digest('hex')
 
   return withTenant(tenantId, async (client) => {
-    const docResult = await client.query('SELECT pdf_hash, pdf_storage_key FROM documents WHERE id = $1', [
+    const docResult = await client.query('SELECT pdf_hash, pdf_storage_key FROM documents WHERE id = $1 FOR UPDATE', [
       documentId,
     ])
     const existing = docResult.rows[0]
@@ -98,7 +98,7 @@ export async function getArchivedPdf(tenantId, documentId, { objectStore = defau
  */
 export async function archiveIfComplete(tenantId, userId, document, render) {
   try {
-    const missing = describeMissingQrBillData(document.tenant, document.party)
+    const missing = describeMissingQrBillData(document.tenant, document.party, document)
     if (missing) return { archived: false, reason: missing }
     await archivePdf(tenantId, { documentId: document.id, userId, pdfBuffer: await render(document) })
     return { archived: true }

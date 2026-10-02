@@ -75,7 +75,18 @@ export async function verifyArchived(tenantId, documentId) {
 }
 
 const FOLDER = { invoice: 'Rechnungen', reminder: 'Mahnungen', sale_contract: 'Kaufvertraege', purchase_contract: 'Ankaufsvertraege' }
-const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+/**
+ * CSV-Zelle in Anführungszeichen. Beginnt der Text mit = + - @ (oder Tab/CR),
+ * würde Excel ihn als Formel ausführen — der Name einer öffentlichen Anfrage
+ * landet hier über den Kunden. Ein vorangestelltes ' macht daraus Text.
+ */
+export const csvCell = (v) => {
+  let text = String(v ?? '')
+  // Zeichencodes statt Zeichenklasse: = + - @ Tab Zeilenumbruch
+  const first = text.charCodeAt(0)
+  if ([61, 43, 45, 64, 9, 13].includes(first)) text = `'${text}`
+  return `"${text.replace(/"/g, '""')}"`
+}
 
 /**
  * Das ganze Belegarchiv als ZIP: alle archivierten PDFs nach Art geordnet,

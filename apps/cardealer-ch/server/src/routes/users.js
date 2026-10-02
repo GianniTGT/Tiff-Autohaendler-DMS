@@ -1,5 +1,6 @@
 import { canManageUsers } from '@tiff/core-auth'
 import { listUsers, addUser, updateUser } from '../services/users.js'
+import { clientMessage } from './http-errors.js'
 
 const forbidden = (reply) => reply.code(403).send({ ok: false, error: 'Nur der Inhaber darf Benutzer verwalten.' })
 
@@ -16,7 +17,7 @@ export async function registerUserRoutes(app) {
     try {
       return reply.code(201).send({ ok: true, data: await addUser(request.tenantId, request.body ?? {}) })
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 
@@ -26,7 +27,7 @@ export async function registerUserRoutes(app) {
       const user = await updateUser(request.tenantId, request.userId, request.params.id, request.body ?? {})
       return user ? { ok: true, data: user } : reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 }

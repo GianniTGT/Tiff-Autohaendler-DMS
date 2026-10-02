@@ -1,5 +1,6 @@
 import { canSeeCompanyTotals } from '@tiff/core-auth'
 import { getSalesReport, getStockReport } from '../services/reports.js'
+import { clientMessage } from './http-errors.js'
 
 /** Beide Berichte zeigen Einkaufspreise und Gewinne: nur Inhaber und Buchhaltung (roles.js: canSeeCompanyTotals). */
 export async function registerReportRoutes(app) {
@@ -11,7 +12,7 @@ export async function registerReportRoutes(app) {
     try {
       return { ok: true, data: await getSalesReport(request.tenantId, { from: request.query.from, to: request.query.to }) }
     } catch (err) {
-      return reply.code(400).send({ ok: false, error: err.message })
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }
   })
 

@@ -1,6 +1,7 @@
 import { listLeads, createLead, updateLead, deleteLead, convertLeadToParty } from '../services/leads.js'
+import { clientMessage } from './http-errors.js'
 
-const fail = (reply, err) => reply.code(400).send({ ok: false, error: err.message })
+const fail = (reply, err) => reply.code(400).send({ ok: false, error: clientMessage(err) })
 const notFound = (reply) => reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
 
 export async function registerLeadRoutes(app) {

@@ -88,7 +88,7 @@ test('Rollenmatrix über HTTP, Berichte, Zähler', { skip: !hasDb }, async (t) =
       'GET /api/users': [200, 403, 403, 403],
       'PATCH /api/tenant': [200, 403, 403, 403],
       'POST /api/tenant/logo': [400, 403, 403, 403], // 400 = Rolle ok, aber kein Bild gesendet
-      'GET /api/archive': [200, 200, 200, 200],
+      'GET /api/archive': [200, 200, 200, 403],
       'GET /api/calendar?from=2026-10-01&to=2026-10-31': [200, 200, 200, 200],
       'GET /api/vehicles': [200, 200, 200, 200],
       'GET /api/leads': [200, 200, 200, 200],

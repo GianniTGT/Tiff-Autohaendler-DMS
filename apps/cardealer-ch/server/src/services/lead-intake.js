@@ -77,6 +77,9 @@ export class RateLimiter {
 }
 
 const defaultLimiter = new RateLimiter({ limit: 10, windowMs: 60_000 })
+// Alle Versuche je Adresse — auch solche mit falschem Schlüssel — damit niemand unbegrenzt
+// Datenbankabfragen auslösen oder Schlüssel durchprobieren kann.
+const defaultAttemptLimiter = new RateLimiter({ limit: 60, windowMs: 60_000 })
 
 async function lookup(slug) {
   const result = await withoutTenant((client) =>
@@ -97,7 +100,8 @@ const clean = (v, max) => (v == null ? '' : String(v).trim().slice(0, max))
  * @returns {Promise<{ok: true, accepted: boolean}>} `accepted: false` bei Spam-Falle — der Aufrufer meldet trotzdem "ok"
  * @throws {IntakeError}
  */
-export async function acceptPublicLead({ slug, key, payload, clientId = 'unknown', limiter = defaultLimiter }) {
+export async function acceptPublicLead({ slug, key, payload, clientId = 'unknown', limiter = defaultLimiter, attemptLimiter = defaultAttemptLimiter }) {
+  if (!attemptLimiter.allow(`attempt:${clientId}`)) throw new IntakeError(429, 'Zu viele Anfragen. Bitte später erneut versuchen.')
   const tenant = await lookup(slug)
   const given = Buffer.from(hashKey(key ?? ''), 'hex')
   const expected = Buffer.from(tenant?.lead_key_hash ?? '0'.repeat(64), 'hex')

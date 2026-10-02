@@ -67,6 +67,11 @@ export async function updateUser(tenantId, actingUserId, id, fields) {
 
     if (id === actingUserId && !nextActive) throw new Error('Sie können sich nicht selbst deaktivieren.')
     const losesOwnerSeat = existing.role === 'inhaber' && existing.active && (nextRole !== 'inhaber' || !nextActive)
+    if (losesOwnerSeat) {
+      // Alle aktiven Inhaber in fester Reihenfolge sperren: zwei Inhaber, die sich gleichzeitig herabstufen,
+      // sähen sich sonst gegenseitig noch als Inhaber, und beide Änderungen gingen durch.
+      await client.query("SELECT id FROM users WHERE role = 'inhaber' AND active ORDER BY id FOR UPDATE")
+    }
     if (losesOwnerSeat && (await activeOwnerCount(client, id)) === 0) {
       throw new Error('Es muss mindestens ein aktiver Inhaber bleiben.')
     }

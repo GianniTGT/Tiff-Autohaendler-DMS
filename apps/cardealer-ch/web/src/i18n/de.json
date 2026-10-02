@@ -899,7 +899,7 @@
       },
       "roles": {
         "title": "Rollen",
-        "body": "Inhaber: alles, auch Benutzer und Betriebsdaten. Buchhaltung: Firmenzahlen, Auswertungen und Archiv-Export. Verkauf und Werkstatt: arbeiten mit Fahrzeugen, Kunden, Anfragen, Aufträgen und Kalender, sehen aber keine Firmensummen. Wer gesperrt wird, ist sofort abgemeldet."
+        "body": "Inhaber: alles, auch Benutzer und Betriebsdaten. Buchhaltung: Firmenzahlen, Auswertungen, Rechnungswesen und Archiv-Export. Verkauf: Fahrzeuge mit Preisen und Wirtschaftlichkeit, Kunden, Anfragen, Rechnungen und Verträge, aber keine Firmensummen. Werkstatt: Fahrzeuge ohne Einkaufspreise, Aufträge, Kosten und Kalender — kein Rechnungswesen, keine Verträge, kein Archiv. Wer gesperrt wird, ist sofort abgemeldet."
       },
       "contracts": {
         "title": "Verträge",

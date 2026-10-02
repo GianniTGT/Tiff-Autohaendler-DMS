@@ -79,7 +79,7 @@ export async function deleteAppointment(tenantId, id) {
 }
 
 /** Alle Ereignisse zwischen zwei Tagen (einschliesslich), Fristen und Termine gemischt. */
-export async function getEvents(tenantId, { from, to, today }) {
+export async function getEvents(tenantId, { from, to, today, includeInvoices = true }) {
   if (!DAY.test(String(from)) || !DAY.test(String(to))) throw new Error('from und to müssen JJJJ-MM-TT sein.')
   return withTenant(tenantId, async (client) => {
     const vehicles = (
@@ -98,7 +98,7 @@ export async function getEvents(tenantId, { from, to, today }) {
     }))
 
     // Unbezahlte Rechnungen: Total minus Zahlungen > 0. Kein Betrag geht in den Kalender.
-    const openInvoices = (
+    const openInvoices = !includeInvoices ? [] : (
       await client.query(
         `SELECT d.id, d.number, d.due_date,
                 COALESCE(p.company_name, NULLIF(TRIM(CONCAT_WS(' ', p.first_name, p.last_name)), '')) AS party_name

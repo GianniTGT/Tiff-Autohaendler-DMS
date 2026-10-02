@@ -42,12 +42,13 @@ export default function Archive({ role }) {
     }
   }
 
-  /** Das PDF abzurufen archiviert es beim ersten Mal (routes/invoices.js) — hier ohne es zu öffnen. */
+  /** Legt den Beleg ab, wenn er vollständig ist; sonst sagt der Server, was fehlt. */
   async function archiveNow(row) {
     setBusyId(row.id)
+    setError(null)
     try {
-      const response = await fetch(pdfUrl(row), { credentials: 'include' })
-      if (!response.ok) throw new Error((await response.json().catch(() => null))?.error ?? `HTTP ${response.status}`)
+      const result = await api.post(`/api/documents/${row.id}/archive`)
+      if (!result.archived) setError(`${row.number}: ${result.reason}`)
       await reload()
     } catch (err) {
       setError(err.message)

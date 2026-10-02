@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin'
 import cookie from '@fastify/cookie'
+import { canBill } from '@tiff/core-auth'
 import { validateSessionCookie } from '../services/auth.js'
 
 export const SESSION_COOKIE_NAME = 'tiff_session'
@@ -27,5 +28,13 @@ export default fp(async function authPlugin(fastify) {
     request.tenantId = session.tenantId
     request.userId = session.userId
     request.role = session.role
+  })
+
+  // Nach requireAuth verwenden: preHandler: [app.requireAuth, app.requireBilling]
+  fastify.decorate('requireBilling', async function requireBilling(request, reply) {
+    if (!canBill(request.role)) {
+      reply.code(403).send({ ok: false, error: 'Dafür fehlt die Berechtigung (Rechnungen, Verträge und Archiv sind nicht für die Werkstatt).' })
+      return reply
+    }
   })
 })

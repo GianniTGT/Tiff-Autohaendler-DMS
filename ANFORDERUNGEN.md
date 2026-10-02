@@ -223,8 +223,10 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Adressen) — sonst bleiben sie „nicht archiviert“ und die Oberfläche sagt warum; AutoScout24-Secret
   AES-256-GCM-verschlüsselt (`APP_SECRET_KEY`); archivierte Belege sind für die Anwendungsrolle auf
   Datenbankebene weder löschbar noch umhängbar (Trigger, `session_user`; Mandanten löscht nur die
-  Wartung); ZIP-Export des ganzen Archivs mit Index und Prüfhinweis. **Noch offen:** Anfragen
-  automatisch von der Website/AutoScout24 empfangen (öffentliche, abgesicherte Schnittstelle), Fotos
+  Wartung); ZIP-Export des ganzen Archivs mit Index und Prüfhinweis. **Rollen (entschieden):** Verkauf sieht Preise und Wirtschaftlichkeit
+  des einzelnen Fahrzeugs (wie im Manager), Werkstatt nicht und hat kein Rechnungswesen/Archiv/Verträge
+  (`canSeePurchasePrices`, `canBill` in `roles.js`; mit dem Piloten zu bestätigen). Anfragen von der
+  Website kommen über einen Schlüssel-geschützten Eingang. **Noch offen:** Fotos
   an AutoScout24 mitschicken, abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als
   Datenstrom für sehr grosse Archive.
 
