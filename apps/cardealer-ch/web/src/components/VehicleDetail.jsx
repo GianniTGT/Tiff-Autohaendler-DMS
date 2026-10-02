@@ -114,6 +114,7 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
   const [vehicle, setVehicle] = useState(null)
   const [economics, setEconomics] = useState(null)
   const [costs, setCosts] = useState([])
+  const [issued, setIssued] = useState([])
   const [parties, setParties] = useState([])
   const [form, setForm] = useState(null)
   const [costForm, setCostForm] = useState({ kind: 'part', description: '', amount: '' })
@@ -125,12 +126,14 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
 
   async function load() {
     try {
-      const [v, e, c, p] = await Promise.all([
+      const [v, e, c, p, ic] = await Promise.all([
         api.get(`/api/vehicles/${vehicleId}`),
         api.get(`/api/vehicles/${vehicleId}/economics`),
         api.get(`/api/vehicles/${vehicleId}/costs`),
         api.get('/api/parties'),
+        api.get(`/api/vehicles/${vehicleId}/contracts`),
       ])
+      setIssued(ic)
       setVehicle(v)
       setEconomics(e)
       setCosts(c)
@@ -178,6 +181,16 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
       setCostForm({ kind: costForm.kind, description: '', amount: '' })
     })
   }
+
+  const issue = (kind) =>
+    run(async () => {
+      const contract = await api.post(`/api/vehicles/${vehicleId}/contracts`, {
+        kind,
+        partyId: (kind === 'sale' ? contracts.buyerId : contracts.sellerId) || undefined,
+        warrantyMonths: kind === 'sale' ? contracts.warrantyMonths : undefined,
+      })
+      setMessage(t('vehicle.detail.contracts.done', { number: contract.number }))
+    })
 
   const removeCost = (costId) => run(() => api.del(`/api/vehicles/${vehicleId}/costs/${costId}`))
 
@@ -386,9 +399,15 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
                 ))}
               </select>
             </label>
-            <a className="btn-ghost w-full" href={`/api/vehicles/${vehicle.id}/ankaufsvertrag.pdf${sellerQuery}`} target="_blank" rel="noreferrer">
-              {t('vehicle.detail.contracts.ankauf')}
-            </a>
+            <div className="grid grid-cols-2 gap-2">
+              <a className="btn-ghost" href={`/api/vehicles/${vehicle.id}/ankaufsvertrag.pdf${sellerQuery}`} target="_blank" rel="noreferrer">
+                {t('vehicle.detail.contracts.preview')}
+              </a>
+              <button type="button" className="btn" disabled={busy} onClick={() => issue('purchase')}>
+                {t('vehicle.detail.contracts.issue')}
+              </button>
+            </div>
+            <p className="text-xs text-steel">{t('vehicle.detail.contracts.ankauf')}</p>
           </div>
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
@@ -408,11 +427,35 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
                 <input className="field" inputMode="numeric" value={contracts.warrantyMonths} onChange={(e) => setContracts({ ...contracts, warrantyMonths: e.target.value })} />
               </label>
             </div>
-            <a className="btn-ghost w-full" href={`/api/vehicles/${vehicle.id}/kaufvertrag.pdf?${contractQuery}`} target="_blank" rel="noreferrer">
-              {t('vehicle.detail.contracts.kauf')}
-            </a>
+            <div className="grid grid-cols-2 gap-2">
+              <a className="btn-ghost" href={`/api/vehicles/${vehicle.id}/kaufvertrag.pdf?${contractQuery}`} target="_blank" rel="noreferrer">
+                {t('vehicle.detail.contracts.preview')}
+              </a>
+              <button type="button" className="btn" disabled={busy} onClick={() => issue('sale')}>
+                {t('vehicle.detail.contracts.issue')}
+              </button>
+            </div>
+            <p className="text-xs text-steel">{t('vehicle.detail.contracts.kauf')}</p>
           </div>
         </div>
+        <p className="mt-3 text-xs text-steel">{t('vehicle.detail.contracts.issueHint')}</p>
+        <h4 className="mt-4 text-xs font-semibold uppercase tracking-wider text-steel">{t('vehicle.detail.contracts.issued')}</h4>
+        {issued.length === 0 ? (
+          <p className="mt-1 text-sm text-steel">{t('vehicle.detail.contracts.none')}</p>
+        ) : (
+          <ul className="mt-1 divide-y divide-line text-sm">
+            {issued.map((c) => (
+              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                <span>
+                  <b>{c.number}</b> · {t(`vehicle.detail.contracts.types.${c.type}`)} · {c.partyName ?? t('common.none')} · {formatDay(c.issueDate)}
+                </span>
+                <a className="text-brand underline" href={`/api/documents/${c.id}/pdf`} target="_blank" rel="noreferrer">
+                  PDF
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </Panel>
     </Drawer>
   )

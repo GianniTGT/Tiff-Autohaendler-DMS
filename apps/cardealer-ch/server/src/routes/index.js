@@ -11,6 +11,7 @@ import { registerWorkshopRoutes } from './workshop.js'
 import { registerLeadRoutes } from './leads.js'
 import { registerUserRoutes } from './users.js'
 import { registerPhotoRoutes } from './photos.js'
+import { registerArchiveRoutes } from './archive.js'
 
 /**
  * Jede Route, die Mandantendaten anfasst, muss durch withTenant() aus
@@ -32,4 +33,5 @@ export async function registerRoutes(app) {
   await registerLeadRoutes(app)
   await registerUserRoutes(app)
   await registerPhotoRoutes(app)
+  await registerArchiveRoutes(app)
 }

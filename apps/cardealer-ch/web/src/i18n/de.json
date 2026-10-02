@@ -36,7 +36,8 @@
     "settings": "Einstellungen",
     "leads": "Anfragen",
     "listings": "Inserate",
-    "users": "Benutzer"
+    "users": "Benutzer",
+    "archive": "Archiv"
   },
   "status": {
     "in_stock": "Auf Lager",
@@ -248,7 +249,17 @@
         "seller": "Verkäufer (Privatperson)",
         "buyer": "Käufer",
         "warranty": "Gewährleistung (Monate)",
-        "choose": "— wählen —"
+        "choose": "— wählen —",
+        "issue": "Ausstellen und archivieren",
+        "preview": "Vorschau",
+        "issued": "Ausgestellte Verträge",
+        "none": "Noch keine Verträge ausgestellt.",
+        "issueHint": "Die Vorschau hat keine Nummer. Beim Ausstellen erhält der Vertrag eine Nummer und wird unveränderlich archiviert.",
+        "done": "Vertrag {number} ausgestellt und archiviert.",
+        "types": {
+          "sale_contract": "Kaufvertrag",
+          "purchase_contract": "Ankaufsvertrag"
+        }
       },
       "photos": {
         "add": "Fotos hinzufügen",
@@ -483,6 +494,13 @@
       "secretSaved": "Gespeichert — leer lassen, um es zu behalten",
       "secretMissing": "Noch nicht hinterlegt",
       "hint": "Wie ein Betrieb an diese Zugangsdaten kommt, ist mit AutoScout24 noch zu klären (ANFORDERUNGEN.md §10)."
+    },
+    "logo": {
+      "title": "Logo",
+      "hint": "Erscheint im Briefkopf von Rechnungen, Mahnungen und Verträgen. PNG oder JPEG, höchstens 2 MB. Bereits archivierte Belege bleiben unverändert.",
+      "upload": "Logo hochladen",
+      "remove": "Entfernen",
+      "none": "Noch kein Logo hinterlegt."
     }
   },
   "reports": {
@@ -725,5 +743,48 @@
     "created": "Benutzer angelegt.",
     "updated": "Gespeichert.",
     "passwordSet": "Neues Passwort gesetzt — alle Sitzungen dieser Person wurden beendet."
+  },
+  "archive": {
+    "title": "Belegarchiv",
+    "intro": "Rechnungen, Mahnungen und Verträge werden mit SHA-256-Hash unveränderlich abgelegt. Aufbewahrung: 10 Jahre (OR 958f, GeBüV).",
+    "empty": "Noch keine Belege.",
+    "types": {
+      "invoice": "Rechnung",
+      "reminder": "Mahnung",
+      "sale_contract": "Kaufvertrag",
+      "purchase_contract": "Ankaufsvertrag"
+    },
+    "filter": {
+      "all": "Alle",
+      "invoice": "Rechnungen",
+      "reminder": "Mahnungen",
+      "sale_contract": "Kaufverträge",
+      "purchase_contract": "Ankaufsverträge",
+      "open": "Nicht archiviert"
+    },
+    "cols": {
+      "number": "Nummer",
+      "type": "Art",
+      "date": "Datum",
+      "party": "Kunde",
+      "state": "Archiv",
+      "retain": "Aufbewahren bis"
+    },
+    "state": {
+      "archived": "Archiviert",
+      "notArchived": "Nicht archiviert"
+    },
+    "actions": {
+      "verify": "Prüfen",
+      "archive": "Jetzt archivieren",
+      "pdf": "PDF"
+    },
+    "verify": {
+      "ok": "Unverändert — Hash stimmt.",
+      "HASH_MISMATCH": "ACHTUNG: Die abgelegte Datei weicht vom gespeicherten Hash ab.",
+      "FILE_MISSING": "ACHTUNG: Die abgelegte Datei fehlt.",
+      "NOT_ARCHIVED": "Noch nicht archiviert."
+    },
+    "hash": "SHA-256"
   }
 }

@@ -7,7 +7,7 @@ import {
   sellVehicle,
 } from '../services/vehicles.js'
 import { listCosts, addCost, deleteCost } from '../services/vehicle-costs.js'
-import { renderKaufvertrag, renderAnkaufsvertrag } from '../services/contracts.js'
+import { renderKaufvertrag, renderAnkaufsvertrag, issueContract, listContracts } from '../services/contracts.js'
 
 export async function registerVehicleRoutes(app) {
   app.get('/api/vehicles', { preHandler: app.requireAuth }, async (request) => {
@@ -90,5 +90,23 @@ export async function registerVehicleRoutes(app) {
       sellerPartyId: request.query.sellerPartyId || undefined,
     })
     return sendContract(reply, buffer, 'Ankaufsvertrag.pdf')
+  })
+
+  app.get('/api/vehicles/:id/contracts', { preHandler: app.requireAuth }, async (request) => ({
+    ok: true,
+    data: await listContracts(request.tenantId, request.params.id),
+  }))
+
+  app.post('/api/vehicles/:id/contracts', { preHandler: app.requireAuth }, async (request, reply) => {
+    try {
+      const { kind, partyId, warrantyMonths } = request.body ?? {}
+      const contract = await issueContract(request.tenantId, request.userId, request.params.id, kind, {
+        partyId: partyId || undefined,
+        warrantyMonths: warrantyMonths ? Number(warrantyMonths) : undefined,
+      })
+      return contract ? reply.code(201).send({ ok: true, data: contract }) : reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
+    } catch (err) {
+      return reply.code(400).send({ ok: false, error: err.message })
+    }
   })
 }

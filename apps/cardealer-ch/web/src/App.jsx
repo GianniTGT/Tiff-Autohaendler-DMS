@@ -13,6 +13,7 @@ import InvoiceDetail from './components/InvoiceDetail.jsx'
 import Leads from './components/Leads.jsx'
 import Listings from './components/Listings.jsx'
 import Users from './components/Users.jsx'
+import Archive from './components/Archive.jsx'
 import Reports from './components/Reports.jsx'
 import Settings from './components/Settings.jsx'
 import lockup from './assets/tiff-lockup-horizontal.png'
@@ -30,6 +31,7 @@ const TABS = [
   { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList },
   { key: 'recon', label: 'nav.recon', Screen: Workshop },
   { key: 'calendar', label: 'nav.calendar', Screen: Calendar },
+  { key: 'archive', label: 'nav.archive', Screen: Archive },
   { key: 'reports', label: 'nav.reports', Screen: Reports, totalsOnly: true },
   { key: 'settings', label: 'nav.settings', Screen: Settings },
   { key: 'users', label: 'nav.users', Screen: Users, ownerOnly: true },
@@ -41,7 +43,7 @@ export default function App() {
   const [openVehicleId, setOpenVehicleId] = useState(null)
   const [openInvoiceId, setOpenInvoiceId] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [companyName, setCompanyName] = useState(null)
+  const [company, setCompany] = useState(null)
 
   useEffect(() => {
     api
@@ -54,7 +56,7 @@ export default function App() {
     if (!session) return
     api
       .get('/api/tenant')
-      .then((tenant) => setCompanyName(tenant.name))
+      .then((tenant) => setCompany({ name: tenant.name, hasLogo: tenant.hasLogo, version: Date.now() }))
       .catch(() => {})
   }, [session, refreshKey])
 
@@ -77,13 +79,16 @@ export default function App() {
 
   return (
     <div className="grid min-h-full grid-cols-[minmax(0,1fr)] lg:grid-cols-[230px_minmax(0,1fr)]">
-      <aside className="flex min-w-0 flex-col bg-brand py-5 text-on-brand lg:sticky lg:top-0 lg:h-screen">
+      <aside className="flex min-w-0 flex-col bg-brand py-5 text-on-brand lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
         <div className="mx-4 mb-4 rounded-tiff bg-white px-3 py-2.5">
           <img src={lockup} alt={t('app.vendor')} className="h-10 w-auto" />
         </div>
-        {companyName && (
+        {company && (
           <div className="mb-3 border-b border-white/15 px-5 pb-4">
-            <small className="block text-[11px] uppercase tracking-[2.5px] text-on-brand-dim">{companyName}</small>
+            {company.hasLogo && (
+              <img src={`/api/tenant/logo?v=${company.version}`} alt="" className="mb-2 max-h-12 max-w-[120px] rounded bg-white/95 object-contain p-1" />
+            )}
+            <small className="block text-[11px] uppercase tracking-[2.5px] text-on-brand-dim">{company.name}</small>
             <b className="block font-display text-xl font-bold uppercase tracking-wide text-on-brand-pure">{t('app.name')}</b>
           </div>
         )}

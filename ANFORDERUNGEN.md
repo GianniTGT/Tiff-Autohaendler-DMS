@@ -216,11 +216,15 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   und Auftragsfristen aus den Quelldaten abgeleitet, plus manuelle Termine; ohne Preise). Anfragen (Status, Fahrzeug, „zu Kunde machen“ ohne Duplikat), Inserate (AutoScout24: Übersicht,
   fehlende Pflichtfelder, übertragen/aktivieren/deaktivieren/entfernen), Benutzer (nur Inhaber; der
   letzte Inhaber und die eigene Person sind gegen Sperren geschützt, Sperre/neues Passwort beenden
-  Sitzungen sofort) und Fahrzeugfotos (Objektspeicher, Titelbild, Reihenfolge). **Noch offen:**
-  Betriebslogo auf den PDFs, Verträge im Belegarchiv ablegen (10 Jahre, OR 958f), Anfragen
-  automatisch von der Website/AutoScout24 empfangen (braucht eine öffentliche, abgesicherte
-  Schnittstelle), Fotos an AutoScout24 mitschicken, AutoScout24-Client-Secret verschlüsselt statt
-  im Klartext speichern.
+  Sitzungen sofort) und Fahrzeugfotos (Objektspeicher, Titelbild, Reihenfolge). Betriebslogo (Einstellungen → PDFs, Seitenleiste) und Belegarchiv-Ausbau: Verträge werden mit
+  Nummer (KV-/AV-JJJJ-NNNNN) ausgestellt und wie Rechnungen mit SHA-256 im Objektspeicher abgelegt;
+  Archiv-Ansicht mit Aufbewahrungsfrist (Ende des Belegjahres + 10 Jahre), „Jetzt archivieren“ und
+  Integritätsprüfung (erkennt veränderte und fehlende Dateien). **Noch offen:** Anfragen automatisch von
+  der Website/AutoScout24 empfangen (braucht eine öffentliche, abgesicherte Schnittstelle), Fotos an
+  AutoScout24 mitschicken, AutoScout24-Client-Secret verschlüsselt statt im Klartext speichern,
+  Rechnungen schon beim Ausstellen statt erst beim ersten PDF-Abruf archivieren, Löschschutz auf
+  Datenbankebene für archivierte Belege, Datenexport des Archivs (ZIP), abweichendes Geschäftsjahr
+  bei der Aufbewahrungsfrist.
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 

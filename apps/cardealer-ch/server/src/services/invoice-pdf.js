@@ -12,6 +12,7 @@ import { PAGE, letterhead, sectionBar, fieldRow, needSpace, footers, contentWidt
 import { formatMoney } from '@tiff/core-billing'
 import { buildQrBill } from '@tiff/core-billing/src/qr-invoice.js'
 import { REMINDER_LABEL } from './reminders.js'
+import { loadLogoBuffer } from './tenant-logo.js'
 
 /**
  * `swissqrbill` verlangt vollständige Adressfelder und stürzt sonst intern
@@ -89,6 +90,11 @@ function drawLineItems(doc, lines) {
  * (Belegarchiv, ANFORDERUNGEN.md §9) wäre bei jedem Abruf ein anderer,
  * obwohl das Dokument "dasselbe" bleiben soll.
  */
+/** Hängt das Betriebslogo an einen Beleg, damit renderInvoicePdf()/renderReminderPdf() es einbetten können. */
+export async function withLogo(tenantId, document) {
+  return document ? { ...document, logoBuffer: await loadLogoBuffer(tenantId) } : document
+}
+
 export function renderInvoicePdf(invoice) {
   return renderBillPdf(invoice, { title: 'RECHNUNG' })
 }
@@ -111,6 +117,8 @@ function renderBillPdf(invoice, { title }) {
     address: [tenant.address_street, [tenant.address_zip, tenant.address_city].filter(Boolean).join(' ')]
       .filter(Boolean)
       .join(', '),
+    // Vom Aufrufer vorab geladen (withLogo): das Rendern selbst bleibt synchron.
+    logo: invoice.logoBuffer ?? undefined,
   }
 
   letterhead(doc, { dealer, title, docNo: invoice.number, date: invoice.issue_date })

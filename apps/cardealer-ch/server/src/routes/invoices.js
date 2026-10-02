@@ -1,6 +1,6 @@
 import { canSeeCompanyTotals } from '@tiff/core-auth'
 import { createInvoice, getInvoice, listInvoices, listRemindersForInvoice } from '../services/invoices.js'
-import { renderInvoicePdfBuffer, renderReminderPdfBuffer } from '../services/invoice-pdf.js'
+import { renderInvoicePdfBuffer, renderReminderPdfBuffer, withLogo } from '../services/invoice-pdf.js'
 import { archivePdf, getArchivedPdf, ArchiveIntegrityError } from '../services/archive.js'
 import { recordPayment, listPayments } from '../services/payments.js'
 import { importCamt054 } from '../services/camt054-import.js'
@@ -36,7 +36,7 @@ export async function registerInvoiceRoutes(app) {
     if (!document) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
     let buffer = await getArchivedPdf(request.tenantId, document.id)
     if (!buffer) {
-      buffer = await render(document)
+      buffer = await render(await withLogo(request.tenantId, document))
       try {
         await archivePdf(request.tenantId, { documentId: document.id, userId: request.userId, pdfBuffer: buffer })
       } catch (err) {

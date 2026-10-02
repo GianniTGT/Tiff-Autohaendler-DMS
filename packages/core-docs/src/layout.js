@@ -167,9 +167,11 @@ export function letterhead(doc, { dealer, title, docNo, date, onLogoError }) {
   let textLeft = left
   const color = dealer.color || BRAND_DEFAULT
 
-  if (dealer.logoPath && fs.existsSync(dealer.logoPath)) {
+  // `dealer.logo` ist ein Buffer (Cloud: Logo liegt im Objektspeicher), `logoPath` ein Dateipfad.
+  const logoSource = dealer.logo ?? (dealer.logoPath && fs.existsSync(dealer.logoPath) ? dealer.logoPath : null)
+  if (logoSource) {
     try {
-      doc.image(dealer.logoPath, left, top, { fit: [58, 44] })
+      doc.image(logoSource, left, top, { fit: [58, 44] })
       textLeft += 70
     } catch (err) {
       onLogoError?.(err)

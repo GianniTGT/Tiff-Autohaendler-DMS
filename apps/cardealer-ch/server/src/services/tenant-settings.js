@@ -32,6 +32,7 @@ function camelize(row) {
     if (!WRITE_ONLY.has(key)) out[key] = row[column] ?? null
   }
   out.autoscout24HasSecret = Boolean(row.autoscout24_client_secret)
+  out.hasLogo = Boolean(row.logo_storage_key)
   return out
 }
 

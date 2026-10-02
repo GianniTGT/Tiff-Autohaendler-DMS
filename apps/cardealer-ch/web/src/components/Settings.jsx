@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../api.js'
 import { t } from '../i18n/index.js'
 import { PageHeader, Panel, Notice } from './ui.jsx'
@@ -18,6 +18,8 @@ export default function Settings({ onSettingsChanged }) {
   const [error, setError] = useState(null)
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [logoVersion, setLogoVersion] = useState(Date.now())
+  const logoInput = useRef(null)
 
   const apply = (data) => {
     setTenant(data)
@@ -39,6 +41,22 @@ export default function Settings({ onSettingsChanged }) {
       .then(apply)
       .catch((err) => setError(err.message))
   }, [])
+
+  /** Logo hoch- oder herunterladen: eigener Weg, nicht Teil des Formulars (Bytes statt Felder). */
+  async function changeLogo(action) {
+    setBusy(true)
+    setError(null)
+    try {
+      await action()
+      setTenant({ ...(await api.get('/api/tenant')) })
+      setLogoVersion(Date.now())
+      onSettingsChanged?.()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function save(event) {
     event.preventDefault()
@@ -82,6 +100,42 @@ export default function Settings({ onSettingsChanged }) {
               </label>
             ))}
           </div>
+        </Panel>
+
+        <Panel title={t('settings.logo.title')}>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex h-16 w-32 items-center justify-center rounded-lg border border-line-strong bg-white p-1">
+              {tenant.hasLogo ? (
+                <img src={`/api/tenant/logo?v=${logoVersion}`} alt="" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <span className="text-center text-xs text-mist">{t('settings.logo.none')}</span>
+              )}
+            </div>
+            {!readOnly && (
+              <div className="flex gap-2">
+                <input
+                  ref={logoInput}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (file) changeLogo(() => api.upload('/api/tenant/logo', file))
+                  }}
+                />
+                <button type="button" className="btn-ghost" disabled={busy} onClick={() => logoInput.current?.click()}>
+                  {t('settings.logo.upload')}
+                </button>
+                {tenant.hasLogo && (
+                  <button type="button" className="btn-ghost" disabled={busy} onClick={() => changeLogo(() => api.del('/api/tenant/logo'))}>
+                    {t('settings.logo.remove')}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <p className="mt-2 text-xs text-steel">{t('settings.logo.hint')}</p>
         </Panel>
 
         <Panel title={t('settings.vat.title')}>

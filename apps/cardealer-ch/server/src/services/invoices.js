@@ -26,6 +26,8 @@ export const DOCUMENT_NUMBER_PREFIX = Object.freeze({
   invoice: 'RE',
   reminder: 'MA',
   credit_note: 'GS',
+  purchase_contract: 'AV',
+  sale_contract: 'KV',
 })
 
 /**
