@@ -14,6 +14,7 @@ import Leads from './components/Leads.jsx'
 import Listings from './components/Listings.jsx'
 import Users from './components/Users.jsx'
 import Archive from './components/Archive.jsx'
+import Help from './components/Help.jsx'
 import Reports from './components/Reports.jsx'
 import Settings from './components/Settings.jsx'
 import lockup from './assets/tiff-lockup-horizontal.png'
@@ -35,6 +36,7 @@ const TABS = [
   { key: 'reports', label: 'nav.reports', Screen: Reports, totalsOnly: true },
   { key: 'settings', label: 'nav.settings', Screen: Settings },
   { key: 'users', label: 'nav.users', Screen: Users, ownerOnly: true },
+  { key: 'help', label: 'nav.help', Screen: Help },
 ]
 
 export default function App() {
@@ -133,6 +135,7 @@ export default function App() {
             userId={session.userId}
             onOpenVehicle={setOpenVehicleId}
             onOpenInvoice={setOpenInvoiceId}
+            onNavigate={setTab}
             onSettingsChanged={() => setRefreshKey((k) => k + 1)}
           />
         </main>

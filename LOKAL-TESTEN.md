@@ -120,3 +120,18 @@ Erst wenn:
 
 Bis dahin gilt: entwickelt und getestet wird lokal, der Server kommt erst
 für den Pilotbetrieb dazu.
+
+## Was es zum Ausprobieren gibt
+
+Nach dem Einloggen: **Hilfe** zeigt, was für den ersten echten Betrieb noch
+eingerichtet werden muss (Firma, UID, MWST-Art, QR-IBAN …). Für einen ersten
+Durchlauf mit dem Test-Betrieb genügt: Einstellungen → Firma, Adresse und
+QR-IBAN eintragen (z. B. `CH44 3199 9123 0008 8901 2`, eine gültige Test-QR-IBAN),
+dann ein Fahrzeug erfassen, einen Kunden anlegen und eine Rechnung erstellen.
+
+**Hinweis Neustart:** Ändern sich `tailwind.config.js` oder `.env`, den
+Web-Server bzw. Server einmal neu starten (`npm run dev:web` / `dev:server`).
+
+**Tests:** `npm test` im Projektordner. Die Integrationstests legen eigene
+Test-Betriebe an und räumen sie wieder weg; sie brauchen die `.env` aus dem
+Abschnitt oben.

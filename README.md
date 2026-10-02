@@ -86,40 +86,67 @@ entwickelt und getestet wird lokal.
 
 ## Stand
 
-**Phase 1, 2 und 3 nach `ANFORDERUNGEN.md` §9 sind erreicht:** Login,
-Fahrzeuge/Kunden erfassen, Rechnung mit MWST und QR-Zahlteil, Zahlungen
-(manuell und per `camt.054`), Mahnwesen mit Verzugszins, MWST-Auswertung
-effektiv/Saldosteuersatz, Belegarchiv (echter Objektspeicher, nicht mehr nur
-ein Hash) und eine AutoScout24-Anbindung (Push-Richtung, Feld-Mapping und
-HTTP-Client fertig und getestet, aber nie gegen die echte API gelaufen — dafür
-fehlen Zugangsdaten, siehe unten). 143 automatisierte Tests, 98 davon im
-Server gegen eine echte PostgreSQL-Instanz inkl. RLS-Mandantentrennung.
+**Phase 1 bis 3 nach `ANFORDERUNGEN.md` §9 sind erreicht, Phase 4 (Oberfläche auf
+Niveau des Tiff Cardealer Managers) ist weit fortgeschritten.** Die Web-App
+hat: Übersicht, Fahrzeuge (Detail mit allen CH-Feldern, Kosten, Fotos, Verkauf,
+Verträge), Inserate (AutoScout24), Anfragen, Kunden, Rechnungen (Zahlungen,
+`camt.054`, Mahnwesen), Werkstatt, Kalender, Belegarchiv (inkl. ZIP-Export und
+Integritätsprüfung), Auswertungen (Gewinn, Lagerbestand, MWST), Einstellungen
+(Betrieb, Logo, QR-IBAN, AutoScout24, Anfragen-Eingang), Benutzer und Hilfe mit
+Einrichtungs-Checkliste. Design: Tiff-Grün/Gold, Barlow, Logo — aus dem Manager
+übernommen. Rollen: Inhaber, Buchhaltung, Verkauf, Werkstatt (Firmenzahlen nur
+für Inhaber/Buchhaltung, Verwaltung nur für den Inhaber).
 
-Drei echte Fehler kamen unterwegs ans Licht, die eine reine Unit-Test-Suite
-ohne echte Datenbank/Bibliotheken nie gefunden hätte:
-- ein `node-pg-migrate`-Default mit doppelten Anführungszeichen im SQL
-  (verletzte den `status`-Constraint bei jedem impliziten Insert),
-- ein Absturz in `swissqrbill`, wenn die Kundenadresse fehlt (Postgres liefert
-  `null`, nicht `undefined`),
-- Phase 2s Belegarchiv verglich beim erneuten Abruf einen frisch gerenderten
-  Hash — das hätte bei jedem künftigen PDF-Layout-Fix jede historische
-  Rechnung als "Integritätsfehler" gemeldet. Phase 3s Objektspeicher behebt
-  das: ein archiviertes PDF kommt aus dem Speicher, nie aus erneuter Erzeugung.
+**195 automatisierte Tests**, überwiegend gegen eine echte PostgreSQL-Instanz
+inkl. RLS-Mandantentrennung und einer Rollenmatrix über HTTP. Ausführen:
+`npm test` (Integrationstests brauchen `DATABASE_URL` und `MIGRATE_DATABASE_URL`
+aus der `.env`, sonst werden sie übersprungen).
 
-**Kaufvertrag und Ankaufsvertrag enthalten noch keinen rechtsgültigen
-Text** — siehe `LEGAL_REVIEW_STATUS` in `packages/core-docs/src/kaufvertrag.js`,
-das muss vor dem ersten echten Vertrag von einem Schweizer Anwalt geprüft
-werden. Die MWST-Auswertung ist nach bestem Wissen aus MWSTG Art. 28a/24a
-gebaut, aber nicht von einem Treuhänder bestätigt.
+Fehler, die erst echte Datenbank und Bibliotheken ans Licht brachten (eine
+reine Unit-Test-Suite hätte sie nicht gefunden):
+- ein `node-pg-migrate`-Default mit doppelten Anführungszeichen im SQL,
+- ein Absturz in `swissqrbill` bei fehlender Kundenadresse (`null` statt `undefined`),
+- das Belegarchiv verglich bei jedem Abruf einen frisch gerenderten Hash — ein
+  künftiger Layout-Fix hätte jede historische Rechnung als "Integritätsfehler"
+  gemeldet; jetzt kommt ein archiviertes PDF aus dem Speicher,
+- Postgres-`DATE`-Spalten kamen als zeitzonenverschobenes JS-Datum an, und
+  `findTaxRate` verglich Datum mit Text (immer `false`): der MWST-Satz wurde nie
+  nach Datum gewählt,
+- ein `DELETE FROM tenants` der Anwendungsrolle hätte über die Kaskade
+  archivierte Belege vernichtet, am Trigger vorbei (`session_user` statt
+  `current_user`, Löschrecht auf `tenants` entzogen).
 
-**Zwei Dinge sind gebaut, aber nie gegen echte Infrastruktur gelaufen** —
-mangels Zugangsdaten, nicht aus Nachlässigkeit: das S3-Objektspeicher-Backend
-(nur der lokale Dateisystem-Fallback ist getestet) und AutoScout24s
-Marken-/Modell-Nachschlagewerke (das angenommene Antwortformat steht in
-`integrations/autoscout24/lookup.js` und muss gegen die echte Preproduktion
-verifiziert werden, sobald Zugangsdaten bestehen).
+## Konfiguration (`.env`)
 
-**Noch offen:** eigene Website-Anbindung an `Tiff-Cardealer-Theme-Swiss` (dafür
-existiert noch keine Schweizer Website). Offerte, Auftrag, Lieferschein und
-Gutschrift existieren als Datenbanktabelle (siehe `documents.type`), sind
-aber noch nicht verdrahtet — nur `invoice` und `reminder` sind es.
+Siehe `.env.example`. Zusätzlich zu den Datenbank-URLs:
+- `APP_SECRET_KEY` (32 Byte, hex oder base64): Schlüssel für Geheimnisse in der
+  Datenbank (AutoScout24-Client-Secret, AES-256-GCM). **Im Betrieb Pflicht**
+  (`NODE_ENV=production`), lokal reicht ein fester Entwicklungsschlüssel.
+- `OBJECT_STORAGE_*`: S3-kompatibler Speicher für Belege, Fotos und Logo.
+  Ohne diese Angaben liegt alles unter `data/objects` — nur für die Entwicklung.
+
+**Anfragen von der Website:** unter Einstellungen einen Schlüssel erzeugen (wird
+nur einmal angezeigt) und die Website-Adresse hinterlegen. Die Website sendet
+dann `POST /api/public/leads/<slug>` mit Header `X-Api-Key`. Der Schlüssel kann
+nur Anfragen anlegen; begrenzt auf 10 pro Minute und Adresse (im Speicher dieses
+Prozesses — bei mehreren Servern braucht es einen gemeinsamen Speicher).
+
+## Was ein Mensch noch klären oder prüfen muss
+
+- **Kaufvertrag und Ankaufsvertrag** enthalten Entwurfstext (`LEGAL_REVIEW_STATUS`
+  in `packages/core-docs/src/kaufvertrag.js`) — vor dem ersten echten Vertrag von
+  einem Schweizer Anwalt prüfen lassen.
+- **MWST-Auswertung und fiktiver Vorsteuerabzug** sind nach bestem Wissen aus
+  MWSTG Art. 28a/24a gebaut, aber nicht von einem Treuhänder bestätigt.
+- **Nie gegen echte Infrastruktur gelaufen** (mangels Zugangsdaten): das
+  S3-Objektspeicher-Backend, der AutoScout24-Push samt Marken-/Modell-Nachschlagewerken
+  (angenommenes Antwortformat in `integrations/autoscout24/lookup.js`) und die
+  AutoScout24-Auswahlwerte (Farbe, Treibstoff, Zustand, …) im Fahrzeugformular.
+- **Aufbewahrungsfrist** rechnet mit dem Kalenderjahr (Ende des Belegjahres + 10 Jahre);
+  ein abweichendes Geschäftsjahr kann sie nur verlängern.
+
+## Noch offen
+
+Fotos an AutoScout24 mitschicken (braucht öffentliche Bild-URLs), Export des Archivs
+als Datenstrom für sehr grosse Bestände, Offerte/Auftrag/Lieferschein/Gutschrift
+(Tabelle vorbereitet, nicht verdrahtet), Anbindung an `Tiff-Cardealer-Theme-Swiss`.

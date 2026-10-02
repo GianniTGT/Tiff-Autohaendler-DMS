@@ -37,7 +37,8 @@
     "leads": "Anfragen",
     "listings": "Inserate",
     "users": "Benutzer",
-    "archive": "Archiv"
+    "archive": "Archiv",
+    "help": "Hilfe"
   },
   "status": {
     "in_stock": "Auf Lager",
@@ -839,5 +840,72 @@
     "hash": "SHA-256",
     "export": "Alles exportieren (ZIP)",
     "exportHint": "Enthält alle archivierten PDFs, eine Index-Tabelle mit SHA-256 und Aufbewahrungsfrist sowie eine Anleitung zur Prüfung."
+  },
+  "help": {
+    "title": "Hilfe",
+    "checklist": {
+      "title": "Einrichtung",
+      "allDone": "Alles Nötige ist eingerichtet.",
+      "open": "{n} Schritte fehlen noch, bevor die erste Rechnung rausgehen sollte.",
+      "optional": "(optional)",
+      "go": "Öffnen",
+      "items": {
+        "company": {
+          "title": "Firma und Adresse",
+          "why": "Erscheinen auf Rechnung, Verträgen und im QR-Zahlteil."
+        },
+        "uid": {
+          "title": "UID (CHE-…)",
+          "why": "Gehört auf die Rechnung eines MWST-pflichtigen Betriebs."
+        },
+        "vatMethod": {
+          "title": "MWST-Abrechnungsart",
+          "why": "Effektiv oder Saldosteuersatz — ohne Angabe gibt es keine MWST-Abrechnung. Mit dem Treuhänder festlegen."
+        },
+        "qrIban": {
+          "title": "QR-IBAN",
+          "why": "Ohne QR-IBAN hat die Rechnung keinen Zahlteil und wird nicht sofort archiviert. Bei der Bank bestellen."
+        },
+        "logo": {
+          "title": "Logo",
+          "why": "Erscheint im Briefkopf der PDFs."
+        },
+        "autoscout24": {
+          "title": "AutoScout24-Zugang",
+          "why": "Für Inserate. Die Zugangsdaten kommen von AutoScout24."
+        },
+        "leadKey": {
+          "title": "Anfragen-Eingang der Website",
+          "why": "Damit Formulare Ihrer Website Anfragen direkt hierher senden."
+        },
+        "firstVehicle": {
+          "title": "Erstes Fahrzeug",
+          "why": "Fahrzeug erfassen, dann Rechnung, Vertrag und Inserat daraus."
+        }
+      }
+    },
+    "topics": {
+      "vat": {
+        "title": "MWST beim Fahrzeughandel",
+        "body": "Der Normalfall ist nicht die Margenbesteuerung, sondern der fiktive Vorsteuerabzug (Art. 28a MWSTG): Kaufen Sie von einer Privatperson, rechnet das System die enthaltene MWST aus dem Einkaufspreis heraus und speichert sie am Fahrzeug. Der Satz gilt am Einkaufsdatum, nicht heute.\n\nDie MWST-Abrechnung unter Auswertungen ist ein Entwurf. Sie muss von einem Treuhänder bestätigt werden, bevor sie an die ESTV geht."
+      },
+      "qr": {
+        "title": "QR-Rechnung",
+        "body": "Rechnungen erhalten einen QR-Zahlteil mit Referenz, sobald eine QR-IBAN hinterlegt ist und Betrieb und Kunde eine vollständige Adresse haben. Zahlungen lesen Sie als camt.054-Datei Ihrer Bank unter Rechnungen ein; das System ordnet sie über die QR-Referenz zu und bucht sie. Dieselbe Datei zweimal einzulesen bucht nichts doppelt.\n\nAb der 3. Mahnung entscheidet ein Mensch (Betreibung)."
+      },
+      "archive": {
+        "title": "Belegarchiv",
+        "body": "Rechnungen, Mahnungen und Verträge werden als PDF mit SHA-256-Hash unveränderlich abgelegt und 10 Jahre aufbewahrt (OR 958f). Archivierte Belege können nicht gelöscht oder umgehängt werden. Unter Archiv prüfen Sie jederzeit, ob eine Datei noch dem Hash entspricht, und exportieren alles als ZIP.\n\nFehlen QR-IBAN oder Adressen, wird der Beleg noch nicht archiviert — damit nicht ein unvollständiges PDF für immer festgeschrieben wird."
+      },
+      "roles": {
+        "title": "Rollen",
+        "body": "Inhaber: alles, auch Benutzer und Betriebsdaten. Buchhaltung: Firmenzahlen, Auswertungen und Archiv-Export. Verkauf und Werkstatt: arbeiten mit Fahrzeugen, Kunden, Anfragen, Aufträgen und Kalender, sehen aber keine Firmensummen. Wer gesperrt wird, ist sofort abgemeldet."
+      },
+      "contracts": {
+        "title": "Verträge",
+        "body": "Kauf- und Ankaufsvertrag sind Entwürfe und von einem Schweizer Anwalt zu prüfen, bevor der erste echte Vertrag unterschrieben wird. Die Vorschau hat keine Nummer; «Ausstellen und archivieren» vergibt die Nummer und legt das PDF ab."
+      }
+    },
+    "contact": "Fragen oder Probleme? Tiff Software Solutions — info@tiff-software-solutions.com"
   }
 }
