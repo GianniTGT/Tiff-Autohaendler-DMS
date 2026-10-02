@@ -57,8 +57,15 @@ notepad .env
 ```
 MIGRATE_DATABASE_URL=postgres://tiff_migrator:devpass@localhost:5432/tiff_autohaendler_dms
 DATABASE_URL=postgres://tiff_app:devpass@localhost:5432/tiff_autohaendler_dms
-PORT=3000
+PORT=3010
 ```
+
+**Warum 3010 und nicht 3000:** Port 3000 ist der Standard-Port sehr vieler
+Node-Projekte (z.B. Next.js). Läuft parallel ein anderes Projekt auf
+demselben PC, das ebenfalls Port 3000 benutzt, landet man beim Testen
+aus Versehen im falschen Projekt — der Login scheint dann mit "falschem
+Passwort" zu scheitern, obwohl in Wirklichkeit die Anfrage beim anderen
+Projekt ankommt. 3010 ist bewusst unüblich, um genau das zu vermeiden.
 
 **Zwei verschiedene Passwörter, nicht verwechseln:** `devpass` hier ist
 **kein Platzhalter** — das ist der feste Wert, den `dev-setup.sql` oben

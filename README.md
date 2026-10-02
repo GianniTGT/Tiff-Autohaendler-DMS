@@ -72,8 +72,8 @@ npm run migrate                       # Postgres-Schema aufbauen
 npm run seed:dev-tenant --workspace packages/core-db -- \
   --slug=mein-betrieb --name="Mein Betrieb AG" --email=ich@example.com --password="..."
 
-npm run dev:server                    # Fastify, Port 3000
-npm run dev:web                       # Vite, proxied /api auf :3000
+npm run dev:server                    # Fastify, Port 3010 (bewusst nicht 3000, siehe .env.example)
+npm run dev:web                       # Vite, proxied /api auf :3010
 ```
 
 Anmelden im Browser (`http://localhost:5173`) mit dem oben gewählten Slug,
