@@ -433,5 +433,107 @@
     "payable": "Geschuldete MWST",
     "disclaimer": "Entwurf — von einem Treuhänder bestätigen lassen, bevor eine Abrechnung an die ESTV geht.",
     "notConfigured": "Für diesen Betrieb ist noch keine MWST-Methode hinterlegt. Bitte unter Einstellungen festlegen (mit dem Treuhänder)."
+  },
+  "workshop": {
+    "title": "Werkstatt",
+    "add": "+ Auftrag erfassen",
+    "empty": "Keine offenen Aufträge. Erfassen Sie, was an einem Fahrzeug noch zu tun ist.",
+    "form": {
+      "vehicle": "Fahrzeug wählen",
+      "kind": "Art",
+      "description": "Was ist zu tun?",
+      "estimate": "Schätzung (CHF, optional)",
+      "due": "Bis wann (optional)",
+      "save": "Auftrag speichern",
+      "noVehicles": "Erfassen Sie zuerst ein Fahrzeug."
+    },
+    "status": {
+      "open": "Offen",
+      "doing": "In Arbeit",
+      "done": "Erledigt",
+      "dropped": "Verworfen"
+    },
+    "actions": {
+      "start": "Starten",
+      "pause": "Zurück auf offen",
+      "done": "Erledigt",
+      "drop": "Verwerfen",
+      "reopen": "Wieder öffnen",
+      "delete": "Löschen"
+    },
+    "doneForm": {
+      "amount": "Tatsächliche Kosten (CHF)",
+      "hint": "Mit Betrag entsteht eine Kostenzeile am Fahrzeug.",
+      "confirm": "Als erledigt buchen",
+      "cancel": "Abbrechen"
+    },
+    "summary": {
+      "outstanding": "{n} offen",
+      "unknown": "{n} ohne Schätzung",
+      "estimate": "Geschätzt",
+      "spent": "Ausgegeben",
+      "waiting": "wartet seit {n} Tagen",
+      "waitingToday": "seit heute",
+      "nextDue": "Nächste Frist",
+      "overdue": "überfällig",
+      "dueOn": "Frist"
+    }
+  },
+  "calendar": {
+    "title": "Kalender",
+    "today": "Heute",
+    "add": "+ Termin",
+    "empty": "Nichts an diesem Tag.",
+    "more": "+{n} weitere",
+    "weekdays": {
+      "0": "Mo",
+      "1": "Di",
+      "2": "Mi",
+      "3": "Do",
+      "4": "Fr",
+      "5": "Sa",
+      "6": "So"
+    },
+    "months": {
+      "0": "Januar",
+      "1": "Februar",
+      "2": "März",
+      "3": "April",
+      "4": "Mai",
+      "5": "Juni",
+      "6": "Juli",
+      "7": "August",
+      "8": "September",
+      "9": "Oktober",
+      "10": "November",
+      "11": "Dezember"
+    },
+    "kinds": {
+      "invoice_due": "Rechnung fällig",
+      "delivery": "Übergabe",
+      "inspection": "MFK läuft ab",
+      "job_due": "Werkstattfrist",
+      "viewing": "Besichtigung",
+      "test_drive": "Probefahrt",
+      "appointment": "Termin",
+      "other": "Anderes",
+      "sold": "Verkauft",
+      "acquired": "Eingekauft"
+    },
+    "form": {
+      "title": "Titel",
+      "kind": "Art",
+      "date": "Datum",
+      "time": "Uhrzeit",
+      "vehicle": "Fahrzeug (optional)",
+      "note": "Notiz",
+      "save": "Termin speichern",
+      "none": "— kein Fahrzeug —"
+    },
+    "markDone": "Erledigt",
+    "markOpen": "Wieder offen",
+    "delete": "Löschen",
+    "overdue": "überfällig",
+    "legendHint": "Rot = überfällig"
   }
 }

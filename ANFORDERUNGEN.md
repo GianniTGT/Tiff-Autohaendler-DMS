@@ -211,8 +211,10 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   CH-Feldern, Kosten, Verkauf abschliessen und Vertrags-PDFs; Rechnungs-Detail mit Zahlungen,
   `camt.054`-Upload, Mahnungen (inkl. Mahnungs-PDF); Auswertungen (MWST); Einstellungen (Betriebsdaten,
   MWST-Methode, QR-IBAN mit Prüfziffernkontrolle). Design: Tiff-Grün/Gold, Barlow (selbst ausgeliefert),
-  Logo — aus `Tiff-Cardealer-Manager` übernommen. **Noch offen:** Werkstatt-Board und Kalender,
-  Anfragen (Leads), AutoScout24-Inserate verwalten, Benutzer/Rollen verwalten, Fahrzeugfotos,
+  Logo — aus `Tiff-Cardealer-Manager` übernommen. Werkstatt (Aufträge mit Schätzung, Board, ein
+  erledigter Auftrag mit Betrag schreibt die Kostenzeile am Fahrzeug) und Kalender (MFK, Rechnungs-
+  und Auftragsfristen aus den Quelldaten abgeleitet, plus manuelle Termine; ohne Preise). **Noch
+  offen:** Anfragen (Leads), AutoScout24-Inserate verwalten, Benutzer/Rollen verwalten, Fahrzeugfotos,
   Betriebslogo auf den PDFs, Verträge im Belegarchiv ablegen (10 Jahre, OR 958f).
 
 ## 10. Was ein Mensch klären muss (nicht Code)

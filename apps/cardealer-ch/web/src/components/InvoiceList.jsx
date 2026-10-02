@@ -3,7 +3,6 @@ import { api } from '../api.js'
 import { formatMoney, francsToRappen } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import InvoiceDetail from './InvoiceDetail.jsx'
 import { PageHeader, Tag, Notice, formatDay, todayIso } from './ui.jsx'
 
 const EMPTY_FORM = { partyId: '', vehicleId: '', description: '', price: '' }
@@ -16,7 +15,7 @@ export function invoiceState(invoice, today = todayIso()) {
 }
 const STATE_TONE = { issued: 'amber', paid: 'green', overdue: 'red' }
 
-export default function InvoiceList() {
+export default function InvoiceList({ onOpenInvoice }) {
   const [invoices, setInvoices] = useState(null)
   const [parties, setParties] = useState([])
   const [vehicles, setVehicles] = useState([])
@@ -25,7 +24,6 @@ export default function InvoiceList() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('all')
-  const [openId, setOpenId] = useState(null)
   const [camtResult, setCamtResult] = useState(null)
   const fileInput = useRef(null)
 
@@ -216,7 +214,7 @@ export default function InvoiceList() {
               {visible.map((i) => {
                 const state = invoiceState(i, today)
                 return (
-                  <tr key={i.id} className="cursor-pointer" onClick={() => setOpenId(i.id)}>
+                  <tr key={i.id} className="cursor-pointer" onClick={() => onOpenInvoice?.(i.id)}>
                     <td className="p-3 font-semibold text-ink">{i.number}</td>
                     <td className="p-3">
                       {i.party_id
@@ -238,7 +236,6 @@ export default function InvoiceList() {
         </div>
       )}
 
-      {openId && <InvoiceDetail invoiceId={openId} onClose={() => setOpenId(null)} onChanged={reload} />}
     </div>
   )
 }

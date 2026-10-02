@@ -7,6 +7,9 @@ import VehicleList from './components/VehicleList.jsx'
 import VehicleDetail from './components/VehicleDetail.jsx'
 import CustomerList from './components/CustomerList.jsx'
 import InvoiceList from './components/InvoiceList.jsx'
+import Workshop from './components/Workshop.jsx'
+import Calendar from './components/Calendar.jsx'
+import InvoiceDetail from './components/InvoiceDetail.jsx'
 import Reports from './components/Reports.jsx'
 import Settings from './components/Settings.jsx'
 import lockup from './assets/tiff-lockup-horizontal.png'
@@ -20,6 +23,8 @@ const TABS = [
   { key: 'inventory', label: 'nav.inventory', Screen: VehicleList },
   { key: 'customers', label: 'nav.customers', Screen: CustomerList },
   { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList },
+  { key: 'recon', label: 'nav.recon', Screen: Workshop },
+  { key: 'calendar', label: 'nav.calendar', Screen: Calendar },
   { key: 'reports', label: 'nav.reports', Screen: Reports, totalsOnly: true },
   { key: 'settings', label: 'nav.settings', Screen: Settings },
 ]
@@ -28,6 +33,7 @@ export default function App() {
   const [session, setSession] = useState(undefined) // undefined = wird geprüft, null = abgemeldet
   const [tab, setTab] = useState('dashboard')
   const [openVehicleId, setOpenVehicleId] = useState(null)
+  const [openInvoiceId, setOpenInvoiceId] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [companyName, setCompanyName] = useState(null)
 
@@ -114,11 +120,19 @@ export default function App() {
             key={`${active.key}-${refreshKey}`}
             role={session.role}
             onOpenVehicle={setOpenVehicleId}
+            onOpenInvoice={setOpenInvoiceId}
             onSettingsChanged={() => setRefreshKey((k) => k + 1)}
           />
         </main>
       </div>
 
+      {openInvoiceId && (
+        <InvoiceDetail
+          invoiceId={openInvoiceId}
+          onClose={() => setOpenInvoiceId(null)}
+          onChanged={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
       {openVehicleId && (
         <VehicleDetail
           vehicleId={openVehicleId}
