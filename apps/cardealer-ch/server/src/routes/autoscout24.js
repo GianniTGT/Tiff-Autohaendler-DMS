@@ -5,7 +5,14 @@ import {
   removeAutoScout24Listing,
 } from '../services/autoscout24-sync.js'
 
+import { getListings } from '../services/listings.js'
+
 export async function registerAutoScout24Routes(app) {
+  app.get('/api/listings', { preHandler: app.requireAuth }, async (request) => ({
+    ok: true,
+    data: await getListings(request.tenantId),
+  }))
+
   app.post('/api/vehicles/:id/autoscout24/push', { preHandler: app.requireAuth }, async (request, reply) => {
     try {
       const result = await pushVehicleToAutoScout24(request.tenantId, request.params.id, {

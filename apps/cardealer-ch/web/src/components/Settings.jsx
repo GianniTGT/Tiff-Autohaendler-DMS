@@ -27,6 +27,9 @@ export default function Settings({ onSettingsChanged }) {
       vatMethod: data.vatMethod ?? '',
       netTaxRatePercent: data.netTaxRatePercent ?? '',
       qrIban: data.qrIban ?? '',
+      autoscout24ClientId: data.autoscout24ClientId ?? '',
+      autoscout24SellerId: data.autoscout24SellerId ?? '',
+      autoscout24ClientSecret: '', // wird nie zurückgegeben; leer lassen behält das gespeicherte
     })
   }
 
@@ -115,6 +118,24 @@ export default function Settings({ onSettingsChanged }) {
             <input {...bind('qrIban')} placeholder="CH44 3199 9123 0008 8901 2" />
           </label>
           <p className="mt-1 text-xs text-steel">{t('settings.payment.qrIbanHint')}</p>
+        </Panel>
+
+        <Panel title={t('settings.autoscout24.title')}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label>
+              <span className="field-label">{t('settings.autoscout24.clientId')}</span>
+              <input {...bind('autoscout24ClientId')} autoComplete="off" />
+            </label>
+            <label>
+              <span className="field-label">{t('settings.autoscout24.sellerId')}</span>
+              <input {...bind('autoscout24SellerId')} autoComplete="off" />
+            </label>
+            <label className="sm:col-span-2">
+              <span className="field-label">{t('settings.autoscout24.clientSecret')}</span>
+              <input {...bind('autoscout24ClientSecret')} type="password" autoComplete="new-password" placeholder={tenant.autoscout24HasSecret ? t('settings.autoscout24.secretSaved') : t('settings.autoscout24.secretMissing')} />
+            </label>
+          </div>
+          <p className="mt-2 text-xs text-steel">{t('settings.autoscout24.hint')}</p>
         </Panel>
 
         {!readOnly && (

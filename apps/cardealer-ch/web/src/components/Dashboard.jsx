@@ -62,7 +62,7 @@ export default function Dashboard({ onOpenVehicle }) {
     <div className="space-y-4 p-6">
       <PageHeader title={t('dashboard.title')} />
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
         <Kpi label={t('dashboard.kpi.onLot')} value={data.counts.onLot} sub={`${data.counts.reserved} ${t('status.reserved').toLowerCase()}`} />
         <Kpi
           label={t('dashboard.kpi.cashTiedUp')}
@@ -80,6 +80,7 @@ export default function Dashboard({ onOpenVehicle }) {
           value={data.soldThisYear.count}
           sub={data.soldThisYear.profitRappen != null ? `${t('dashboard.kpi.soldThisYearProfit')}: ${formatMoney(data.soldThisYear.profitRappen)}` : null}
         />
+        <Kpi label={t('dashboard.kpi.newLeads')} value={data.newLeads} />
         <Kpi
           label={t('dashboard.kpi.overdue')}
           value={data.overdueInvoices.count}

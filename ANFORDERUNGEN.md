@@ -213,9 +213,14 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   MWST-Methode, QR-IBAN mit Prüfziffernkontrolle). Design: Tiff-Grün/Gold, Barlow (selbst ausgeliefert),
   Logo — aus `Tiff-Cardealer-Manager` übernommen. Werkstatt (Aufträge mit Schätzung, Board, ein
   erledigter Auftrag mit Betrag schreibt die Kostenzeile am Fahrzeug) und Kalender (MFK, Rechnungs-
-  und Auftragsfristen aus den Quelldaten abgeleitet, plus manuelle Termine; ohne Preise). **Noch
-  offen:** Anfragen (Leads), AutoScout24-Inserate verwalten, Benutzer/Rollen verwalten, Fahrzeugfotos,
-  Betriebslogo auf den PDFs, Verträge im Belegarchiv ablegen (10 Jahre, OR 958f).
+  und Auftragsfristen aus den Quelldaten abgeleitet, plus manuelle Termine; ohne Preise). Anfragen (Status, Fahrzeug, „zu Kunde machen“ ohne Duplikat), Inserate (AutoScout24: Übersicht,
+  fehlende Pflichtfelder, übertragen/aktivieren/deaktivieren/entfernen), Benutzer (nur Inhaber; der
+  letzte Inhaber und die eigene Person sind gegen Sperren geschützt, Sperre/neues Passwort beenden
+  Sitzungen sofort) und Fahrzeugfotos (Objektspeicher, Titelbild, Reihenfolge). **Noch offen:**
+  Betriebslogo auf den PDFs, Verträge im Belegarchiv ablegen (10 Jahre, OR 958f), Anfragen
+  automatisch von der Website/AutoScout24 empfangen (braucht eine öffentliche, abgesicherte
+  Schnittstelle), Fotos an AutoScout24 mitschicken, AutoScout24-Client-Secret verschlüsselt statt
+  im Klartext speichern.
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 

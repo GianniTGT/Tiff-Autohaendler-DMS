@@ -23,7 +23,21 @@ async function call(method, path, body) {
   return data?.data
 }
 
+/** Eine Datei als rohe Bytes hochladen (Fotos) — kein multipart, der Server prüft den Typ an den Bytes. */
+async function upload(path, file) {
+  const response = await fetch(path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file,
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) throw new ApiError(response.status, data)
+  return data?.data
+}
+
 export const api = {
+  upload,
   get: (path) => call('GET', path),
   post: (path, body) => call('POST', path, body),
   patch: (path, body) => call('PATCH', path, body),

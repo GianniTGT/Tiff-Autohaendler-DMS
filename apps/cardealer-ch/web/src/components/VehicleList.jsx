@@ -103,7 +103,16 @@ export default function VehicleList({ onOpenVehicle }) {
             <tbody>
               {vehicles.map((v) => (
                 <tr key={v.id} className="cursor-pointer" onClick={() => onOpenVehicle?.(v.id)}>
-                  <td className="p-3 font-semibold text-ink">{[v.make, v.model].filter(Boolean).join(' ') || t('vehicle.unknown')}</td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      {v.coverPhotoId ? (
+                        <img src={`/api/vehicles/${v.id}/photos/${v.coverPhotoId}`} alt="" loading="lazy" className="h-10 w-14 rounded object-cover" />
+                      ) : (
+                        <div className="h-10 w-14 rounded bg-tint" />
+                      )}
+                      <span className="font-semibold text-ink">{[v.make, v.model].filter(Boolean).join(' ') || t('vehicle.unknown')}</span>
+                    </div>
+                  </td>
                   <td className="p-3 font-mono text-xs text-steel">{v.vin || t('common.none')}</td>
                   <td className="num p-3 text-right">{v.mileageKm != null ? `${Number(v.mileageKm).toLocaleString('de-CH')} km` : t('common.none')}</td>
                   <td className="p-3">

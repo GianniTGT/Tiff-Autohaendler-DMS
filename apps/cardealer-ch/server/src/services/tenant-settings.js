@@ -16,13 +16,22 @@ export const FIELD_MAP = Object.freeze({
   addressZip: 'address_zip',
   addressCity: 'address_city',
   qrIban: 'qr_iban',
+  autoscout24ClientId: 'autoscout24_client_id',
+  autoscout24SellerId: 'autoscout24_seller_id',
+  // Geheimnis: nur schreibbar, wird nie zurückgegeben (siehe camelize).
+  autoscout24ClientSecret: 'autoscout24_client_secret',
 })
+
+const WRITE_ONLY = new Set(['autoscout24ClientSecret'])
 
 const VAT_METHODS = ['effective', 'net_tax_rate']
 
 function camelize(row) {
   const out = {}
-  for (const [key, column] of Object.entries(FIELD_MAP)) out[key] = row[column] ?? null
+  for (const [key, column] of Object.entries(FIELD_MAP)) {
+    if (!WRITE_ONLY.has(key)) out[key] = row[column] ?? null
+  }
+  out.autoscout24HasSecret = Boolean(row.autoscout24_client_secret)
   return out
 }
 
@@ -75,6 +84,7 @@ export async function updateTenantSettings(tenantId, fields) {
   for (const [key, value] of Object.entries(fields)) {
     const column = FIELD_MAP[key]
     if (!column || value === undefined) continue
+    if (WRITE_ONLY.has(key) && value === '') continue // leer lassen heisst: Geheimnis behalten
     columns.push(column)
     values.push(key === 'qrIban' && value ? normalizeIban(value) : value === '' ? null : value)
   }

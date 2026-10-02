@@ -33,7 +33,10 @@
     "documents": "Dokumente",
     "reports": "Auswertungen",
     "calendar": "Kalender",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "leads": "Anfragen",
+    "listings": "Inserate",
+    "users": "Benutzer"
   },
   "status": {
     "in_stock": "Auf Lager",
@@ -100,7 +103,8 @@
       "projectedProfit": "Erwarteter Gewinn",
       "soldThisYear": "Dieses Jahr verkauft",
       "overdue": "Überfällige Rechnungen",
-      "soldThisYearProfit": "Gewinn daraus"
+      "soldThisYearProfit": "Gewinn daraus",
+      "newLeads": "Neue Anfragen"
     },
     "title": "Übersicht",
     "sections": {
@@ -149,7 +153,12 @@
       "energyLabel": "Energieetikette",
       "purchasePrice": "Einkaufspreis",
       "askingPrice": "Angebotspreis",
-      "soldPrice": "Verkaufspreis"
+      "soldPrice": "Verkaufspreis",
+      "vehicleCategory": "Fahrzeugart",
+      "conditionType": "Zustand",
+      "warrantyType": "Garantie",
+      "bodyColorText": "Farbbezeichnung (Freitext)",
+      "interiorColorText": "Innenfarbe (Freitext)"
     },
     "status": "Status",
     "profit": "Gewinn",
@@ -173,7 +182,9 @@
         "economics": "Wirtschaftlichkeit",
         "costs": "Kosten",
         "sell": "Verkauf abschliessen",
-        "contracts": "Verträge"
+        "contracts": "Verträge",
+        "listing": "Inserat (AutoScout24)",
+        "photos": "Fotos"
       },
       "economics": {
         "purchase": "Einkauf",
@@ -238,6 +249,17 @@
         "buyer": "Käufer",
         "warranty": "Gewährleistung (Monate)",
         "choose": "— wählen —"
+      },
+      "photos": {
+        "add": "Fotos hinzufügen",
+        "empty": "Noch keine Fotos.",
+        "cover": "Titelbild",
+        "makeCover": "Als Titelbild",
+        "left": "Nach vorne",
+        "right": "Nach hinten",
+        "remove": "Löschen",
+        "uploading": "Wird hochgeladen … ({n} von {total})",
+        "hint": "JPEG, PNG oder WebP, höchstens 10 MB pro Foto."
       }
     },
     "options": {
@@ -275,6 +297,43 @@
         "front": "Vorderrad",
         "rear": "Hinterrad",
         "all": "Allrad"
+      },
+      "vehicleCategory": {
+        "car": "Personenwagen",
+        "utility": "Nutzfahrzeug",
+        "motorcycle": "Motorrad",
+        "truck": "Lastwagen",
+        "camper": "Wohnmobil",
+        "trailer": "Anhänger"
+      },
+      "conditionType": {
+        "used": "Occasion",
+        "new": "Neu",
+        "demonstration": "Vorführwagen",
+        "pre-registered": "Tageszulassung",
+        "oldtimer": "Oldtimer"
+      },
+      "warrantyType": {
+        "none": "Keine",
+        "from-date": "Ab Kaufdatum",
+        "from-delivery": "Ab Übergabe",
+        "from-first-registration": "Ab Erstzulassung"
+      },
+      "bodyColor": {
+        "beige": "Beige",
+        "black": "Schwarz",
+        "blue": "Blau",
+        "bronze": "Bronze",
+        "brown": "Braun",
+        "gold": "Gold",
+        "green": "Grün",
+        "grey": "Grau",
+        "orange": "Orange",
+        "red": "Rot",
+        "silver": "Silber",
+        "violet": "Violett",
+        "white": "Weiss",
+        "yellow": "Gelb"
       }
     }
   },
@@ -415,6 +474,15 @@
       "title": "Zahlungen",
       "qrIban": "QR-IBAN",
       "qrIbanHint": "Von der Bank, Instituts-ID 30000–31999. Ohne QR-IBAN hat die Rechnung keinen Zahlteil."
+    },
+    "autoscout24": {
+      "title": "AutoScout24",
+      "clientId": "Client-ID",
+      "sellerId": "Händler-ID (Seller-ID)",
+      "clientSecret": "Client-Secret",
+      "secretSaved": "Gespeichert — leer lassen, um es zu behalten",
+      "secretMissing": "Noch nicht hinterlegt",
+      "hint": "Wie ein Betrieb an diese Zugangsdaten kommt, ist mit AutoScout24 noch zu klären (ANFORDERUNGEN.md §10)."
     }
   },
   "reports": {
@@ -535,5 +603,127 @@
     "delete": "Löschen",
     "overdue": "überfällig",
     "legendHint": "Rot = überfällig"
+  },
+  "leads": {
+    "title": "Anfragen",
+    "add": "+ Anfrage erfassen",
+    "empty": "Noch keine Anfragen.",
+    "searchEmpty": "Keine Anfrage in diesem Status.",
+    "filter": {
+      "all": "Alle",
+      "new": "Neu",
+      "contacted": "Kontaktiert",
+      "test_drive": "Probefahrt",
+      "won": "Gewonnen",
+      "lost": "Verloren"
+    },
+    "status": {
+      "new": "Neu",
+      "contacted": "Kontaktiert",
+      "test_drive": "Probefahrt",
+      "won": "Gewonnen",
+      "lost": "Verloren"
+    },
+    "types": {
+      "inquiry": "Anfrage",
+      "test_drive": "Probefahrt",
+      "trade_in": "Inzahlungnahme",
+      "financing": "Finanzierung / Leasing",
+      "other": "Anderes"
+    },
+    "sources": {
+      "manual": "Von Hand",
+      "website": "Website",
+      "autoscout24": "AutoScout24"
+    },
+    "fields": {
+      "name": "Name",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "message": "Nachricht",
+      "vehicle": "Fahrzeug",
+      "notes": "Interne Notiz",
+      "type": "Art",
+      "noVehicle": "— kein Fahrzeug —"
+    },
+    "save": "Speichern",
+    "convert": "Zu Kunde machen",
+    "converted": "Kunde angelegt.",
+    "linked": "Mit bestehendem Kunden verknüpft.",
+    "isCustomer": "Ist Kunde",
+    "delete": "Löschen",
+    "contact": "Kontakt"
+  },
+  "listings": {
+    "title": "Inserate",
+    "intro": "Fahrzeuge einmal erfassen, gezielt an AutoScout24 übertragen. Einkaufspreis, Verkaufspreis und Käuferdaten gehen nie hinauf.",
+    "notConfigured": "AutoScout24 ist noch nicht verbunden. Die Zugangsdaten trägt der Inhaber unter Einstellungen ein.",
+    "empty": "Keine Fahrzeuge im Bestand.",
+    "cols": {
+      "vehicle": "Fahrzeug",
+      "price": "Angebotspreis",
+      "state": "Stand",
+      "actions": "Aktionen"
+    },
+    "state": {
+      "listed": "Inseriert",
+      "notListed": "Nicht inseriert",
+      "incomplete": "Unvollständig"
+    },
+    "syncedAt": "Zuletzt übertragen {date}",
+    "missing": "Fehlt: {fields}",
+    "fields": {
+      "make": "Marke",
+      "model": "Modell",
+      "vehicleCategory": "Fahrzeugart",
+      "bodyColor": "Aussenfarbe",
+      "bodyType": "Karosserieform",
+      "conditionType": "Zustand",
+      "firstRegistrationDate": "Erstzulassung",
+      "askingPriceRappen": "Angebotspreis",
+      "warrantyType": "Garantie"
+    },
+    "actions": {
+      "push": "Übertragen",
+      "update": "Aktualisieren",
+      "activate": "Aktivieren",
+      "deactivate": "Deaktivieren",
+      "remove": "Entfernen",
+      "edit": "Fahrzeug ergänzen"
+    },
+    "done": "Erledigt.",
+    "confirmRemove": "Das Inserat bei AutoScout24 wirklich löschen?"
+  },
+  "users": {
+    "title": "Benutzer",
+    "add": "+ Benutzer anlegen",
+    "ownerOnly": "Nur der Inhaber kann Benutzer verwalten.",
+    "cols": {
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "status": "Status"
+    },
+    "active": "Aktiv",
+    "inactive": "Gesperrt",
+    "form": {
+      "name": "Name",
+      "email": "E-Mail",
+      "password": "Startpasswort (mind. 10 Zeichen)",
+      "role": "Rolle",
+      "save": "Benutzer anlegen",
+      "hint": "Es wird keine E-Mail verschickt. Geben Sie das Startpasswort persönlich weiter."
+    },
+    "actions": {
+      "deactivate": "Sperren",
+      "activate": "Entsperren",
+      "resetPassword": "Neues Passwort",
+      "setPassword": "Passwort setzen",
+      "cancel": "Abbrechen"
+    },
+    "you": "Sie",
+    "created": "Benutzer angelegt.",
+    "updated": "Gespeichert.",
+    "passwordSet": "Neues Passwort gesetzt — alle Sitzungen dieser Person wurden beendet."
   }
 }

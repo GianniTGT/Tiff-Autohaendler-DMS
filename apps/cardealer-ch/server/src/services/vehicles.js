@@ -93,10 +93,11 @@ export async function listVehicles(tenantId, { status } = {}) {
     const where = status ? 'WHERE status = $1' : ''
     const params = status ? [status] : []
     const result = await client.query(
-      `SELECT * FROM vehicles ${where} ORDER BY created_at DESC`,
+      `SELECT v.*, (SELECT p.id FROM vehicle_photos p WHERE p.vehicle_id = v.id AND p.is_cover LIMIT 1) AS cover_photo_id
+         FROM vehicles v ${where.replace('status', 'v.status')} ORDER BY v.created_at DESC`,
       params,
     )
-    return result.rows.map(camelizeRow)
+    return result.rows.map((row) => ({ ...camelizeRow(row), coverPhotoId: row.cover_photo_id }))
   })
 }
 

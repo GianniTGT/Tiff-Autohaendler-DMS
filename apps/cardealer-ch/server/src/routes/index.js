@@ -8,6 +8,9 @@ import { registerAutoScout24Routes } from './autoscout24.js'
 import { registerDashboardRoutes } from './dashboard.js'
 import { registerTenantRoutes } from './tenant.js'
 import { registerWorkshopRoutes } from './workshop.js'
+import { registerLeadRoutes } from './leads.js'
+import { registerUserRoutes } from './users.js'
+import { registerPhotoRoutes } from './photos.js'
 
 /**
  * Jede Route, die Mandantendaten anfasst, muss durch withTenant() aus
@@ -26,4 +29,7 @@ export async function registerRoutes(app) {
   await registerDashboardRoutes(app)
   await registerTenantRoutes(app)
   await registerWorkshopRoutes(app)
+  await registerLeadRoutes(app)
+  await registerUserRoutes(app)
+  await registerPhotoRoutes(app)
 }

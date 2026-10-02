@@ -36,3 +36,8 @@ export function canSeeCompanyTotals(role) {
 export function canEditCompanySettings(role) {
   return role === 'inhaber'
 }
+
+/** Benutzer anlegen, sperren, Rollen vergeben: nur der Inhaber. */
+export function canManageUsers(role) {
+  return role === 'inhaber'
+}

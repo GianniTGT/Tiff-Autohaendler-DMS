@@ -4,6 +4,7 @@ import { formatMoney, francsToRappen, rappenToFrancs } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
 import { Drawer, Panel, Tag, Notice, VEHICLE_STATUS_TONE, formatDay } from './ui.jsx'
+import VehiclePhotos from './VehiclePhotos.jsx'
 
 const COST_KINDS = ['part', 'labor', 'transport', 'fee', 'detail']
 
@@ -12,6 +13,10 @@ const OPTION_VALUES = {
   fuelType: ['petrol', 'diesel', 'electric', 'hybrid-petrol', 'hybrid-diesel', 'lpg', 'cng', 'hydrogen', 'other'],
   transmissionType: ['manual', 'automatic', 'semi-automatic', 'automatic-stepless'],
   driveType: ['front', 'rear', 'all'],
+  vehicleCategory: ['car', 'utility', 'motorcycle', 'truck', 'camper', 'trailer'],
+  conditionType: ['used', 'new', 'demonstration', 'pre-registered', 'oldtimer'],
+  warrantyType: ['none', 'from-date', 'from-delivery', 'from-first-registration'],
+  bodyColor: ['beige', 'black', 'blue', 'bronze', 'brown', 'gold', 'green', 'grey', 'orange', 'red', 'silver', 'violet', 'white', 'yellow'],
   purchaseFroms: ['private', 'dealer', 'auction', 'trade_in'],
   vatSchemes: ['notional_input_tax', 'standard', 'margin'],
 }
@@ -32,12 +37,15 @@ const SECTIONS = [
       ['trim', 'text'],
       ['modelYear', 'int'],
       ['firstRegistrationDate', 'date'],
+      ['vehicleCategory', 'select', 'vehicleCategory'],
+      ['conditionType', 'select', 'conditionType'],
       ['bodyType', 'select', 'bodyType'],
       ['fuelType', 'select', 'fuelType'],
       ['transmissionType', 'select', 'transmissionType'],
       ['driveType', 'select', 'driveType'],
-      ['bodyColorText', 'text', null, 'vehicle.fields.bodyColor'],
-      ['interiorColorText', 'text', null, 'vehicle.fields.interiorColor'],
+      ['bodyColor', 'select', 'bodyColor'],
+      ['bodyColorText', 'text'],
+      ['interiorColorText', 'text'],
       ['doors', 'int'],
       ['seats', 'int'],
       ['powerKw', 'int'],
@@ -48,7 +56,7 @@ const SECTIONS = [
   ],
   [
     'inspection',
-    [['lastInspectionDate', 'date'], ['inspectionValidUntil', 'date'], ['soldWithInspection', 'check']],
+    [['lastInspectionDate', 'date'], ['inspectionValidUntil', 'date'], ['soldWithInspection', 'check'], ['warrantyType', 'select', 'warrantyType']],
   ],
   [
     'pricing',
@@ -290,6 +298,8 @@ export default function VehicleDetail({ vehicleId, onClose, onChanged }) {
           {t('common.save')}
         </button>
       </form>
+
+      <VehiclePhotos vehicleId={vehicle.id} onChanged={onChanged} />
 
       <Panel title={t('vehicle.detail.sections.costs')}>
         {costs.length === 0 ? (

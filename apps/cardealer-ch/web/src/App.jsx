@@ -10,6 +10,9 @@ import InvoiceList from './components/InvoiceList.jsx'
 import Workshop from './components/Workshop.jsx'
 import Calendar from './components/Calendar.jsx'
 import InvoiceDetail from './components/InvoiceDetail.jsx'
+import Leads from './components/Leads.jsx'
+import Listings from './components/Listings.jsx'
+import Users from './components/Users.jsx'
 import Reports from './components/Reports.jsx'
 import Settings from './components/Settings.jsx'
 import lockup from './assets/tiff-lockup-horizontal.png'
@@ -21,12 +24,15 @@ const SEES_TOTALS = ['inhaber', 'buchhaltung']
 const TABS = [
   { key: 'dashboard', label: 'nav.dashboard', Screen: Dashboard },
   { key: 'inventory', label: 'nav.inventory', Screen: VehicleList },
+  { key: 'listings', label: 'nav.listings', Screen: Listings },
+  { key: 'leads', label: 'nav.leads', Screen: Leads },
   { key: 'customers', label: 'nav.customers', Screen: CustomerList },
   { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList },
   { key: 'recon', label: 'nav.recon', Screen: Workshop },
   { key: 'calendar', label: 'nav.calendar', Screen: Calendar },
   { key: 'reports', label: 'nav.reports', Screen: Reports, totalsOnly: true },
   { key: 'settings', label: 'nav.settings', Screen: Settings },
+  { key: 'users', label: 'nav.users', Screen: Users, ownerOnly: true },
 ]
 
 export default function App() {
@@ -65,7 +71,7 @@ export default function App() {
     return <Login onLoggedIn={setSession} />
   }
 
-  const tabs = TABS.filter((x) => !x.totalsOnly || SEES_TOTALS.includes(session.role))
+  const tabs = TABS.filter((x) => (!x.totalsOnly || SEES_TOTALS.includes(session.role)) && (!x.ownerOnly || session.role === 'inhaber'))
   const active = tabs.find((x) => x.key === tab) ?? tabs[0]
   const Screen = active.Screen
 
@@ -119,6 +125,7 @@ export default function App() {
           <Screen
             key={`${active.key}-${refreshKey}`}
             role={session.role}
+            userId={session.userId}
             onOpenVehicle={setOpenVehicleId}
             onOpenInvoice={setOpenInvoiceId}
             onSettingsChanged={() => setRefreshKey((k) => k + 1)}
