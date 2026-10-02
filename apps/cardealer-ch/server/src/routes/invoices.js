@@ -1,7 +1,7 @@
 import { canSeeCompanyTotals } from '@tiff/core-auth'
 import { createInvoice, getInvoice, listInvoices, listRemindersForInvoice } from '../services/invoices.js'
 import { renderInvoicePdfBuffer, renderReminderPdfBuffer, withLogo } from '../services/invoice-pdf.js'
-import { archivePdf, getArchivedPdf, ArchiveIntegrityError } from '../services/archive.js'
+import { archivePdf, getArchivedPdf, archiveIfComplete, ArchiveIntegrityError } from '../services/archive.js'
 import { recordPayment, listPayments } from '../services/payments.js'
 import { importCamt054 } from '../services/camt054-import.js'
 import { listOverdueInvoices, createReminder, getReminder } from '../services/reminders.js'
@@ -16,7 +16,14 @@ export async function registerInvoiceRoutes(app) {
   app.post('/api/invoices', { preHandler: app.requireAuth }, async (request, reply) => {
     try {
       const invoice = await createInvoice(request.tenantId, request.body ?? {})
-      return reply.code(201).send({ ok: true, data: invoice })
+      // Der ausgestellte Beleg wird sofort abgelegt, wenn er vollständig ist (archive.js).
+      const archive = await archiveIfComplete(
+        request.tenantId,
+        request.userId,
+        await withLogo(request.tenantId, await getInvoice(request.tenantId, invoice.id)),
+        renderInvoicePdfBuffer,
+      )
+      return reply.code(201).send({ ok: true, data: { ...invoice, archive } })
     } catch (err) {
       return reply.code(400).send({ ok: false, error: err.message })
     }
@@ -101,7 +108,13 @@ export async function registerInvoiceRoutes(app) {
         invoiceId: request.params.id,
         asOfDate: request.body?.asOfDate,
       })
-      return reply.code(201).send({ ok: true, data: reminder })
+      const archive = await archiveIfComplete(
+        request.tenantId,
+        request.userId,
+        await withLogo(request.tenantId, await getReminder(request.tenantId, reminder.id)),
+        renderReminderPdfBuffer,
+      )
+      return reply.code(201).send({ ok: true, data: { ...reminder, archive } })
     } catch (err) {
       return reply.code(400).send({ ok: false, error: err.message })
     }

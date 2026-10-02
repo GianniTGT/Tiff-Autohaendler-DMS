@@ -12,6 +12,7 @@
 import { createHash } from 'node:crypto'
 import { withTenant } from '@tiff/core-db'
 import { createObjectStore } from '../integrations/object-storage/store.js'
+import { createZip } from './zip.js'
 
 export const RETENTION_YEARS = 10
 export const ARCHIVE_TYPES = Object.freeze(['invoice', 'reminder', 'sale_contract', 'purchase_contract'])
@@ -71,4 +72,58 @@ export async function verifyArchived(tenantId, documentId) {
   if (!bytes) return { ok: false, reason: 'FILE_MISSING', storedHash: row.pdf_hash }
   const hash = createHash('sha256').update(bytes).digest('hex')
   return hash === row.pdf_hash ? { ok: true, hash, storedHash: row.pdf_hash } : { ok: false, reason: 'HASH_MISMATCH', hash, storedHash: row.pdf_hash }
+}
+
+const FOLDER = { invoice: 'Rechnungen', reminder: 'Mahnungen', sale_contract: 'Kaufvertraege', purchase_contract: 'Ankaufsvertraege' }
+const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+
+/**
+ * Das ganze Belegarchiv als ZIP: alle archivierten PDFs nach Art geordnet,
+ * dazu `index.csv` (Nummer, Art, Datum, Partei, SHA-256, Aufbewahrung bis,
+ * Prüfergebnis) und `LIESMICH.txt`. Jede Datei wird beim Export gegen ihren
+ * Hash geprüft — ein verändertes oder fehlendes PDF wird nicht stillschweigend
+ * mitgeliefert, sondern im Index als solches gekennzeichnet.
+ * Alles liegt im Arbeitsspeicher; für das Archiv eines Kleinbetriebs genügt
+ * das, bei sehr grossen Beständen müsste der Export streamen.
+ */
+export async function buildArchiveExport(tenantId, now = new Date()) {
+  const rows = await listArchive(tenantId)
+  const keys = await withTenant(tenantId, async (client) =>
+    new Map((await client.query('SELECT id, pdf_storage_key FROM documents WHERE pdf_storage_key IS NOT NULL')).rows.map((r) => [r.id, r.pdf_storage_key])),
+  )
+
+  const files = []
+  const lines = ['Nummer;Art;Datum;Partei;Fahrzeug;SHA-256;Aufbewahren bis;Pruefung']
+  let problems = 0
+  for (const row of rows) {
+    let check = 'NICHT_ARCHIVIERT'
+    if (row.archived) {
+      const bytes = await store.getObject(keys.get(row.id))
+      if (!bytes) check = 'DATEI_FEHLT'
+      else if (createHash('sha256').update(bytes).digest('hex') !== row.hash) check = 'HASH_ABWEICHEND'
+      else check = 'OK'
+      if (bytes) files.push({ name: `${FOLDER[row.type]}/${row.number}.pdf`, data: bytes })
+    }
+    if (check !== 'OK') problems += 1
+    lines.push([row.number, row.type, row.issueDate, row.partyName, row.vehicleLabel, row.hash, row.retainUntil, check].map(csvCell).join(';'))
+  }
+
+  const CRLF = '\r\n'
+  const readme = [
+    'Belegarchiv-Export',
+    `Erstellt: ${now.toISOString()}`,
+    `Belege insgesamt: ${rows.length}, davon mit Auffälligkeit: ${problems}`,
+    '',
+    'Jede Datei in den Ordnern ist das PDF, das bei der Ausstellung unveränderlich abgelegt wurde.',
+    'Prüfen: SHA-256 der Datei berechnen und mit der Spalte "SHA-256" in index.csv vergleichen',
+    '(Windows: certutil -hashfile Datei.pdf SHA256; Mac/Linux: shasum -a 256 Datei.pdf).',
+    '',
+    `Aufbewahrungsfrist: Ende des Belegjahres + ${RETENTION_YEARS} Jahre (OR 958f, GeBueV).`,
+    'Prüfung "NICHT_ARCHIVIERT": Beleg ausgestellt, PDF aber noch nicht abgelegt — kein PDF im Export.',
+  ].join(CRLF)
+
+  // UTF-8-BOM, damit Excel Umlaute in der CSV richtig öffnet.
+  files.push({ name: 'index.csv', data: Buffer.from(`﻿${lines.join(CRLF)}${CRLF}`, 'utf8') })
+  files.push({ name: 'LIESMICH.txt', data: Buffer.from(`${readme}${CRLF}`, 'utf8') })
+  return { zip: createZip(files, now), count: files.length - 2, problems }
 }

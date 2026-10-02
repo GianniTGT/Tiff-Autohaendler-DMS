@@ -219,12 +219,14 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Sitzungen sofort) und Fahrzeugfotos (Objektspeicher, Titelbild, Reihenfolge). Betriebslogo (Einstellungen → PDFs, Seitenleiste) und Belegarchiv-Ausbau: Verträge werden mit
   Nummer (KV-/AV-JJJJ-NNNNN) ausgestellt und wie Rechnungen mit SHA-256 im Objektspeicher abgelegt;
   Archiv-Ansicht mit Aufbewahrungsfrist (Ende des Belegjahres + 10 Jahre), „Jetzt archivieren“ und
-  Integritätsprüfung (erkennt veränderte und fehlende Dateien). **Noch offen:** Anfragen automatisch von
-  der Website/AutoScout24 empfangen (braucht eine öffentliche, abgesicherte Schnittstelle), Fotos an
-  AutoScout24 mitschicken, AutoScout24-Client-Secret verschlüsselt statt im Klartext speichern,
-  Rechnungen schon beim Ausstellen statt erst beim ersten PDF-Abruf archivieren, Löschschutz auf
-  Datenbankebene für archivierte Belege, Datenexport des Archivs (ZIP), abweichendes Geschäftsjahr
-  bei der Aufbewahrungsfrist.
+  Integritätsprüfung (erkennt veränderte und fehlende Dateien). Dazu: Rechnungen und Mahnungen werden beim Ausstellen sofort archiviert, sofern vollständig (QR-IBAN,
+  Adressen) — sonst bleiben sie „nicht archiviert“ und die Oberfläche sagt warum; AutoScout24-Secret
+  AES-256-GCM-verschlüsselt (`APP_SECRET_KEY`); archivierte Belege sind für die Anwendungsrolle auf
+  Datenbankebene weder löschbar noch umhängbar (Trigger, `session_user`; Mandanten löscht nur die
+  Wartung); ZIP-Export des ganzen Archivs mit Index und Prüfhinweis. **Noch offen:** Anfragen
+  automatisch von der Website/AutoScout24 empfangen (öffentliche, abgesicherte Schnittstelle), Fotos
+  an AutoScout24 mitschicken, abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als
+  Datenstrom für sehr grosse Archive.
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 

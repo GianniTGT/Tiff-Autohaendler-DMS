@@ -17,6 +17,7 @@
 import { createHash } from 'node:crypto'
 import { withTenant } from '@tiff/core-db'
 import { createObjectStore } from '../integrations/object-storage/store.js'
+import { describeMissingQrBillData } from './invoice-pdf.js'
 
 export class ArchiveIntegrityError extends Error {}
 
@@ -82,4 +83,26 @@ export async function getArchivedPdf(tenantId, documentId, { objectStore = defau
   })
   if (!storageKey) return null
   return objectStore.getObject(storageKey)
+}
+
+/**
+ * Archiviert einen frisch ausgestellten Beleg sofort — aber nur, wenn er
+ * vollständig ist. Fehlen QR-IBAN oder Adressen, trägt das PDF den Hinweis
+ * "Kein QR-Zahlteil" statt des Zahlteils; das als unveränderlichen Beleg
+ * abzulegen hiesse, den Fehler einzufrieren, den man gleich beheben will.
+ * Solche Belege bleiben "nicht archiviert" (Archiv-Ansicht) und werden beim
+ * ersten PDF-Abruf oder per "Jetzt archivieren" abgelegt, wenn alles stimmt.
+ *
+ * @returns {Promise<{archived: boolean, reason?: string}>} wirft nie — ein
+ *   Archivierungsproblem darf das Ausstellen des Belegs nicht rückgängig machen.
+ */
+export async function archiveIfComplete(tenantId, userId, document, render) {
+  try {
+    const missing = describeMissingQrBillData(document.tenant, document.party)
+    if (missing) return { archived: false, reason: missing }
+    await archivePdf(tenantId, { documentId: document.id, userId, pdfBuffer: await render(document) })
+    return { archived: true }
+  } catch (err) {
+    return { archived: false, reason: err.message }
+  }
 }

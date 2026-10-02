@@ -438,7 +438,9 @@
         "noQr": "Kein QR-Zahlteil: QR-IBAN fehlt in den Einstellungen.",
         "qrRef": "QR-Referenz",
         "dueOn": "Fällig am"
-      }
+      },
+      "notArchived": "Rechnung {number} erstellt, aber noch nicht archiviert: {reason}",
+      "archivedOk": "Rechnung {number} erstellt und archiviert."
     },
     "createSaleContract": "Kaufvertrag erstellen",
     "createPurchaseContract": "Ankaufsvertrag erstellen",
@@ -785,6 +787,8 @@
       "FILE_MISSING": "ACHTUNG: Die abgelegte Datei fehlt.",
       "NOT_ARCHIVED": "Noch nicht archiviert."
     },
-    "hash": "SHA-256"
+    "hash": "SHA-256",
+    "export": "Alles exportieren (ZIP)",
+    "exportHint": "Enthält alle archivierten PDFs, eine Index-Tabelle mit SHA-256 und Aufbewahrungsfrist sowie eine Anleitung zur Prüfung."
   }
 }

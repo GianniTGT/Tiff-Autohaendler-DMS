@@ -23,6 +23,7 @@ const { updateTenantSettings, getTenantSettings } = await import('../src/service
 const { createUser, login, validateSessionCookie, encodeSessionCookie } = await import('../src/services/auth.js')
 const { listParties } = await import('../src/services/parties.js')
 const { listVehicles } = await import('../src/services/vehicles.js')
+const { decryptSecret } = await import('../src/services/secrets.js')
 
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64, 1)])
 const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 2)])
@@ -219,6 +220,8 @@ test('Anfragen, Benutzer, Fotos, Inserate', { skip: !hasDb }, async (t) => {
     await updateTenantSettings(A, { autoscout24ClientSecret: '' })
     assert.equal((await getTenantSettings(A)).autoscout24HasSecret, true, 'leer lassen behält das Geheimnis')
     const stored = (await adminPool.query('SELECT autoscout24_client_secret FROM tenants WHERE id = $1', [A])).rows[0]
-    assert.equal(stored.autoscout24_client_secret, 'topsecret')
+    assert.equal(stored.autoscout24_client_secret.startsWith('enc:v1:'), true, 'in der Datenbank steht nie Klartext')
+    assert.equal(stored.autoscout24_client_secret.includes('topsecret'), false)
+    assert.equal(decryptSecret(stored.autoscout24_client_secret), 'topsecret')
   })
 })

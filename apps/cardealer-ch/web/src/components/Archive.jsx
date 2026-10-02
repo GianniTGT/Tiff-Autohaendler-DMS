@@ -9,7 +9,9 @@ const FILTERS = ['all', 'invoice', 'reminder', 'sale_contract', 'purchase_contra
 const pdfUrl = (row) =>
   row.type === 'invoice' ? `/api/invoices/${row.id}/pdf` : row.type === 'reminder' ? `/api/reminders/${row.id}/pdf` : `/api/documents/${row.id}/pdf`
 
-export default function Archive() {
+const SEES_TOTALS = ['inhaber', 'buchhaltung']
+
+export default function Archive({ role }) {
   const [rows, setRows] = useState(null)
   const [filter, setFilter] = useState('all')
   const [error, setError] = useState(null)
@@ -60,7 +62,13 @@ export default function Archive() {
 
   return (
     <div className="space-y-4 p-6">
-      <PageHeader title={t('archive.title')} />
+      <PageHeader title={t('archive.title')}>
+        {SEES_TOTALS.includes(role) && (
+          <a className="btn" href="/api/archive/export.zip" download title={t('archive.exportHint')}>
+            {t('archive.export')}
+          </a>
+        )}
+      </PageHeader>
       <p className="max-w-3xl text-sm text-steel">{t('archive.intro')}</p>
       {error && <Notice>{error}</Notice>}
 

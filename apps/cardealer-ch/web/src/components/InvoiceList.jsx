@@ -25,6 +25,7 @@ export default function InvoiceList({ onOpenInvoice }) {
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('all')
   const [camtResult, setCamtResult] = useState(null)
+  const [notice, setNotice] = useState(null)
   const fileInput = useRef(null)
 
   async function reload() {
@@ -56,11 +57,16 @@ export default function InvoiceList({ onOpenInvoice }) {
     event.preventDefault()
     setSaving(true)
     try {
-      await api.post('/api/invoices', {
+      const created = await api.post('/api/invoices', {
         partyId: form.partyId,
         vehicleId: form.vehicleId || undefined,
         lines: [{ description: form.description, quantity: 1, unitPriceRappen: francsToRappen(form.price), taxCode: 'standard' }],
       })
+      setNotice(
+        created.archive?.archived
+          ? { tone: 'green', text: t('documents.invoices.archivedOk', { number: created.number }) }
+          : { tone: 'amber', text: t('documents.invoices.notArchived', { number: created.number, reason: created.archive?.reason ?? '' }) },
+      )
       setForm(EMPTY_FORM)
       setShowForm(false)
       await reload()
@@ -105,6 +111,8 @@ export default function InvoiceList({ onOpenInvoice }) {
           {t('documents.invoices.add')}
         </button>
       </PageHeader>
+
+      {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
 
       {camtResult && (
         <div className="card mb-4 p-4">

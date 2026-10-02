@@ -22,7 +22,7 @@ import { loadLogoBuffer } from './tenant-logo.js'
  * mit einer Partei ohne hinterlegte Adresse). Deshalb hier vorher prüfen
  * und einen Hinweis drucken statt eines 500ers.
  */
-function describeMissingQrBillData(tenant, party) {
+export function describeMissingQrBillData(tenant, party) {
   if (!tenant.qr_iban) {
     return 'Für diesen Mandanten ist noch keine QR-IBAN hinterlegt. Siehe ANFORDERUNGEN.md §10 — QR-IBAN bei der Bank bestellen.'
   }

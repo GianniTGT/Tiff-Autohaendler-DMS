@@ -8,6 +8,7 @@ import { createAutoScout24Client } from '../integrations/autoscout24/client.js'
 import { resolveMakeAndModelKeys } from '../integrations/autoscout24/lookup.js'
 import { mapVehicleToAutoScout24Listing } from '../integrations/autoscout24/mapping.js'
 import { getVehicle, updateVehicle } from './vehicles.js'
+import { decryptSecret } from './secrets.js'
 
 const defaultClient = createAutoScout24Client()
 
@@ -24,7 +25,7 @@ async function getCredentials(tenantId) {
       )
     }
     return {
-      credentials: { clientId: row.autoscout24_client_id, clientSecret: row.autoscout24_client_secret },
+      credentials: { clientId: row.autoscout24_client_id, clientSecret: decryptSecret(row.autoscout24_client_secret) },
       sellerId: row.autoscout24_seller_id,
     }
   })

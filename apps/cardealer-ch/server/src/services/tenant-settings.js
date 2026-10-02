@@ -4,6 +4,7 @@
  * invoice-pdf.js und vat-report.js).
  */
 import { withTenant } from '@tiff/core-db'
+import { encryptSecret } from './secrets.js'
 
 export const FIELD_MAP = Object.freeze({
   name: 'name',
@@ -87,7 +88,9 @@ export async function updateTenantSettings(tenantId, fields) {
     if (!column || value === undefined) continue
     if (WRITE_ONLY.has(key) && value === '') continue // leer lassen heisst: Geheimnis behalten
     columns.push(column)
-    values.push(key === 'qrIban' && value ? normalizeIban(value) : value === '' ? null : value)
+    values.push(
+      key === 'qrIban' && value ? normalizeIban(value) : WRITE_ONLY.has(key) ? encryptSecret(value) : value === '' ? null : value,
+    )
   }
   if (columns.length === 0) return getTenantSettings(tenantId)
   return withTenant(tenantId, async (client) => {
