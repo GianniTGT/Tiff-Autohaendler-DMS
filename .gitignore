@@ -12,3 +12,6 @@ coverage/
 # Lokaler Objektspeicher-Fallback (integrations/object-storage/store.js) —
 # nur für Entwicklung ohne S3-kompatible Zugangsdaten, nie für den Betrieb.
 data/objects/
+
+# Lokales Beleg-Archiv (Objektspeicher im Dev-Betrieb)
+apps/cardealer-ch/server/data/

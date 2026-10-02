@@ -1,4 +1,4 @@
-import { createInvoice, getInvoice } from '../services/invoices.js'
+import { createInvoice, getInvoice, listInvoices } from '../services/invoices.js'
 import { renderInvoicePdfBuffer } from '../services/invoice-pdf.js'
 import { archivePdf, getArchivedPdf, ArchiveIntegrityError } from '../services/archive.js'
 import { recordPayment, listPayments } from '../services/payments.js'
@@ -7,6 +7,11 @@ import { listOverdueInvoices, createReminder, getReminder } from '../services/re
 import { computeVatReport } from '../services/vat-report.js'
 
 export async function registerInvoiceRoutes(app) {
+  app.get('/api/invoices', { preHandler: app.requireAuth }, async (request) => ({
+    ok: true,
+    data: await listInvoices(request.tenantId),
+  }))
+
   app.post('/api/invoices', { preHandler: app.requireAuth }, async (request, reply) => {
     try {
       const invoice = await createInvoice(request.tenantId, request.body ?? {})

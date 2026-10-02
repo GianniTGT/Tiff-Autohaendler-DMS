@@ -3,9 +3,18 @@ import { api } from './api.js'
 import { t } from './i18n/index.js'
 import Login from './components/Login.jsx'
 import VehicleList from './components/VehicleList.jsx'
+import CustomerList from './components/CustomerList.jsx'
+import InvoiceList from './components/InvoiceList.jsx'
+
+const TABS = [
+  { key: 'inventory', label: 'nav.inventory', Screen: VehicleList },
+  { key: 'customers', label: 'nav.customers', Screen: CustomerList },
+  { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList },
+]
 
 export default function App() {
   const [session, setSession] = useState(undefined) // undefined = wird geprüft, null = abgemeldet
+  const [tab, setTab] = useState('inventory')
 
   useEffect(() => {
     api
@@ -40,7 +49,21 @@ export default function App() {
           </button>
         </div>
       </header>
-      <VehicleList />
+      <nav className="bg-white border-b px-6 flex gap-4 text-sm">
+        {TABS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`py-2 border-b-2 ${tab === key ? 'border-gray-900 text-gray-900 font-medium' : 'border-transparent text-gray-500'}`}
+          >
+            {t(label)}
+          </button>
+        ))}
+      </nav>
+      {(() => {
+        const { Screen } = TABS.find((x) => x.key === tab)
+        return <Screen key={tab} />
+      })()}
     </div>
   )
 }

@@ -131,6 +131,22 @@
     "health": { "good": "Gesunde Marge", "thin": "Knappe Marge", "loss": "Mit Verlust" }
   },
   "customers": {
+    "title": "Kunden",
+    "add": "+ Kunde erfassen",
+    "kind": { "person": "Person", "company": "Firma" },
+    "fields": {
+      "kind": "Art",
+      "companyName": "Firma",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "addressStreet": "Strasse",
+      "addressZip": "PLZ",
+      "addressCity": "Ort"
+    },
+    "name": "Name",
+    "address": "Adresse",
     "searchPlaceholder": "Suchen nach Name, Telefon, E-Mail oder Fahrzeug",
     "empty": "Noch niemand erfasst.",
     "noMatch": "Niemand passt dazu."
@@ -148,6 +164,22 @@
       "sale_contract": "Kaufvertrag"
     },
     "createInvoice": "Rechnung erstellen",
+    "invoices": {
+      "title": "Rechnungen",
+      "add": "+ Rechnung erstellen",
+      "empty": "Noch keine Rechnungen.",
+      "number": "Nummer",
+      "customer": "Kunde",
+      "issueDate": "Datum",
+      "dueDate": "Fällig",
+      "total": "Total",
+      "pdf": "PDF",
+      "chooseCustomer": "Kunde wählen",
+      "chooseVehicle": "Fahrzeug (optional)",
+      "description": "Beschreibung",
+      "priceNet": "Preis netto (CHF)",
+      "needsCustomer": "Bitte zuerst einen Kunden erfassen."
+    },
     "createSaleContract": "Kaufvertrag erstellen",
     "createPurchaseContract": "Ankaufsvertrag erstellen",
     "generated": "Das Dokument wurde erstellt.",

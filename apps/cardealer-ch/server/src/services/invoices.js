@@ -157,3 +157,17 @@ export async function getInvoice(tenantId, id) {
     return { ...document, lines: linesResult.rows, party, tenant: tenantResult.rows[0] }
   })
 }
+
+export async function listInvoices(tenantId) {
+  return withTenant(tenantId, async (client) => {
+    const result = await client.query(
+      `SELECT d.id, d.number, d.status, d.issue_date, d.due_date, d.total_rappen,
+              d.party_id, p.company_name, p.first_name, p.last_name
+         FROM documents d
+         LEFT JOIN parties p ON p.id = d.party_id
+        WHERE d.type = 'invoice'
+        ORDER BY d.number DESC`,
+    )
+    return result.rows
+  })
+}
