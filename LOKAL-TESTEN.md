@@ -11,10 +11,10 @@ irgendein fremder Server.
 
 - [Node.js 22 LTS](https://nodejs.org) — Next-Next-Finish
 - [Git](https://git-scm.com) — Next-Next-Finish
-- [PostgreSQL 16](https://www.postgresql.org/download/windows/)
-  (EnterpriseDB-Installer für Windows) — Passwort fürs `postgres`-Superuser-
-  Konto merken, Port `5432` lassen. Läuft danach unsichtbar im Hintergrund,
-  kein Docker und keine Virtualisierung nötig.
+- [PostgreSQL](https://www.postgresql.org/download/windows/)
+  (EnterpriseDB-Installer für Windows, aktuell Version 17) — Passwort fürs
+  `postgres`-Superuser-Konto merken, Port `5432` lassen. Läuft danach
+  unsichtbar im Hintergrund, kein Docker und keine Virtualisierung nötig.
 
 ## Projekt holen und einrichten
 
@@ -31,7 +31,7 @@ Terminal-Fenster** nachhelfen (Versionsnummer ggf. anpassen, prüfbar mit
 `Get-ChildItem "C:\Program Files\PostgreSQL"`):
 
 ```powershell
-$env:Path += ";C:\Program Files\PostgreSQL\16\bin"
+$env:Path += ";C:\Program Files\PostgreSQL\17\bin"
 ```
 
 **Datenbank-Rollen einrichten** (einmalig, mit dem Postgres-Superuser-
