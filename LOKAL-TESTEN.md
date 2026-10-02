@@ -52,14 +52,21 @@ notepad .env
 ```
 
 öffnet (und legt bei Bedarf an) die Datei. Dort folgende drei Zeilen
-hineinschreiben (Passwort aus dem vorigen Schritt eintragen), dann
-speichern und Notepad schliessen:
+**genau so** hineinschreiben, dann speichern und Notepad schliessen:
 
 ```
-MIGRATE_DATABASE_URL=postgres://tiff_migrator:DEIN_PASSWORT@localhost:5432/tiff_autohaendler_dms
-DATABASE_URL=postgres://tiff_app:DEIN_PASSWORT@localhost:5432/tiff_autohaendler_dms
+MIGRATE_DATABASE_URL=postgres://tiff_migrator:devpass@localhost:5432/tiff_autohaendler_dms
+DATABASE_URL=postgres://tiff_app:devpass@localhost:5432/tiff_autohaendler_dms
 PORT=3000
 ```
+
+**Zwei verschiedene Passwörter, nicht verwechseln:** `devpass` hier ist
+**kein Platzhalter** — das ist der feste Wert, den `dev-setup.sql` oben
+für die beiden Rollen `tiff_migrator`/`tiff_app` angelegt hat (siehe das
+Skript selbst), wortwörtlich abschreiben. Das unterscheidet sich vom
+`postgres`-Superuser-Passwort, das du bei der Installation gewählt hast
+und das `psql` im vorigen Schritt einmalig abfragt — die beiden haben
+nichts miteinander zu tun.
 
 **Schema aufbauen und ersten Betrieb anlegen:**
 
