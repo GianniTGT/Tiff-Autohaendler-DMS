@@ -6,7 +6,8 @@
     "errorTitle": "Etwas ist schiefgelaufen",
     "signedInAs": "Angemeldet als",
     "signOut": "Abmelden",
-    "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+    "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+    "vendor": "Tiff Software Solutions"
   },
   "common": {
     "back": "Zurück",
@@ -84,7 +85,10 @@
     "password": "Passwort",
     "submit": "Anmelden",
     "invalid": "Anmeldename oder Passwort ist falsch.",
-    "forgot": "Passwort vergessen?"
+    "forgot": "Passwort vergessen?",
+    "tenant": "Betrieb",
+    "tagline": "Dealer-Management für Schweizer Occasionshändler",
+    "connectionFailed": "Verbindung fehlgeschlagen."
   },
   "dashboard": {
     "emptyTitle": "Noch keine Fahrzeuge",
@@ -168,7 +172,8 @@
         "notes": "Notizen",
         "economics": "Wirtschaftlichkeit",
         "costs": "Kosten",
-        "sell": "Verkauf abschliessen"
+        "sell": "Verkauf abschliessen",
+        "contracts": "Verträge"
       },
       "economics": {
         "purchase": "Einkauf",
@@ -224,6 +229,15 @@
         "good": "Gesunde Marge",
         "thin": "Knappe Marge",
         "loss": "Mit Verlust"
+      },
+      "contracts": {
+        "note": "Entwurf — vor dem ersten Einsatz von einem Schweizer Anwalt prüfen lassen.",
+        "ankauf": "Ankaufsvertrag (PDF)",
+        "kauf": "Kaufvertrag (PDF)",
+        "seller": "Verkäufer (Privatperson)",
+        "buyer": "Käufer",
+        "warranty": "Gewährleistung (Monate)",
+        "choose": "— wählen —"
       }
     },
     "options": {
@@ -316,22 +330,108 @@
       "description": "Beschreibung",
       "priceNet": "Preis netto (CHF)",
       "needsCustomer": "Bitte zuerst einen Kunden erfassen.",
-      "noCustomerHint": "Ohne Kunde"
+      "noCustomerHint": "Ohne Kunde",
+      "status": {
+        "issued": "Offen",
+        "paid": "Bezahlt",
+        "overdue": "Überfällig"
+      },
+      "filter": {
+        "all": "Alle",
+        "open": "Offen",
+        "overdue": "Überfällig",
+        "paid": "Bezahlt"
+      },
+      "paidAmount": "Bezahlt",
+      "outstanding": "Offen",
+      "detail": {
+        "positions": "Positionen",
+        "payments": "Zahlungen",
+        "reminders": "Mahnungen",
+        "noPayments": "Noch keine Zahlung.",
+        "noReminders": "Noch keine Mahnung.",
+        "recordPayment": "Zahlung erfassen",
+        "amount": "Betrag (CHF)",
+        "paidOn": "Zahlungsdatum",
+        "save": "Zahlung buchen",
+        "createReminder": "Mahnung erstellen",
+        "reminderLevel": "{n}. Mahnung",
+        "reminderBlocked": "Nach der 3. Mahnung entscheidet ein Mensch (Betreibung).",
+        "subtotal": "Zwischensumme (exkl. MWST)",
+        "vat": "MWST",
+        "total": "Total (inkl. MWST)",
+        "source": {
+          "manual": "manuell",
+          "camt054": "Bankdatei"
+        },
+        "pdfInvoice": "Rechnung als PDF",
+        "noQr": "Kein QR-Zahlteil: QR-IBAN fehlt in den Einstellungen.",
+        "qrRef": "QR-Referenz",
+        "dueOn": "Fällig am"
+      }
     },
     "createSaleContract": "Kaufvertrag erstellen",
     "createPurchaseContract": "Ankaufsvertrag erstellen",
     "generated": "Das Dokument wurde erstellt.",
-    "failed": "Das Dokument konnte nicht erstellt werden."
+    "failed": "Das Dokument konnte nicht erstellt werden.",
+    "camt": {
+      "button": "Bankdatei einlesen (camt.054)",
+      "title": "Ergebnis des Bankabgleichs",
+      "matched": "gebucht",
+      "skipped": "nicht zugeordnet",
+      "reasons": {
+        "DEBIT_ENTRY": "Belastung, keine Gutschrift",
+        "NO_STRUCTURED_REFERENCE": "keine QR-Referenz",
+        "NO_MATCHING_INVOICE": "keine passende Rechnung",
+        "ALREADY_IMPORTED": "bereits eingelesen"
+      },
+      "close": "Schliessen"
+    }
   },
   "settings": {
     "title": "Einstellungen",
     "company": {
       "title": "Der Betrieb",
       "legalName": "Firma (Rechtsträger)",
-      "uid": "UID",
+      "uid": "UID (CHE-123.456.789)",
       "vatLiable": "MWST-pflichtig",
       "vatMethod": "Abrechnungsart",
-      "qrIban": "QR-IBAN"
+      "qrIban": "QR-IBAN",
+      "name": "Anzeigename",
+      "street": "Strasse",
+      "zip": "PLZ",
+      "city": "Ort"
+    },
+    "saved": "Gespeichert.",
+    "readOnly": "Nur der Inhaber kann diese Angaben ändern.",
+    "vat": {
+      "title": "MWST",
+      "liable": "MWST-pflichtig",
+      "method": "Abrechnungsart",
+      "choose": "— nicht festgelegt —",
+      "netRate": "Saldosteuersatz in % (von der ESTV zugeteilt)"
+    },
+    "payment": {
+      "title": "Zahlungen",
+      "qrIban": "QR-IBAN",
+      "qrIbanHint": "Von der Bank, Instituts-ID 30000–31999. Ohne QR-IBAN hat die Rechnung keinen Zahlteil."
     }
+  },
+  "reports": {
+    "title": "Auswertungen",
+    "vat": "MWST-Abrechnung",
+    "from": "Von",
+    "to": "Bis",
+    "run": "Berechnen",
+    "method": {
+      "effective": "Effektive Methode",
+      "net_tax_rate": "Saldosteuersatz"
+    },
+    "outputTax": "Umsatzsteuer (aus Rechnungen)",
+    "notional": "Fiktiver Vorsteuerabzug (verkaufte Fahrzeuge)",
+    "revenue": "Fakturierter Umsatz (inkl. MWST)",
+    "payable": "Geschuldete MWST",
+    "disclaimer": "Entwurf — von einem Treuhänder bestätigen lassen, bevor eine Abrechnung an die ESTV geht.",
+    "notConfigured": "Für diesen Betrieb ist noch keine MWST-Methode hinterlegt. Bitte unter Einstellungen festlegen (mit dem Treuhänder)."
   }
 }

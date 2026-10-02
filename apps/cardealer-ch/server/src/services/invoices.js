@@ -162,11 +162,31 @@ export async function listInvoices(tenantId) {
   return withTenant(tenantId, async (client) => {
     const result = await client.query(
       `SELECT d.id, d.number, d.status, d.issue_date, d.due_date, d.total_rappen,
-              d.party_id, p.company_name, p.first_name, p.last_name
+              d.party_id, p.company_name, p.first_name, p.last_name,
+              COALESCE(pay.paid, 0) AS paid_rappen,
+              (SELECT MAX(reminder_level) FROM documents r WHERE r.predecessor_id = d.id AND r.type = 'reminder') AS last_reminder_level
          FROM documents d
          LEFT JOIN parties p ON p.id = d.party_id
+         LEFT JOIN (SELECT document_id, SUM(amount_rappen) AS paid FROM payments GROUP BY document_id) pay
+                ON pay.document_id = d.id
         WHERE d.type = 'invoice'
         ORDER BY d.number DESC`,
+    )
+    return result.rows.map((r) => ({
+      ...r,
+      outstanding_rappen: Math.max(0, Number(r.total_rappen) - Number(r.paid_rappen)),
+    }))
+  })
+}
+
+/** Mahnungen zu einer Rechnung, neueste Stufe zuerst. */
+export async function listRemindersForInvoice(tenantId, invoiceId) {
+  return withTenant(tenantId, async (client) => {
+    const result = await client.query(
+      `SELECT id, number, reminder_level, issue_date, due_date, total_rappen
+         FROM documents WHERE predecessor_id = $1 AND type = 'reminder'
+        ORDER BY reminder_level DESC`,
+      [invoiceId],
     )
     return result.rows
   })

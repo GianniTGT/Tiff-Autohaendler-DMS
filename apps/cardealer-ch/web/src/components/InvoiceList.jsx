@@ -1,12 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../api.js'
 import { formatMoney, francsToRappen } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
+import InvoiceDetail from './InvoiceDetail.jsx'
+import { PageHeader, Tag, Notice, formatDay, todayIso } from './ui.jsx'
 
 const EMPTY_FORM = { partyId: '', vehicleId: '', description: '', price: '' }
+const FILTERS = ['all', 'open', 'overdue', 'paid']
 
-const formatDate = (day) => (day ? new Date(`${String(day).slice(0, 10)}T00:00:00`).toLocaleDateString('de-CH') : t('common.none'))
+/** Anzeigestatus: 'overdue' gibt es nicht in der DB, sondern ergibt sich aus Fälligkeit und Restbetrag. */
+export function invoiceState(invoice, today = todayIso()) {
+  if (invoice.status === 'paid' || invoice.outstanding_rappen <= 0) return 'paid'
+  return String(invoice.due_date).slice(0, 10) < today ? 'overdue' : 'issued'
+}
+const STATE_TONE = { issued: 'amber', paid: 'green', overdue: 'red' }
 
 export default function InvoiceList() {
   const [invoices, setInvoices] = useState(null)
@@ -16,14 +24,14 @@ export default function InvoiceList() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [filter, setFilter] = useState('all')
+  const [openId, setOpenId] = useState(null)
+  const [camtResult, setCamtResult] = useState(null)
+  const fileInput = useRef(null)
 
   async function reload() {
     try {
-      const [inv, par, veh] = await Promise.all([
-        api.get('/api/invoices'),
-        api.get('/api/parties'),
-        api.get('/api/vehicles'),
-      ])
+      const [inv, par, veh] = await Promise.all([api.get('/api/invoices'), api.get('/api/parties'), api.get('/api/vehicles')])
       setInvoices(inv)
       setParties(par)
       setVehicles(veh)
@@ -40,8 +48,7 @@ export default function InvoiceList() {
     const v = vehicles.find((x) => x.id === vehicleId)
     const next = { ...form, vehicleId }
     if (v) {
-      const label = [v.make, v.model].filter(Boolean).join(' ')
-      next.description = [label, v.vin].filter(Boolean).join(', ')
+      next.description = [[v.make, v.model].filter(Boolean).join(' '), v.vin].filter(Boolean).join(', ')
       if (v.askingPriceRappen != null) next.price = String(v.askingPriceRappen / 100)
     }
     setForm(next)
@@ -66,28 +73,77 @@ export default function InvoiceList() {
     }
   }
 
-  if (error) return <p className="text-red-600 p-6">{error}</p>
-  if (!invoices) return <p className="p-6 text-gray-500">{t('common.loading')}</p>
+  async function handleCamt(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    try {
+      const xml = await file.text()
+      setCamtResult(await api.post('/api/payments/camt054', { xml }))
+      await reload()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
 
-  const field = 'border border-gray-300 rounded px-2 py-1.5 text-sm'
+  if (error) return <p className="p-6 text-danger">{error}</p>
+  if (!invoices) return <p className="p-6 text-steel">{t('common.loading')}</p>
+
+  const today = todayIso()
+  const visible = invoices.filter((i) => {
+    const state = invoiceState(i, today)
+    if (filter === 'open') return state !== 'paid'
+    return filter === 'all' || state === filter
+  })
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">{t('documents.invoices.title')}</h2>
-        <button className="bg-gray-900 text-white rounded px-3 py-1.5 text-sm" onClick={() => setShowForm((v) => !v)}>
+      <PageHeader title={t('documents.invoices.title')}>
+        <input ref={fileInput} type="file" accept=".xml,text/xml" className="hidden" onChange={handleCamt} />
+        <button className="btn-ghost" onClick={() => fileInput.current?.click()}>
+          {t('documents.camt.button')}
+        </button>
+        <button className="btn" onClick={() => setShowForm((v) => !v)}>
           {t('documents.invoices.add')}
         </button>
-      </div>
+      </PageHeader>
+
+      {camtResult && (
+        <div className="card mb-4 p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="panel-title">{t('documents.camt.title')}</h3>
+            <button className="text-sm text-brand underline" onClick={() => setCamtResult(null)}>
+              {t('documents.camt.close')}
+            </button>
+          </div>
+          <ul className="mt-2 divide-y divide-line text-sm">
+            {camtResult.map((r, i) => (
+              <li key={i} className="flex justify-between gap-3 py-1.5">
+                <span>
+                  {formatDay(r.valueDate)} · {formatMoney(r.amountRappen)}
+                </span>
+                {r.matched ? (
+                  <Tag tone="green">{t('documents.camt.matched')}</Tag>
+                ) : (
+                  <Tag tone="amber">
+                    {t('documents.camt.skipped')}: {t(`documents.camt.reasons.${r.reason}`)}
+                  </Tag>
+                )}
+              </li>
+            ))}
+            {camtResult.length === 0 && <li className="py-1.5 text-steel">{t('common.none')}</li>}
+          </ul>
+        </div>
+      )}
 
       {showForm &&
         (parties.length === 0 ? (
-          <p className="bg-white rounded-lg shadow p-4 mb-4 text-sm text-gray-500">{t('documents.invoices.needsCustomer')}</p>
+          <Notice tone="amber">{t('documents.invoices.needsCustomer')}</Notice>
         ) : (
-          <form onSubmit={handleAdd} className="bg-white rounded-lg shadow p-4 mb-4 grid grid-cols-2 gap-3">
+          <form onSubmit={handleAdd} className="card mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
             <select
               required
-              className={field}
+              className="field"
               aria-label={t('documents.invoices.customer')}
               value={form.partyId}
               onChange={(e) => setForm({ ...form, partyId: e.target.value })}
@@ -99,12 +155,7 @@ export default function InvoiceList() {
                 </option>
               ))}
             </select>
-            <select
-              className={field}
-              aria-label={t('documents.invoices.chooseVehicle')}
-              value={form.vehicleId}
-              onChange={(e) => pickVehicle(e.target.value)}
-            >
+            <select className="field" aria-label={t('documents.invoices.chooseVehicle')} value={form.vehicleId} onChange={(e) => pickVehicle(e.target.value)}>
               <option value="">{t('documents.invoices.chooseVehicle')}</option>
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -114,60 +165,80 @@ export default function InvoiceList() {
             </select>
             <input
               required
-              className={field}
+              className="field"
               placeholder={t('documents.invoices.description')}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
             <input
               required
-              className={field}
+              className="field"
               placeholder={t('documents.invoices.priceNet')}
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
             />
-            <button type="submit" disabled={saving} className="col-span-2 bg-gray-900 text-white rounded px-3 py-1.5 text-sm disabled:opacity-50">
+            <button type="submit" disabled={saving} className="btn sm:col-span-2">
               {t('common.save')}
             </button>
           </form>
         ))}
 
-      {invoices.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">{t('documents.invoices.empty')}</div>
+      <div className="mb-3 flex gap-2">
+        {FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`rounded-full px-3 py-1 text-sm font-semibold ${
+              filter === f ? 'bg-brand text-white' : 'border border-line-strong bg-white text-steel hover:text-brand'
+            }`}
+          >
+            {t(`documents.invoices.filter.${f}`)}
+          </button>
+        ))}
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="card p-8 text-center text-steel">{t('documents.invoices.empty')}</div>
       ) : (
-        <table className="w-full bg-white rounded-lg shadow text-sm">
-          <thead>
-            <tr className="text-left text-gray-500 border-b">
-              <th className="p-3">{t('documents.invoices.number')}</th>
-              <th className="p-3">{t('documents.invoices.customer')}</th>
-              <th className="p-3">{t('documents.invoices.issueDate')}</th>
-              <th className="p-3">{t('documents.invoices.dueDate')}</th>
-              <th className="p-3 text-right">{t('documents.invoices.total')}</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((i) => (
-              <tr key={i.id} className="border-b last:border-0">
-                <td className="p-3">{i.number}</td>
-                <td className="p-3">
-                  {i.party_id
-                    ? partyName({ kind: i.company_name ? 'company' : 'person', companyName: i.company_name, firstName: i.first_name, lastName: i.last_name })
-                    : t('common.none')}
-                </td>
-                <td className="p-3">{formatDate(i.issue_date)}</td>
-                <td className="p-3">{formatDate(i.due_date)}</td>
-                <td className="p-3 text-right">{formatMoney(Number(i.total_rappen))}</td>
-                <td className="p-3 text-right">
-                  <a className="underline" href={`/api/invoices/${i.id}/pdf`} target="_blank" rel="noreferrer">
-                    {t('documents.invoices.pdf')}
-                  </a>
-                </td>
+        <div className="card overflow-x-auto">
+          <table className="rows w-full text-sm">
+            <thead>
+              <tr className="text-left">
+                <th className="p-3">{t('documents.invoices.number')}</th>
+                <th className="p-3">{t('documents.invoices.customer')}</th>
+                <th className="p-3">{t('documents.invoices.dueDate')}</th>
+                <th className="p-3">{t('vehicle.status')}</th>
+                <th className="p-3 text-right">{t('documents.invoices.total')}</th>
+                <th className="p-3 text-right">{t('documents.invoices.outstanding')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visible.map((i) => {
+                const state = invoiceState(i, today)
+                return (
+                  <tr key={i.id} className="cursor-pointer" onClick={() => setOpenId(i.id)}>
+                    <td className="p-3 font-semibold text-ink">{i.number}</td>
+                    <td className="p-3">
+                      {i.party_id
+                        ? partyName({ kind: i.company_name ? 'company' : 'person', companyName: i.company_name, firstName: i.first_name, lastName: i.last_name })
+                        : t('common.none')}
+                    </td>
+                    <td className="p-3">{formatDay(i.due_date)}</td>
+                    <td className="space-x-1 p-3">
+                      <Tag tone={STATE_TONE[state]}>{t(`documents.invoices.status.${state}`)}</Tag>
+                      {i.last_reminder_level != null && <Tag tone="gray">{t('documents.invoices.detail.reminderLevel', { n: i.last_reminder_level })}</Tag>}
+                    </td>
+                    <td className="num p-3 text-right">{formatMoney(Number(i.total_rappen))}</td>
+                    <td className="num p-3 text-right">{formatMoney(i.outstanding_rappen)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
+
+      {openId && <InvoiceDetail invoiceId={openId} onClose={() => setOpenId(null)} onChanged={reload} />}
     </div>
   )
 }

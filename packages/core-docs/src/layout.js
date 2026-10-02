@@ -58,7 +58,7 @@ export function needSpace(doc, height) {
 }
 
 /** Ein gefüllter Balken mit Kapitälchen — trennt einen Abschnitt vom nächsten. */
-export function sectionBar(doc, label, { color = NAVY_DEFAULT } = {}) {
+export function sectionBar(doc, label, { color = BRAND_DEFAULT } = {}) {
   needSpace(doc, 40)
   const left = doc.page.margins.left
   const w = contentWidth(doc)
@@ -72,7 +72,8 @@ export function sectionBar(doc, label, { color = NAVY_DEFAULT } = {}) {
   doc.y += 18
 }
 
-export const NAVY_DEFAULT = '#08328B'
+/** Tiff-Grün (Herstellerfarbe), solange ein Betrieb keine eigene hinterlegt hat. */
+export const BRAND_DEFAULT = '#16653C'
 
 /**
  * Ein liniertes Formularfeld: kleine graue Beschriftung über einem Wert auf
@@ -164,7 +165,7 @@ export function letterhead(doc, { dealer, title, docNo, date, onLogoError }) {
   const right = doc.page.width - doc.page.margins.right
   const top = doc.y
   let textLeft = left
-  const color = dealer.color || NAVY_DEFAULT
+  const color = dealer.color || BRAND_DEFAULT
 
   if (dealer.logoPath && fs.existsSync(dealer.logoPath)) {
     try {

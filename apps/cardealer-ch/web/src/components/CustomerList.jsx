@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { t } from '../i18n/index.js'
+import { PageHeader } from './ui.jsx'
 
 const EMPTY_FORM = {
   kind: 'person',
@@ -57,29 +58,28 @@ export default function CustomerList() {
 
   const input = (key) => (
     <input
-      className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+      className="field"
       placeholder={t(`customers.fields.${key}`)}
       value={form[key]}
       onChange={(e) => setForm({ ...form, [key]: e.target.value })}
     />
   )
 
-  if (error) return <p className="text-red-600 p-6">{error}</p>
-  if (!parties) return <p className="p-6 text-gray-500">{t('common.loading')}</p>
+  if (error) return <p className="p-6 text-danger">{error}</p>
+  if (!parties) return <p className="p-6 text-steel">{t('common.loading')}</p>
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">{t('customers.title')}</h2>
-        <button className="bg-gray-900 text-white rounded px-3 py-1.5 text-sm" onClick={() => setShowForm((v) => !v)}>
+      <PageHeader title={t('customers.title')}>
+        <button className="btn" onClick={() => setShowForm((v) => !v)}>
           {t('customers.add')}
         </button>
-      </div>
+      </PageHeader>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-white rounded-lg shadow p-4 mb-4 grid grid-cols-3 gap-3">
+        <form onSubmit={handleAdd} className="card mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
           <select
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+            className="field"
             aria-label={t('customers.fields.kind')}
             value={form.kind}
             onChange={(e) => setForm({ ...form, kind: e.target.value })}
@@ -100,18 +100,18 @@ export default function CustomerList() {
           {input('addressStreet')}
           {input('addressZip')}
           {input('addressCity')}
-          <button type="submit" disabled={saving} className="col-span-3 bg-gray-900 text-white rounded px-3 py-1.5 text-sm disabled:opacity-50">
+          <button type="submit" disabled={saving} className="btn sm:col-span-3">
             {t('common.save')}
           </button>
         </form>
       )}
 
       {parties.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">{t('customers.empty')}</div>
+        <div className="card p-8 text-center text-steel">{t('customers.empty')}</div>
       ) : (
-        <table className="w-full bg-white rounded-lg shadow text-sm">
+        <div className="card overflow-x-auto"><table className="rows w-full text-sm">
           <thead>
-            <tr className="text-left text-gray-500 border-b">
+            <tr className="text-left">
               <th className="p-3">{t('customers.name')}</th>
               <th className="p-3">{t('customers.fields.email')}</th>
               <th className="p-3">{t('customers.fields.phone')}</th>
@@ -120,18 +120,18 @@ export default function CustomerList() {
           </thead>
           <tbody>
             {parties.map((p) => (
-              <tr key={p.id} className="border-b last:border-0">
-                <td className="p-3">{partyName(p)}</td>
+              <tr key={p.id}>
+                <td className="p-3 font-semibold text-ink">{partyName(p)}</td>
                 <td className="p-3">{p.email || t('common.none')}</td>
                 <td className="p-3">{p.phone || t('common.none')}</td>
-                <td className="p-3 text-gray-500">
+                <td className="p-3 text-steel">
                   {[p.addressStreet, [p.addressZip, p.addressCity].filter(Boolean).join(' ')].filter(Boolean).join(', ') ||
                     t('common.none')}
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </div>
   )

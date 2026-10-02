@@ -2,46 +2,45 @@ import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { formatMoney } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
+import { PageHeader, formatDay } from './ui.jsx'
 
-function Kpi({ label, value, sub }) {
+function Kpi({ label, value, sub, accent }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="text-xs uppercase tracking-wide text-gray-500">{label}</div>
-      <div className="text-2xl font-semibold text-gray-900 mt-1">{value}</div>
-      {sub && <div className="text-xs text-gray-500 mt-1">{sub}</div>}
+    <div className={`card min-w-0 p-4 ${accent ? 'border-t-4 border-t-brand-gold' : 'border-t-4 border-t-brand'}`}>
+      <div className="text-xs font-semibold uppercase tracking-wider text-steel">{label}</div>
+      <div className="num mt-1 font-display text-2xl font-bold text-brand-deep sm:text-3xl">{value}</div>
+      {sub && <div className="mt-0.5 text-xs text-steel">{sub}</div>}
     </div>
   )
 }
 
 function Section({ title, tone = 'gray', items, render, onOpen, total }) {
-  const toneClass = { red: 'text-red-700', amber: 'text-amber-700', gray: 'text-gray-900' }[tone]
+  const toneClass = { red: 'text-danger', amber: 'text-warn', gray: 'text-brand' }[tone]
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h3 className={`text-sm font-semibold mb-2 ${toneClass}`}>
-        {title} {items.length > 0 && <span className="font-normal text-gray-500">({total ?? items.length})</span>}
+    <div className="card p-4">
+      <h3 className={`font-display text-[15px] font-bold uppercase tracking-wider ${toneClass}`}>
+        {title} {items.length > 0 && <span className="font-body text-sm font-normal text-steel">({total ?? items.length})</span>}
       </h3>
       {items.length === 0 ? (
-        <p className="text-sm text-gray-500">{t('dashboard.allGood')}</p>
+        <p className="mt-2 text-sm text-mist">{t('dashboard.allGood')}</p>
       ) : (
-        <ul className="divide-y">
+        <ul className="mt-2 divide-y divide-line">
           {items.map((item) => (
             <li key={item.id}>
-              <button className="w-full text-left py-2 flex justify-between gap-3 text-sm hover:bg-gray-50" onClick={() => onOpen(item.id)}>
-                <span className="text-gray-900">{item.label}</span>
-                <span className="text-gray-500 text-right">{render(item)}</span>
+              <button className="flex w-full justify-between gap-3 py-2 text-left text-sm hover:bg-tint" onClick={() => onOpen(item.id)}>
+                <span className="font-semibold text-ink">{item.label}</span>
+                <span className="text-right text-steel">{render(item)}</span>
               </button>
             </li>
           ))}
           {total != null && total > items.length && (
-            <li className="pt-2 text-xs text-gray-500">{t('dashboard.moreItems', { n: total - items.length })}</li>
+            <li className="pt-2 text-xs text-steel">{t('dashboard.moreItems', { n: total - items.length })}</li>
           )}
         </ul>
       )}
     </div>
   )
 }
-
-const formatDate = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('de-CH')
 
 export default function Dashboard({ onOpenVehicle }) {
   const [data, setData] = useState(null)
@@ -54,16 +53,16 @@ export default function Dashboard({ onOpenVehicle }) {
       .catch((err) => setError(err.message))
   }, [])
 
-  if (error) return <p className="text-red-600 p-6">{error}</p>
-  if (!data) return <p className="p-6 text-gray-500">{t('common.loading')}</p>
+  if (error) return <p className="p-6 text-danger">{error}</p>
+  if (!data) return <p className="p-6 text-steel">{t('common.loading')}</p>
 
   const restricted = t('dashboard.restricted')
 
   return (
-    <div className="p-6 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.title')}</h2>
+    <div className="space-y-4 p-6">
+      <PageHeader title={t('dashboard.title')} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         <Kpi label={t('dashboard.kpi.onLot')} value={data.counts.onLot} sub={`${data.counts.reserved} ${t('status.reserved').toLowerCase()}`} />
         <Kpi
           label={t('dashboard.kpi.cashTiedUp')}
@@ -74,6 +73,7 @@ export default function Dashboard({ onOpenVehicle }) {
           label={t('dashboard.kpi.projectedProfit')}
           value={data.money ? formatMoney(data.money.projectedProfitRappen) : t('common.none')}
           sub={data.money ? null : restricted}
+          accent
         />
         <Kpi
           label={t('dashboard.kpi.soldThisYear')}
@@ -87,20 +87,20 @@ export default function Dashboard({ onOpenVehicle }) {
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Section
           title={t('dashboard.sections.inspectionExpired')}
           tone="red"
           items={data.inspection.expired}
           onOpen={onOpenVehicle}
-          render={(i) => `${formatDate(i.validUntil)} · ${t('dashboard.daysAgo', { n: -i.daysLeft })}`}
+          render={(i) => `${formatDay(i.validUntil)} · ${t('dashboard.daysAgo', { n: -i.daysLeft })}`}
         />
         <Section
           title={t('dashboard.sections.inspectionDueSoon')}
           tone="amber"
           items={data.inspection.dueSoon}
           onOpen={onOpenVehicle}
-          render={(i) => `${formatDate(i.validUntil)} · ${t('dashboard.daysLeft', { n: i.daysLeft })}`}
+          render={(i) => `${formatDay(i.validUntil)} · ${t('dashboard.daysLeft', { n: i.daysLeft })}`}
         />
         <Section
           title={t('dashboard.sections.ageing')}

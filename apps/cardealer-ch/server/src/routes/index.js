@@ -6,6 +6,7 @@ import { registerPartyRoutes } from './parties.js'
 import { registerInvoiceRoutes } from './invoices.js'
 import { registerAutoScout24Routes } from './autoscout24.js'
 import { registerDashboardRoutes } from './dashboard.js'
+import { registerTenantRoutes } from './tenant.js'
 
 /**
  * Jede Route, die Mandantendaten anfasst, muss durch withTenant() aus
@@ -22,4 +23,5 @@ export async function registerRoutes(app) {
   await registerInvoiceRoutes(app)
   await registerAutoScout24Routes(app)
   await registerDashboardRoutes(app)
+  await registerTenantRoutes(app)
 }

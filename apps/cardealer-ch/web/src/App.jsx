@@ -2,17 +2,26 @@ import { useEffect, useState } from 'react'
 import { api } from './api.js'
 import { t } from './i18n/index.js'
 import Login from './components/Login.jsx'
+import Dashboard from './components/Dashboard.jsx'
 import VehicleList from './components/VehicleList.jsx'
+import VehicleDetail from './components/VehicleDetail.jsx'
 import CustomerList from './components/CustomerList.jsx'
 import InvoiceList from './components/InvoiceList.jsx'
-import Dashboard from './components/Dashboard.jsx'
-import VehicleDetail from './components/VehicleDetail.jsx'
+import Reports from './components/Reports.jsx'
+import Settings from './components/Settings.jsx'
+import lockup from './assets/tiff-lockup-horizontal.png'
+
+// Wer Firmenzahlen sieht, steht in packages/core-auth/src/roles.js
+// (canSeeCompanyTotals). Hier nur die Menü-Sicht; der Server prüft selbst.
+const SEES_TOTALS = ['inhaber', 'buchhaltung']
 
 const TABS = [
   { key: 'dashboard', label: 'nav.dashboard', Screen: Dashboard },
   { key: 'inventory', label: 'nav.inventory', Screen: VehicleList },
   { key: 'customers', label: 'nav.customers', Screen: CustomerList },
   { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList },
+  { key: 'reports', label: 'nav.reports', Screen: Reports, totalsOnly: true },
+  { key: 'settings', label: 'nav.settings', Screen: Settings },
 ]
 
 export default function App() {
@@ -20,6 +29,7 @@ export default function App() {
   const [tab, setTab] = useState('dashboard')
   const [openVehicleId, setOpenVehicleId] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [companyName, setCompanyName] = useState(null)
 
   useEffect(() => {
     api
@@ -28,47 +38,87 @@ export default function App() {
       .catch(() => setSession(null))
   }, [])
 
+  useEffect(() => {
+    if (!session) return
+    api
+      .get('/api/tenant')
+      .then((tenant) => setCompanyName(tenant.name))
+      .catch(() => {})
+  }, [session, refreshKey])
+
   async function handleLogout() {
     await api.post('/api/auth/logout')
     setSession(null)
+    setTab('dashboard')
   }
 
   if (session === undefined) {
-    return <p className="p-6 text-gray-500">{t('common.loading')}</p>
+    return <p className="p-6 text-steel">{t('common.loading')}</p>
   }
-
   if (session === null) {
     return <Login onLoggedIn={setSession} />
   }
 
+  const tabs = TABS.filter((x) => !x.totalsOnly || SEES_TOTALS.includes(session.role))
+  const active = tabs.find((x) => x.key === tab) ?? tabs[0]
+  const Screen = active.Screen
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
-        <span className="font-bold text-gray-900">{t('app.name')}</span>
-        <div className="text-sm text-gray-500 flex items-center gap-3">
-          <span>
-            {t('app.signedInAs')}: {t(`roles.${session.role}`)}
-          </span>
-          <button onClick={handleLogout} className="text-gray-900 underline">
+    <div className="grid min-h-full grid-cols-[minmax(0,1fr)] lg:grid-cols-[230px_minmax(0,1fr)]">
+      <aside className="flex min-w-0 flex-col bg-brand py-5 text-on-brand lg:sticky lg:top-0 lg:h-screen">
+        <div className="mx-4 mb-4 rounded-tiff bg-white px-3 py-2.5">
+          <img src={lockup} alt={t('app.vendor')} className="h-10 w-auto" />
+        </div>
+        {companyName && (
+          <div className="mb-3 border-b border-white/15 px-5 pb-4">
+            <small className="block text-[11px] uppercase tracking-[2.5px] text-on-brand-dim">{companyName}</small>
+            <b className="block font-display text-xl font-bold uppercase tracking-wide text-on-brand-pure">{t('app.name')}</b>
+          </div>
+        )}
+        <nav className="flex flex-row gap-1 overflow-x-auto px-3 lg:flex-col lg:overflow-visible">
+          {tabs.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`whitespace-nowrap rounded-lg px-3 py-2 text-left font-display text-[17px] font-semibold uppercase tracking-wide transition-colors ${
+                active.key === key
+                  ? 'bg-brand-dark text-on-brand-pure shadow-[inset_3px_0_0_0_#C9A053]'
+                  : 'text-on-brand hover:bg-brand-dark/60'
+              }`}
+            >
+              {t(label)}
+            </button>
+          ))}
+        </nav>
+        <div className="mt-auto hidden px-5 pt-6 text-sm text-on-brand-dim lg:block">
+          <div>
+            {t('app.signedInAs')}: <b className="text-on-brand-pure">{t(`roles.${session.role}`)}</b>
+          </div>
+          <button onClick={handleLogout} className="mt-1 underline hover:text-on-brand-pure">
             {t('app.signOut')}
           </button>
         </div>
-      </header>
-      <nav className="bg-white border-b px-6 flex gap-4 text-sm">
-        {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`py-2 border-b-2 ${tab === key ? 'border-gray-900 text-gray-900 font-medium' : 'border-transparent text-gray-500'}`}
-          >
-            {t(label)}
+      </aside>
+
+      <div className="min-w-0">
+        <header className="flex items-center justify-end gap-3 border-b border-line-strong bg-white px-6 py-2 text-sm text-steel lg:hidden">
+          <span>
+            {t('app.signedInAs')}: {t(`roles.${session.role}`)}
+          </span>
+          <button onClick={handleLogout} className="text-brand underline">
+            {t('app.signOut')}
           </button>
-        ))}
-      </nav>
-      {(() => {
-        const { Screen } = TABS.find((x) => x.key === tab)
-        return <Screen key={`${tab}-${refreshKey}`} onOpenVehicle={setOpenVehicleId} />
-      })()}
+        </header>
+        <main>
+          <Screen
+            key={`${active.key}-${refreshKey}`}
+            role={session.role}
+            onOpenVehicle={setOpenVehicleId}
+            onSettingsChanged={() => setRefreshKey((k) => k + 1)}
+          />
+        </main>
+      </div>
+
       {openVehicleId && (
         <VehicleDetail
           vehicleId={openVehicleId}

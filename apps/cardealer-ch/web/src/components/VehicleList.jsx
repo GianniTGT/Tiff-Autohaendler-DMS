@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { formatMoney, francsToRappen } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
+import { PageHeader, Tag, VEHICLE_STATUS_TONE } from './ui.jsx'
 
 const EMPTY_FORM = { vin: '', make: '', model: '', mileageKm: '', purchasePrice: '', askingPrice: '' }
 
@@ -47,93 +48,73 @@ export default function VehicleList({ onOpenVehicle }) {
     }
   }
 
-  if (error) return <p className="text-red-600 p-6">{error}</p>
-  if (!vehicles) return <p className="p-6 text-gray-500">{t('common.loading')}</p>
+  if (error) return <p className="p-6 text-danger">{error}</p>
+  if (!vehicles) return <p className="p-6 text-steel">{t('common.loading')}</p>
+
+  const input = (key, label) => (
+    <input
+      className="field"
+      placeholder={label}
+      aria-label={label}
+      value={form[key]}
+      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+    />
+  )
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">{t('nav.inventory')}</h2>
-        <button
-          className="bg-gray-900 text-white rounded px-3 py-1.5 text-sm"
-          onClick={() => setShowForm((v) => !v)}
-        >
+      <PageHeader title={t('nav.inventory')}>
+        <button className="btn" onClick={() => setShowForm((v) => !v)}>
           {t('dashboard.addVehicle')}
         </button>
-      </div>
+      </PageHeader>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-white rounded-lg shadow p-4 mb-4 grid grid-cols-3 gap-3">
-          <input
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
-            placeholder={t('vehicle.fields.vin')}
-            value={form.vin}
-            onChange={(e) => setForm({ ...form, vin: e.target.value })}
-          />
-          <input
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
-            placeholder={t('vehicle.fields.make')}
-            value={form.make}
-            onChange={(e) => setForm({ ...form, make: e.target.value })}
-          />
-          <input
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
-            placeholder={t('vehicle.fields.model')}
-            value={form.model}
-            onChange={(e) => setForm({ ...form, model: e.target.value })}
-          />
-          <input
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
-            placeholder={t('vehicle.fields.mileageKm')}
-            value={form.mileageKm}
-            onChange={(e) => setForm({ ...form, mileageKm: e.target.value })}
-          />
-          <input
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
-            placeholder={t('vehicle.fields.purchasePrice')}
-            value={form.purchasePrice}
-            onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })}
-          />
-          <input
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
-            placeholder={t('vehicle.fields.askingPrice')}
-            value={form.askingPrice}
-            onChange={(e) => setForm({ ...form, askingPrice: e.target.value })}
-          />
-          <button type="submit" disabled={saving} className="col-span-3 bg-gray-900 text-white rounded px-3 py-1.5 text-sm disabled:opacity-50">
+        <form onSubmit={handleAdd} className="card mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
+          {input('vin', t('vehicle.fields.vin'))}
+          {input('make', t('vehicle.fields.make'))}
+          {input('model', t('vehicle.fields.model'))}
+          {input('mileageKm', t('vehicle.fields.mileageKm'))}
+          {input('purchasePrice', t('vehicle.fields.purchasePrice'))}
+          {input('askingPrice', t('vehicle.fields.askingPrice'))}
+          <button type="submit" disabled={saving} className="btn sm:col-span-3">
             {t('common.save')}
           </button>
         </form>
       )}
 
       {vehicles.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-          <p>{t('dashboard.emptyTitle')}</p>
-          <p className="text-sm mt-1">{t('dashboard.emptyBody')}</p>
+        <div className="card p-8 text-center">
+          <p className="font-display text-lg font-bold uppercase text-brand">{t('dashboard.emptyTitle')}</p>
+          <p className="mt-1 text-sm text-steel">{t('dashboard.emptyBody')}</p>
         </div>
       ) : (
-        <table className="w-full bg-white rounded-lg shadow text-sm">
-          <thead>
-            <tr className="text-left text-gray-500 border-b">
-              <th className="p-3">{t('vehicle.fields.make')}</th>
-              <th className="p-3">{t('vehicle.fields.vin')}</th>
-              <th className="p-3">{t('vehicle.fields.mileageKm')}</th>
-              <th className="p-3">{t('vehicle.status')}</th>
-              <th className="p-3 text-right">{t('vehicle.fields.askingPrice')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vehicles.map((v) => (
-              <tr key={v.id} className="border-b last:border-0 cursor-pointer hover:bg-gray-50" onClick={() => onOpenVehicle?.(v.id)}>
-                <td className="p-3">{[v.make, v.model].filter(Boolean).join(' ') || t('vehicle.unknown')}</td>
-                <td className="p-3 text-gray-500">{v.vin || t('common.none')}</td>
-                <td className="p-3">{v.mileageKm != null ? `${v.mileageKm} km` : t('common.none')}</td>
-                <td className="p-3">{t(`status.${v.status}`)}</td>
-                <td className="p-3 text-right">{formatMoney(v.askingPriceRappen)}</td>
+        <div className="card overflow-x-auto">
+          <table className="rows w-full text-sm">
+            <thead>
+              <tr className="text-left">
+                <th className="p-3">{t('vehicle.fields.make')}</th>
+                <th className="p-3">{t('vehicle.fields.vin')}</th>
+                <th className="p-3 text-right">{t('vehicle.fields.mileageKm')}</th>
+                <th className="p-3">{t('vehicle.status')}</th>
+                <th className="p-3 text-right">{t('vehicle.fields.askingPrice')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {vehicles.map((v) => (
+                <tr key={v.id} className="cursor-pointer" onClick={() => onOpenVehicle?.(v.id)}>
+                  <td className="p-3 font-semibold text-ink">{[v.make, v.model].filter(Boolean).join(' ') || t('vehicle.unknown')}</td>
+                  <td className="p-3 font-mono text-xs text-steel">{v.vin || t('common.none')}</td>
+                  <td className="num p-3 text-right">{v.mileageKm != null ? `${Number(v.mileageKm).toLocaleString('de-CH')} km` : t('common.none')}</td>
+                  <td className="p-3">
+                    <Tag tone={VEHICLE_STATUS_TONE[v.status]}>{t(`status.${v.status}`)}</Tag>
+                  </td>
+                  <td className="num p-3 text-right">{formatMoney(v.askingPriceRappen)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )

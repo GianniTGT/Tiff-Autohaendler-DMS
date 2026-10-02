@@ -1,3 +1,90 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-canvas text-ink font-body antialiased;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2;
+  }
+  /* Jedes Eingabefeld ist eine Kante, auf der man handelt — wie im Manager. */
+  input,
+  select,
+  textarea {
+    border-color: theme('colors.line-strong');
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-tiff border border-line-strong bg-white;
+    box-shadow: 0 1px 2px rgb(16 27 58 / 0.04), 0 1px 6px rgb(16 27 58 / 0.05);
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 font-display
+           text-[15px] font-bold uppercase tracking-wide text-white transition-colors
+           hover:bg-brand-dark disabled:opacity-40;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border-[1.5px] border-line-strong
+           bg-white px-4 py-2 font-display text-[15px] font-bold uppercase tracking-wide
+           text-steel transition-colors hover:border-brand hover:bg-canvas hover:text-brand
+           disabled:opacity-40;
+  }
+  .tag {
+    @apply inline-block rounded-full px-2.5 py-1 text-[11.5px] font-bold uppercase tracking-wider;
+  }
+  .field {
+    @apply w-full rounded-lg border bg-white px-3 py-2 text-sm text-ink;
+  }
+  .field-label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wider text-steel;
+  }
+  .page-title {
+    @apply font-display text-2xl font-bold uppercase tracking-wide text-brand-deep;
+  }
+  .panel-title {
+    @apply font-display text-[15px] font-bold uppercase tracking-wider text-brand;
+  }
+
+  /* Tabellen: Zebrastreifen führt das Auge über viele Spalten besser als eine Haarlinie. */
+  .rows > tbody > tr {
+    @apply border-b border-line;
+  }
+  .rows > tbody > tr:nth-child(even) {
+    @apply bg-tint-faint;
+  }
+  .rows > tbody > tr:last-child {
+    @apply border-0;
+  }
+  .rows > tbody > tr:hover {
+    @apply bg-tint;
+  }
+  .rows > thead > tr {
+    @apply border-b-2 border-line-strong;
+  }
+  .rows th {
+    @apply text-xs font-semibold uppercase tracking-wider text-steel;
+  }
+
+  /* Anmeldeseite: gezeichnet statt fotografiert (keine Bildlizenz), Grün und Gold der Marke. */
+  .login-bg {
+    background-color: #08301c;
+    background-image: radial-gradient(120% 80% at 18% 108%, rgb(22 101 60 / 0.55) 0%, transparent 62%),
+      radial-gradient(80% 62% at 95% -6%, rgb(201 160 83 / 0.38) 0%, transparent 58%),
+      linear-gradient(108deg, transparent 38%, rgb(255 255 255 / 0.05) 50%, transparent 62%),
+      linear-gradient(158deg, #1b6b44 0%, #0f4a2c 46%, #08301c 100%);
+  }
+}

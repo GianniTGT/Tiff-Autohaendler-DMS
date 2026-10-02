@@ -11,6 +11,7 @@ import PDFDocument from 'pdfkit'
 import { PAGE, letterhead, sectionBar, fieldRow, needSpace, footers, contentWidth, INK, MUTED, LINE } from '@tiff/core-docs'
 import { formatMoney } from '@tiff/core-billing'
 import { buildQrBill } from '@tiff/core-billing/src/qr-invoice.js'
+import { REMINDER_LABEL } from './reminders.js'
 
 /**
  * `swissqrbill` verlangt vollständige Adressfelder und stürzt sonst intern
@@ -89,6 +90,15 @@ function drawLineItems(doc, lines) {
  * obwohl das Dokument "dasselbe" bleiben soll.
  */
 export function renderInvoicePdf(invoice) {
+  return renderBillPdf(invoice, { title: 'RECHNUNG' })
+}
+
+/** Mahnung: dasselbe Layout wie die Rechnung, mit Mahnstufe als Titel. */
+export function renderReminderPdf(reminder) {
+  return renderBillPdf(reminder, { title: REMINDER_LABEL[reminder.reminder_level]?.toUpperCase() ?? 'MAHNUNG' })
+}
+
+function renderBillPdf(invoice, { title }) {
   const doc = new PDFDocument({
     size: PAGE.size,
     margins: PAGE.margins,
@@ -103,7 +113,7 @@ export function renderInvoicePdf(invoice) {
       .join(', '),
   }
 
-  letterhead(doc, { dealer, title: 'RECHNUNG', docNo: invoice.number, date: invoice.issue_date })
+  letterhead(doc, { dealer, title, docNo: invoice.number, date: invoice.issue_date })
 
   sectionBar(doc, 'Rechnungsadresse')
   fieldRow(doc, [
@@ -167,8 +177,15 @@ export function renderInvoicePdf(invoice) {
 
 /** Wie renderInvoicePdf(), aber fertig eingesammelt — für Hash/Archiv, wo die volle Länge vorher feststehen muss. */
 export function renderInvoicePdfBuffer(invoice) {
+  return collect(renderInvoicePdf(invoice))
+}
+
+export function renderReminderPdfBuffer(reminder) {
+  return collect(renderReminderPdf(reminder))
+}
+
+function collect(doc) {
   return new Promise((resolve, reject) => {
-    const doc = renderInvoicePdf(invoice)
     const chunks = []
     doc.on('data', (chunk) => chunks.push(chunk))
     doc.on('end', () => resolve(Buffer.concat(chunks)))

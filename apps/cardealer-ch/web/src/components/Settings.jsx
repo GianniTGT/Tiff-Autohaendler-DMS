@@ -1,0 +1,128 @@
+import { useEffect, useState } from 'react'
+import { api } from '../api.js'
+import { t } from '../i18n/index.js'
+import { PageHeader, Panel, Notice } from './ui.jsx'
+
+const FIELDS = [
+  ['legalName', 'settings.company.legalName'],
+  ['name', 'settings.company.name'],
+  ['uid', 'settings.company.uid'],
+  ['addressStreet', 'settings.company.street'],
+  ['addressZip', 'settings.company.zip'],
+  ['addressCity', 'settings.company.city'],
+]
+
+export default function Settings({ onSettingsChanged }) {
+  const [tenant, setTenant] = useState(null)
+  const [form, setForm] = useState(null)
+  const [error, setError] = useState(null)
+  const [saved, setSaved] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const apply = (data) => {
+    setTenant(data)
+    setForm({
+      ...Object.fromEntries(FIELDS.map(([k]) => [k, data[k] ?? ''])),
+      vatLiable: Boolean(data.vatLiable),
+      vatMethod: data.vatMethod ?? '',
+      netTaxRatePercent: data.netTaxRatePercent ?? '',
+      qrIban: data.qrIban ?? '',
+    })
+  }
+
+  useEffect(() => {
+    api
+      .get('/api/tenant')
+      .then(apply)
+      .catch((err) => setError(err.message))
+  }, [])
+
+  async function save(event) {
+    event.preventDefault()
+    setBusy(true)
+    setError(null)
+    setSaved(false)
+    try {
+      apply({ ...(await api.patch('/api/tenant', form)), canEdit: tenant.canEdit })
+      setSaved(true)
+      onSettingsChanged?.()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!form) return <p className="p-6 text-steel">{error ?? t('common.loading')}</p>
+  const readOnly = !tenant.canEdit
+  const bind = (key) => ({
+    className: 'field disabled:bg-tint',
+    disabled: readOnly,
+    value: form[key],
+    onChange: (e) => setForm({ ...form, [key]: e.target.value }),
+  })
+
+  return (
+    <div className="space-y-4 p-6">
+      <PageHeader title={t('settings.title')} />
+      {readOnly && <Notice tone="amber">{t('settings.readOnly')}</Notice>}
+      {error && <Notice>{error}</Notice>}
+      {saved && <Notice tone="green">{t('settings.saved')}</Notice>}
+
+      <form onSubmit={save} className="space-y-4">
+        <Panel title={t('settings.company.title')}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {FIELDS.map(([key, label]) => (
+              <label key={key}>
+                <span className="field-label">{t(label)}</span>
+                <input {...bind(key)} />
+              </label>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title={t('settings.vat.title')}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+              <input
+                type="checkbox"
+                disabled={readOnly}
+                checked={form.vatLiable}
+                onChange={(e) => setForm({ ...form, vatLiable: e.target.checked })}
+              />
+              {t('settings.vat.liable')}
+            </label>
+            <label>
+              <span className="field-label">{t('settings.vat.method')}</span>
+              <select {...bind('vatMethod')}>
+                <option value="">{t('settings.vat.choose')}</option>
+                <option value="effective">{t('reports.method.effective')}</option>
+                <option value="net_tax_rate">{t('reports.method.net_tax_rate')}</option>
+              </select>
+            </label>
+            {form.vatMethod === 'net_tax_rate' && (
+              <label>
+                <span className="field-label">{t('settings.vat.netRate')}</span>
+                <input {...bind('netTaxRatePercent')} inputMode="decimal" />
+              </label>
+            )}
+          </div>
+        </Panel>
+
+        <Panel title={t('settings.payment.title')}>
+          <label>
+            <span className="field-label">{t('settings.payment.qrIban')}</span>
+            <input {...bind('qrIban')} placeholder="CH44 3199 9123 0008 8901 2" />
+          </label>
+          <p className="mt-1 text-xs text-steel">{t('settings.payment.qrIbanHint')}</p>
+        </Panel>
+
+        {!readOnly && (
+          <button type="submit" disabled={busy} className="btn">
+            {t('common.save')}
+          </button>
+        )}
+      </form>
+    </div>
+  )
+}

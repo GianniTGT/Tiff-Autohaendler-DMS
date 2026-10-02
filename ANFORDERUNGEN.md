@@ -205,6 +205,16 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Eigene Website-Anbindung an `Tiff-Cardealer-Theme-Swiss` bleibt offen — dafür existiert noch
   keine Schweizer Website, an die synchronisiert werden könnte.
 
+- **Phase 4 (in Arbeit — Oberfläche auf Manager-Niveau bringen):** Das Backend war ab Phase 2
+  weiter als die Oberfläche (nur drei Listen). Bisher gebaut: Übersicht (Kapital, Gewinn, MFK-Fristen,
+  Standzeit, Zu erledigen; Firmenzahlen nur für Inhaber/Buchhaltung), Fahrzeug-Detail mit allen
+  CH-Feldern, Kosten, Verkauf abschliessen und Vertrags-PDFs; Rechnungs-Detail mit Zahlungen,
+  `camt.054`-Upload, Mahnungen (inkl. Mahnungs-PDF); Auswertungen (MWST); Einstellungen (Betriebsdaten,
+  MWST-Methode, QR-IBAN mit Prüfziffernkontrolle). Design: Tiff-Grün/Gold, Barlow (selbst ausgeliefert),
+  Logo — aus `Tiff-Cardealer-Manager` übernommen. **Noch offen:** Werkstatt-Board und Kalender,
+  Anfragen (Leads), AutoScout24-Inserate verwalten, Benutzer/Rollen verwalten, Fahrzeugfotos,
+  Betriebslogo auf den PDFs, Verträge im Belegarchiv ablegen (10 Jahre, OR 958f).
+
 ## 10. Was ein Mensch klären muss (nicht Code)
 
 Unverändert aus `SCHWEIZ-SAAS.md` §5, hier nochmals verdichtet:

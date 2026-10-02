@@ -7,6 +7,7 @@ import {
   sellVehicle,
 } from '../services/vehicles.js'
 import { listCosts, addCost, deleteCost } from '../services/vehicle-costs.js'
+import { renderKaufvertrag, renderAnkaufsvertrag } from '../services/contracts.js'
 
 export async function registerVehicleRoutes(app) {
   app.get('/api/vehicles', { preHandler: app.requireAuth }, async (request) => {
@@ -66,5 +67,28 @@ export async function registerVehicleRoutes(app) {
     const removed = await deleteCost(request.tenantId, request.params.id, request.params.costId)
     if (!removed) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
     return { ok: true }
+  })
+
+  const sendContract = (reply, buffer, filename) => {
+    if (!buffer) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
+    reply.type('application/pdf')
+    reply.header('Content-Disposition', `inline; filename="${filename}"`)
+    return reply.send(buffer)
+  }
+
+  app.get('/api/vehicles/:id/kaufvertrag.pdf', { preHandler: app.requireAuth }, async (request, reply) => {
+    const { buyerPartyId, warrantyMonths } = request.query
+    const buffer = await renderKaufvertrag(request.tenantId, request.params.id, {
+      buyerPartyId: buyerPartyId || undefined,
+      warrantyMonths: warrantyMonths ? Number(warrantyMonths) : undefined,
+    })
+    return sendContract(reply, buffer, 'Kaufvertrag.pdf')
+  })
+
+  app.get('/api/vehicles/:id/ankaufsvertrag.pdf', { preHandler: app.requireAuth }, async (request, reply) => {
+    const buffer = await renderAnkaufsvertrag(request.tenantId, request.params.id, {
+      sellerPartyId: request.query.sellerPartyId || undefined,
+    })
+    return sendContract(reply, buffer, 'Ankaufsvertrag.pdf')
   })
 }

@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
     "@tiff/core-billing": "*",
     "@tiff/core-ui": "*",
     "react": "^18.3.1",

@@ -1,5 +1,6 @@
-import { createInvoice, getInvoice, listInvoices } from '../services/invoices.js'
-import { renderInvoicePdfBuffer } from '../services/invoice-pdf.js'
+import { canSeeCompanyTotals } from '@tiff/core-auth'
+import { createInvoice, getInvoice, listInvoices, listRemindersForInvoice } from '../services/invoices.js'
+import { renderInvoicePdfBuffer, renderReminderPdfBuffer } from '../services/invoice-pdf.js'
 import { archivePdf, getArchivedPdf, ArchiveIntegrityError } from '../services/archive.js'
 import { recordPayment, listPayments } from '../services/payments.js'
 import { importCamt054 } from '../services/camt054-import.js'
@@ -27,20 +28,17 @@ export async function registerInvoiceRoutes(app) {
     return { ok: true, data: invoice }
   })
 
-  app.get('/api/invoices/:id/pdf', { preHandler: app.requireAuth }, async (request, reply) => {
-    const invoice = await getInvoice(request.tenantId, request.params.id)
-    if (!invoice) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
-
-    // Schon archiviert? Dann kommt genau das PDF zurück, das damals
-    // ausgestellt wurde — aus dem Objektspeicher, nicht neu gerendert (siehe
-    // archive.js für den Grund: PDF-Rendering-Code darf sich ändern, ohne
-    // dass historische Belege sich dadurch "ändern").
-    const archived = await getArchivedPdf(request.tenantId, invoice.id)
-    let buffer = archived
+  // Rechnung und Mahnung teilen sich den Weg: einmal archiviert, kommt das PDF
+  // beim nächsten Abruf aus dem Speicher, nie aus einer erneuten Erzeugung
+  // (archive.js: PDF-Rendering-Code darf sich ändern, ohne dass historische
+  // Belege sich dadurch "ändern").
+  async function sendArchivedPdf(request, reply, document, render) {
+    if (!document) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
+    let buffer = await getArchivedPdf(request.tenantId, document.id)
     if (!buffer) {
-      buffer = await renderInvoicePdfBuffer(invoice)
+      buffer = await render(document)
       try {
-        await archivePdf(request.tenantId, { documentId: invoice.id, userId: request.userId, pdfBuffer: buffer })
+        await archivePdf(request.tenantId, { documentId: document.id, userId: request.userId, pdfBuffer: buffer })
       } catch (err) {
         if (err instanceof ArchiveIntegrityError) {
           request.log.error(err)
@@ -49,11 +47,23 @@ export async function registerInvoiceRoutes(app) {
         throw err
       }
     }
-
     reply.type('application/pdf')
-    reply.header('Content-Disposition', `inline; filename="${invoice.number}.pdf"`)
+    reply.header('Content-Disposition', `inline; filename="${document.number}.pdf"`)
     return reply.send(buffer)
-  })
+  }
+
+  app.get('/api/invoices/:id/pdf', { preHandler: app.requireAuth }, async (request, reply) =>
+    sendArchivedPdf(request, reply, await getInvoice(request.tenantId, request.params.id), renderInvoicePdfBuffer),
+  )
+
+  app.get('/api/reminders/:id/pdf', { preHandler: app.requireAuth }, async (request, reply) =>
+    sendArchivedPdf(request, reply, await getReminder(request.tenantId, request.params.id), renderReminderPdfBuffer),
+  )
+
+  app.get('/api/invoices/:id/reminders', { preHandler: app.requireAuth }, async (request) => ({
+    ok: true,
+    data: await listRemindersForInvoice(request.tenantId, request.params.id),
+  }))
 
   app.get('/api/invoices/:id/payments', { preHandler: app.requireAuth }, async (request) => ({
     ok: true,
@@ -104,6 +114,9 @@ export async function registerInvoiceRoutes(app) {
   })
 
   app.get('/api/reports/vat', { preHandler: app.requireAuth }, async (request, reply) => {
+    if (!canSeeCompanyTotals(request.role)) {
+      return reply.code(403).send({ ok: false, error: 'Die MWST-Auswertung ist nur für Inhaber und Buchhaltung sichtbar.' })
+    }
     try {
       const report = await computeVatReport(request.tenantId, { from: request.query.from, to: request.query.to })
       return { ok: true, data: report }

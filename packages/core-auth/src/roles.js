@@ -31,3 +31,8 @@ export function isAssignableRole(role) {
 export function canSeeCompanyTotals(role) {
   return role === 'inhaber' || role === 'buchhaltung'
 }
+
+/** Betriebsdaten (Firma, UID, QR-IBAN, MWST-Methode) ändern: nur der Inhaber. */
+export function canEditCompanySettings(role) {
+  return role === 'inhaber'
+}

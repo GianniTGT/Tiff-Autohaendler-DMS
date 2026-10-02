@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api, ApiError } from '../api.js'
 import { t } from '../i18n/index.js'
+import lockup from '../assets/tiff-lockup-horizontal.png'
 
 export default function Login({ onLoggedIn }) {
   const [tenantSlug, setTenantSlug] = useState('')
@@ -17,24 +18,28 @@ export default function Login({ onLoggedIn }) {
       const session = await api.post('/api/auth/login', { tenantSlug, email, password })
       onLoggedIn(session)
     } catch (err) {
-      setError(err instanceof ApiError ? t('login.invalid') : 'Verbindung fehlgeschlagen.')
+      setError(err instanceof ApiError ? t('login.invalid') : t('login.connectionFailed'))
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white rounded-lg shadow p-6 space-y-4">
-        <h1 className="text-xl font-bold text-gray-900">{t('app.name')}</h1>
+    <div className="login-bg grid min-h-full place-items-center p-4">
+      <form onSubmit={handleSubmit} className="card w-full max-w-sm space-y-4 p-6 shadow-2xl">
+        <img src={lockup} alt={t('app.vendor')} className="mx-auto h-14 w-auto" />
+        <div className="text-center">
+          <h1 className="font-display text-2xl font-bold uppercase tracking-wide text-brand-deep">{t('app.name')}</h1>
+          <p className="text-sm text-steel">{t('login.tagline')}</p>
+        </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1" htmlFor="tenantSlug">
-            Betrieb
+          <label className="field-label" htmlFor="tenantSlug">
+            {t('login.tenant')}
           </label>
           <input
             id="tenantSlug"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="field"
             value={tenantSlug}
             onChange={(e) => setTenantSlug(e.target.value)}
             autoComplete="organization"
@@ -43,13 +48,13 @@ export default function Login({ onLoggedIn }) {
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1" htmlFor="email">
+          <label className="field-label" htmlFor="email">
             {t('login.email')}
           </label>
           <input
             id="email"
             type="email"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="field"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"
@@ -58,13 +63,13 @@ export default function Login({ onLoggedIn }) {
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1" htmlFor="password">
+          <label className="field-label" htmlFor="password">
             {t('login.password')}
           </label>
           <input
             id="password"
             type="password"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="field"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
@@ -72,13 +77,9 @@ export default function Login({ onLoggedIn }) {
           />
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full bg-gray-900 text-white rounded px-3 py-2 disabled:opacity-50"
-        >
+        <button type="submit" disabled={busy} className="btn w-full">
           {t('login.submit')}
         </button>
       </form>
