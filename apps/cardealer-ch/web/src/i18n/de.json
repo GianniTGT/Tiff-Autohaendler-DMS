@@ -19,7 +19,10 @@
     "none": "—",
     "loading": "Wird geladen…",
     "notChosen": "Nicht gewählt",
-    "money": { "hide": "Zahlen ausblenden", "show": "Zahlen wieder anzeigen" }
+    "money": {
+      "hide": "Zahlen ausblenden",
+      "show": "Zahlen wieder anzeigen"
+    }
   },
   "nav": {
     "dashboard": "Übersicht",
@@ -91,8 +94,28 @@
       "onLot": "Fahrzeuge auf Lager",
       "cashTiedUp": "Kapital gebunden",
       "projectedProfit": "Erwarteter Gewinn",
-      "soldThisYear": "Dieses Jahr verkauft"
-    }
+      "soldThisYear": "Dieses Jahr verkauft",
+      "overdue": "Überfällige Rechnungen",
+      "soldThisYearProfit": "Gewinn daraus"
+    },
+    "title": "Übersicht",
+    "sections": {
+      "inspectionExpired": "MFK abgelaufen",
+      "inspectionDueSoon": "MFK bald fällig",
+      "ageing": "Lange Standzeit",
+      "needsDoing": "Zu erledigen"
+    },
+    "daysLeft": "in {n} Tagen",
+    "daysAgo": "seit {n} Tagen",
+    "onLotDays": "{n} Tage auf Lager",
+    "allGood": "Nichts offen.",
+    "moreItems": "… und {n} weitere",
+    "reasons": {
+      "noAskingPrice": "Angebotspreis fehlt",
+      "noInspection": "MFK-Datum fehlt",
+      "noIdentifier": "VIN/Stammnummer fehlt"
+    },
+    "restricted": "Nur für Inhaber und Buchhaltung sichtbar."
   },
   "vehicle": {
     "fields": {
@@ -128,12 +151,126 @@
     "profit": "Gewinn",
     "totalInvested": "Insgesamt investiert",
     "unknown": "Unbekanntes Fahrzeug",
-    "health": { "good": "Gesunde Marge", "thin": "Knappe Marge", "loss": "Mit Verlust" }
+    "health": {
+      "good": "Gesunde Marge",
+      "thin": "Knappe Marge",
+      "loss": "Mit Verlust"
+    },
+    "detail": {
+      "close": "Schliessen",
+      "edit": "Bearbeiten",
+      "saved": "Gespeichert.",
+      "sections": {
+        "identity": "Identifikation",
+        "spec": "Fahrzeugdaten",
+        "inspection": "MFK",
+        "pricing": "Preise und MWST",
+        "notes": "Notizen",
+        "economics": "Wirtschaftlichkeit",
+        "costs": "Kosten",
+        "sell": "Verkauf abschliessen"
+      },
+      "economics": {
+        "purchase": "Einkauf",
+        "parts": "Teile",
+        "labor": "Arbeit",
+        "other": "Übrige Kosten",
+        "invested": "Investiert",
+        "price": "Verkaufspreis",
+        "priceAsking": "Angebotspreis (geplant)",
+        "profit": "Gewinn",
+        "margin": "Marge"
+      },
+      "vatScheme": "MWST-Schema",
+      "purchaseFrom": "Einkauf von",
+      "purchasedAt": "Einkaufsdatum",
+      "notionalInputTax": "Fiktiver Vorsteuerabzug",
+      "vatSchemes": {
+        "notional_input_tax": "Fiktiver Vorsteuerabzug (Art. 28a)",
+        "standard": "Normal besteuert",
+        "margin": "Margenbesteuerung"
+      },
+      "purchaseFroms": {
+        "private": "Privatperson",
+        "dealer": "Händler",
+        "auction": "Auktion",
+        "trade_in": "Inzahlungnahme"
+      },
+      "cost": {
+        "kind": "Art",
+        "description": "Beschreibung",
+        "amount": "Betrag (CHF)",
+        "date": "Datum",
+        "add": "Hinzufügen",
+        "empty": "Noch keine Kosten erfasst.",
+        "remove": "Entfernen",
+        "kinds": {
+          "part": "Teil",
+          "labor": "Arbeit",
+          "transport": "Transport",
+          "fee": "Gebühr",
+          "detail": "Aufbereitung"
+        }
+      },
+      "sell": {
+        "price": "Verkaufspreis (CHF)",
+        "date": "Verkaufsdatum",
+        "buyer": "Käufer",
+        "chooseBuyer": "Käufer wählen (optional)",
+        "submit": "Als verkauft markieren",
+        "soldOn": "Verkauft am {date}"
+      },
+      "health": {
+        "good": "Gesunde Marge",
+        "thin": "Knappe Marge",
+        "loss": "Mit Verlust"
+      }
+    },
+    "options": {
+      "bodyType": {
+        "saloon": "Limousine",
+        "estate": "Kombi",
+        "suv": "SUV / Geländewagen",
+        "small-car": "Kleinwagen",
+        "coupe": "Coupé",
+        "cabriolet": "Cabriolet",
+        "minivan": "Van / Minibus",
+        "pickup": "Pick-up",
+        "van": "Transporter",
+        "bus": "Bus",
+        "other": "Andere"
+      },
+      "fuelType": {
+        "petrol": "Benzin",
+        "diesel": "Diesel",
+        "electric": "Elektro",
+        "hybrid-petrol": "Hybrid (Benzin)",
+        "hybrid-diesel": "Hybrid (Diesel)",
+        "lpg": "Autogas (LPG)",
+        "cng": "Erdgas (CNG)",
+        "hydrogen": "Wasserstoff",
+        "other": "Andere"
+      },
+      "transmissionType": {
+        "manual": "Manuell",
+        "automatic": "Automat",
+        "semi-automatic": "Halbautomat",
+        "automatic-stepless": "Automat (stufenlos)"
+      },
+      "driveType": {
+        "front": "Vorderrad",
+        "rear": "Hinterrad",
+        "all": "Allrad"
+      }
+    }
   },
   "customers": {
     "title": "Kunden",
     "add": "+ Kunde erfassen",
-    "kind": { "person": "Person", "company": "Firma" },
+    "kind": {
+      "person": "Person",
+      "company": "Firma"
+    },
     "fields": {
       "kind": "Art",
       "companyName": "Firma",
@@ -178,7 +315,8 @@
       "chooseVehicle": "Fahrzeug (optional)",
       "description": "Beschreibung",
       "priceNet": "Preis netto (CHF)",
-      "needsCustomer": "Bitte zuerst einen Kunden erfassen."
+      "needsCustomer": "Bitte zuerst einen Kunden erfassen.",
+      "noCustomerHint": "Ohne Kunde"
     },
     "createSaleContract": "Kaufvertrag erstellen",
     "createPurchaseContract": "Ankaufsvertrag erstellen",

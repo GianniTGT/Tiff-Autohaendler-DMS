@@ -2,6 +2,13 @@ import pg from 'pg'
 
 const { Pool } = pg
 
+// DATE-Spalten (OID 1082) als 'YYYY-MM-DD'-Text statt als JS-Date. Ein Date
+// steht für lokale Mitternacht und wird beim JSON-Export um die Zeitzone
+// verschoben (CH: der 2.10. kommt als "…-01T22:00:00Z" an), und ein Vergleich
+// wie `valid_from > iso` in findTaxRate() ist zwischen Date und String immer
+// false — der MWST-Satz wurde so nie nach Datum gewählt.
+pg.types.setTypeParser(1082, (value) => value)
+
 let pool
 
 export function getPool() {

@@ -6,7 +6,7 @@ import { partyName } from './CustomerList.jsx'
 
 const EMPTY_FORM = { partyId: '', vehicleId: '', description: '', price: '' }
 
-const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString('de-CH') : t('common.none'))
+const formatDate = (day) => (day ? new Date(`${String(day).slice(0, 10)}T00:00:00`).toLocaleDateString('de-CH') : t('common.none'))
 
 export default function InvoiceList() {
   const [invoices, setInvoices] = useState(null)

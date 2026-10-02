@@ -5,8 +5,11 @@ import Login from './components/Login.jsx'
 import VehicleList from './components/VehicleList.jsx'
 import CustomerList from './components/CustomerList.jsx'
 import InvoiceList from './components/InvoiceList.jsx'
+import Dashboard from './components/Dashboard.jsx'
+import VehicleDetail from './components/VehicleDetail.jsx'
 
 const TABS = [
+  { key: 'dashboard', label: 'nav.dashboard', Screen: Dashboard },
   { key: 'inventory', label: 'nav.inventory', Screen: VehicleList },
   { key: 'customers', label: 'nav.customers', Screen: CustomerList },
   { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList },
@@ -14,7 +17,9 @@ const TABS = [
 
 export default function App() {
   const [session, setSession] = useState(undefined) // undefined = wird geprüft, null = abgemeldet
-  const [tab, setTab] = useState('inventory')
+  const [tab, setTab] = useState('dashboard')
+  const [openVehicleId, setOpenVehicleId] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     api
@@ -62,8 +67,15 @@ export default function App() {
       </nav>
       {(() => {
         const { Screen } = TABS.find((x) => x.key === tab)
-        return <Screen key={tab} />
+        return <Screen key={`${tab}-${refreshKey}`} onOpenVehicle={setOpenVehicleId} />
       })()}
+      {openVehicleId && (
+        <VehicleDetail
+          vehicleId={openVehicleId}
+          onClose={() => setOpenVehicleId(null)}
+          onChanged={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
     </div>
   )
 }

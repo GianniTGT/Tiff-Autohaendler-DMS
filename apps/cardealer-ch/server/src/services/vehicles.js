@@ -12,6 +12,7 @@
  */
 import { withTenant } from '@tiff/core-db'
 import { computeEconomics, findTaxRate, notionalInputTax } from '@tiff/core-billing'
+import { listCosts, groupCosts } from './vehicle-costs.js'
 
 export const FIELD_MAP = Object.freeze({
   vin: 'vin',
@@ -164,14 +165,40 @@ export async function updateVehicle(tenantId, id, fields) {
   })
 }
 
-/** Wirtschaftlichkeit eines einzelnen Fahrzeugs — Einkauf/Teile/Arbeit/Sonstiges → Gewinn. */
+/** Wirtschaftlichkeit eines einzelnen Fahrzeugs — Einkauf + erfasste Kosten → Gewinn. */
 export async function getVehicleEconomics(tenantId, id) {
   const vehicle = await getVehicle(tenantId, id)
   if (!vehicle) return null
+  const costs = groupCosts(await listCosts(tenantId, id))
   return computeEconomics({
     purchaseRappen: vehicle.purchasePriceRappen,
     askingPriceRappen: vehicle.askingPriceRappen,
     soldPriceRappen: vehicle.soldPriceRappen,
     writtenOff: vehicle.status === 'written_off',
+    ...costs,
+  })
+}
+
+/**
+ * Verkauf abschliessen: Preis, Datum und Käufer festhalten, Status 'sold'.
+ * Ein verkauftes Fahrzeug kann nicht ein zweites Mal verkauft werden — wer
+ * den Preis korrigieren muss, tut das über PATCH.
+ */
+export async function sellVehicle(tenantId, id, { soldPriceRappen, soldAt, buyerPartyId }) {
+  if (!Number.isInteger(soldPriceRappen) || soldPriceRappen <= 0) {
+    throw new Error('Der Verkaufspreis muss grösser als 0 sein.')
+  }
+  return withTenant(tenantId, async (client) => {
+    const existing = await client.query('SELECT status FROM vehicles WHERE id = $1', [id])
+    if (!existing.rows[0]) return null
+    if (existing.rows[0].status === 'sold') throw new Error('Dieses Fahrzeug ist bereits verkauft.')
+    if (existing.rows[0].status === 'written_off') throw new Error('Ein abgeschriebenes Fahrzeug kann nicht verkauft werden.')
+    const result = await client.query(
+      `UPDATE vehicles
+          SET status = 'sold', sold_price_rappen = $1, sold_at = COALESCE($2::date, CURRENT_DATE), buyer_party_id = $3
+        WHERE id = $4 RETURNING *`,
+      [soldPriceRappen, soldAt ?? null, buyerPartyId ?? null, id],
+    )
+    return camelizeRow(result.rows[0])
   })
 }

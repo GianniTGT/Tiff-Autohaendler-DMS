@@ -5,7 +5,7 @@ import { t } from '../i18n/index.js'
 
 const EMPTY_FORM = { vin: '', make: '', model: '', mileageKm: '', purchasePrice: '', askingPrice: '' }
 
-export default function VehicleList() {
+export default function VehicleList({ onOpenVehicle }) {
   const [vehicles, setVehicles] = useState(null)
   const [error, setError] = useState(null)
   const [showForm, setShowForm] = useState(false)
@@ -124,7 +124,7 @@ export default function VehicleList() {
           </thead>
           <tbody>
             {vehicles.map((v) => (
-              <tr key={v.id} className="border-b last:border-0">
+              <tr key={v.id} className="border-b last:border-0 cursor-pointer hover:bg-gray-50" onClick={() => onOpenVehicle?.(v.id)}>
                 <td className="p-3">{[v.make, v.model].filter(Boolean).join(' ') || t('vehicle.unknown')}</td>
                 <td className="p-3 text-gray-500">{v.vin || t('common.none')}</td>
                 <td className="p-3">{v.mileageKm != null ? `${v.mileageKm} km` : t('common.none')}</td>

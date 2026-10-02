@@ -4,7 +4,9 @@ import {
   createVehicle,
   updateVehicle,
   getVehicleEconomics,
+  sellVehicle,
 } from '../services/vehicles.js'
+import { listCosts, addCost, deleteCost } from '../services/vehicle-costs.js'
 
 export async function registerVehicleRoutes(app) {
   app.get('/api/vehicles', { preHandler: app.requireAuth }, async (request) => {
@@ -33,5 +35,36 @@ export async function registerVehicleRoutes(app) {
     const vehicle = await updateVehicle(request.tenantId, request.params.id, request.body ?? {})
     if (!vehicle) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
     return { ok: true, data: vehicle }
+  })
+
+  app.post('/api/vehicles/:id/sell', { preHandler: app.requireAuth }, async (request, reply) => {
+    try {
+      const vehicle = await sellVehicle(request.tenantId, request.params.id, request.body ?? {})
+      if (!vehicle) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
+      return { ok: true, data: vehicle }
+    } catch (err) {
+      return reply.code(400).send({ ok: false, error: err.message })
+    }
+  })
+
+  app.get('/api/vehicles/:id/costs', { preHandler: app.requireAuth }, async (request) => ({
+    ok: true,
+    data: await listCosts(request.tenantId, request.params.id),
+  }))
+
+  app.post('/api/vehicles/:id/costs', { preHandler: app.requireAuth }, async (request, reply) => {
+    try {
+      const cost = await addCost(request.tenantId, request.params.id, request.body ?? {})
+      if (!cost) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
+      return reply.code(201).send({ ok: true, data: cost })
+    } catch (err) {
+      return reply.code(400).send({ ok: false, error: err.message })
+    }
+  })
+
+  app.delete('/api/vehicles/:id/costs/:costId', { preHandler: app.requireAuth }, async (request, reply) => {
+    const removed = await deleteCost(request.tenantId, request.params.id, request.params.costId)
+    if (!removed) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
+    return { ok: true }
   })
 }
