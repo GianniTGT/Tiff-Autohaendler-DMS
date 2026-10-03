@@ -28,7 +28,16 @@ export function detectImageType(buffer) {
 }
 
 function toPhoto(row) {
-  return { id: row.id, vehicleId: row.vehicle_id, contentType: row.content_type, sizeBytes: row.size_bytes, position: row.position, isCover: row.is_cover }
+  return {
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    contentType: row.content_type,
+    sizeBytes: row.size_bytes,
+    position: row.position,
+    isCover: row.is_cover,
+    // Bildschlüssel bei AutoScout24 (Migration 19); null = dort noch nicht hochgeladen.
+    autoscout24ImageKey: row.autoscout24_image_key ?? null,
+  }
 }
 
 export async function listPhotos(tenantId, vehicleId) {
@@ -122,4 +131,47 @@ export async function deletePhoto(tenantId, vehicleId, photoId) {
   if (!removed) return false
   await store.deleteObject(removed.storage_key).catch(() => {})
   return true
+}
+
+/**
+ * Fotos in der Reihenfolge, in der sie bei AutoScout24 stehen sollen: Titelbild zuerst (dort ist das
+ * erste Bild das Hauptbild), dann nach Position. Mit Speicherschlüssel, damit der Sync die Bytes
+ * holen kann, ohne die Tabelle zu kennen.
+ */
+export async function listPhotosForAutoScout24(tenantId, vehicleId) {
+  return withTenant(tenantId, async (client) =>
+    (
+      await client.query('SELECT * FROM vehicle_photos WHERE vehicle_id = $1 ORDER BY is_cover DESC, position, created_at', [vehicleId])
+    ).rows.map((row) => ({ ...toPhoto(row), storageKey: row.storage_key })),
+  )
+}
+
+/** Bytes eines Fotos über seinen Speicherschlüssel — für den Upload an AutoScout24. */
+export async function getPhotoBytesByStorageKey(storageKey) {
+  return store.getObject(storageKey)
+}
+
+export async function setAutoScout24ImageKey(tenantId, vehicleId, photoId, imageKey) {
+  await withTenant(tenantId, (client) =>
+    client.query('UPDATE vehicle_photos SET autoscout24_image_key = $1 WHERE id = $2 AND vehicle_id = $3', [imageKey, photoId, vehicleId]),
+  )
+}
+
+/** Alle Bildschlüssel eines Fahrzeugs vergessen — wenn das Inserat weg ist oder neu angelegt wurde, gelten sie nicht mehr. */
+export async function clearAutoScout24ImageKeys(tenantId, vehicleId) {
+  await withTenant(tenantId, (client) =>
+    client.query('UPDATE vehicle_photos SET autoscout24_image_key = NULL WHERE vehicle_id = $1', [vehicleId]),
+  )
+}
+
+/** Pro Fahrzeug: wie viele Fotos es gibt und wie viele davon bei AutoScout24 liegen — für die Inserate-Übersicht. */
+export async function countPhotosByVehicle(tenantId) {
+  return withTenant(tenantId, async (client) => {
+    const rows = (
+      await client.query(
+        'SELECT vehicle_id, COUNT(*)::int AS total, COUNT(autoscout24_image_key)::int AS synced FROM vehicle_photos GROUP BY vehicle_id',
+      )
+    ).rows
+    return new Map(rows.map((r) => [r.vehicle_id, { total: r.total, synced: r.synced }]))
+  })
 }

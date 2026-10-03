@@ -109,9 +109,11 @@ export function createAutoScout24Client({ baseUrl = PRODUCTION_BASE_URL, fetchIm
       }),
 
     /**
-     * Fotos in zwei Schritten, wie AUTOSCOUT24-API.md §2 beschreibt: erst
-     * pro Datei hochladen (liefert einen `key`), dann einmal die Liste der
-     * Keys in der gewünschten Reihenfolge setzen.
+     * Fotos in zwei Schritten (OpenAPI-Spezifikation `UploadSellerListingImage` /
+     * `SetSellerListingImages`): erst pro Datei hochladen — multipart, Feld `file`,
+     * erlaubt png/jpeg/gif/webp, Antwort `{ key }` — dann einmal die Liste aller
+     * Keys in der gewünschten Reihenfolge setzen (das erste Bild ist das Titelbild).
+     * Der Body der Liste ist laut Spezifikation ein Array von `{ key }`, kein Objekt.
      */
     uploadImage: (credentials, sellerId, listingId, formData) =>
       request('POST', `/public/v1/sellers/${sellerId}/listings/${listingId}/images/upload`, {
@@ -121,7 +123,14 @@ export function createAutoScout24Client({ baseUrl = PRODUCTION_BASE_URL, fetchIm
       }),
 
     setImages: (credentials, sellerId, listingId, keys) =>
-      request('PUT', `/public/v1/sellers/${sellerId}/listings/${listingId}/images`, { credentials, body: { keys } }),
+      request('PUT', `/public/v1/sellers/${sellerId}/listings/${listingId}/images`, {
+        credentials,
+        body: keys.map((key) => ({ key })),
+      }),
+
+    /** Welche Bilder AutoScout24 für das Inserat kennt: `[{ id, key, url }]`. */
+    getImages: (credentials, sellerId, listingId) =>
+      request('GET', `/public/v1/sellers/${sellerId}/listings/${listingId}/images`, { credentials }),
 
     /** Nachschlagewerke, um makeKey/modelKey zu finden — siehe lookup.js. */
     listMakes: (credentials, vehicleCategory = 'car') =>

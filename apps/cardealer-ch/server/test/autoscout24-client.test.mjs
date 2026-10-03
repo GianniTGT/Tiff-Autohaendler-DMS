@@ -138,3 +138,32 @@ test('uploadImage schickt den FormData-Body ohne Content-Type-Override', async (
   assert.equal(call.options.body, formData)
   assert.equal(call.options.headers['Content-Type'], undefined)
 })
+
+test('setImages schickt laut Spezifikation ein Array von { key } in der gegebenen Reihenfolge, kein { keys }', async () => {
+  const fetchImpl = mockFetch([
+    jsonResponse(200, { access_token: 'token-abc', expires_in: 86400 }),
+    { ok: true, status: 204, text: async () => '' },
+  ])
+  const client = createAutoScout24Client({ fetchImpl, baseUrl: 'https://api.example.test' })
+
+  const result = await client.setImages(CREDENTIALS, 'seller-1', 'listing-42', ['101/1101/2.jpg', '101/1101/1.jpg'])
+  assert.equal(result, null)
+  const [, call] = fetchImpl.calls
+  assert.equal(call.url, 'https://api.example.test/public/v1/sellers/seller-1/listings/listing-42/images')
+  assert.equal(call.options.method, 'PUT')
+  assert.deepEqual(JSON.parse(call.options.body), [{ key: '101/1101/2.jpg' }, { key: '101/1101/1.jpg' }])
+})
+
+test('getImages liest die Bildliste des Inserats', async () => {
+  const fetchImpl = mockFetch([
+    jsonResponse(200, { access_token: 'token-abc', expires_in: 86400 }),
+    jsonResponse(200, [{ id: 1, key: 'a.jpg', url: 'https://images.example.test/a.jpg' }]),
+  ])
+  const client = createAutoScout24Client({ fetchImpl, baseUrl: 'https://api.example.test' })
+
+  const result = await client.getImages(CREDENTIALS, 'seller-1', 'listing-42')
+  assert.equal(result[0].key, 'a.jpg')
+  const [, call] = fetchImpl.calls
+  assert.equal(call.url, 'https://api.example.test/public/v1/sellers/seller-1/listings/listing-42/images')
+  assert.equal(call.options.method, 'GET')
+})

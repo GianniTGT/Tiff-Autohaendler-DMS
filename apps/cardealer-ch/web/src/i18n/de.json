@@ -758,7 +758,7 @@
   },
   "listings": {
     "title": "Inserate",
-    "intro": "Fahrzeuge einmal erfassen, gezielt an AutoScout24 übertragen. Einkaufspreis, Verkaufspreis und Käuferdaten gehen nie hinauf.",
+    "intro": "Fahrzeuge einmal erfassen, gezielt an AutoScout24 übertragen — die Fotos gehen mit, Titelbild zuerst. Einkaufspreis, Verkaufspreis und Käuferdaten gehen nie hinauf.",
     "notConfigured": "AutoScout24 ist noch nicht verbunden. Die Zugangsdaten trägt der Inhaber unter Einstellungen ein.",
     "empty": "Keine Fahrzeuge im Bestand.",
     "cols": {
@@ -793,8 +793,16 @@
       "activate": "Aktivieren",
       "deactivate": "Deaktivieren",
       "remove": "Entfernen",
-      "edit": "Fahrzeug ergänzen"
+      "edit": "Fahrzeug ergänzen",
+      "photos": "Fotos übertragen"
     },
+    "photos": {
+      "none": "Keine Fotos",
+      "local": "{total} Fotos",
+      "count": "{total} Fotos, {synced} davon bei AutoScout24"
+    },
+    "photosDone": "Erledigt — {uploaded} Fotos neu hochgeladen, {total} im Inserat.",
+    "photosFailed": "Fahrzeugdaten übertragen, die Fotos aber nicht: {error} — unter «Fotos übertragen» erneut versuchen.",
     "done": "Erledigt.",
     "confirmRemove": "Das Inserat bei AutoScout24 wirklich löschen?",
     "soldStillListed": "Verkauft — das Inserat läuft noch!",

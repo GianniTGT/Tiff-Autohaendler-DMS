@@ -141,12 +141,14 @@ Prozesses — bei mehreren Servern braucht es einen gemeinsamen Speicher).
   MWSTG Art. 28a/24a gebaut, aber nicht von einem Treuhänder bestätigt.
 - **Nie gegen echte Infrastruktur gelaufen** (mangels Zugangsdaten): das
   S3-Objektspeicher-Backend, der AutoScout24-Push samt Marken-/Modell-Nachschlagewerken
-  (angenommenes Antwortformat in `integrations/autoscout24/lookup.js`) und die
-  AutoScout24-Auswahlwerte (Farbe, Treibstoff, Zustand, …) im Fahrzeugformular.
+  (angenommenes Antwortformat in `integrations/autoscout24/lookup.js`), der Foto-Upload
+  (multipart-Feld `file` und Bildliste als Array von `{ key }`, beides aus der OpenAPI-Spezifikation
+  unter developers.autoscout24.ch) und die AutoScout24-Auswahlwerte (Farbe, Treibstoff, Zustand, …)
+  im Fahrzeugformular.
 - **Aufbewahrungsfrist** rechnet mit dem Kalenderjahr (Ende des Belegjahres + 10 Jahre);
   ein abweichendes Geschäftsjahr kann sie nur verlängern.
 
 ## Noch offen
 
-Fotos an AutoScout24 mitschicken (braucht öffentliche Bild-URLs), Export des Archivs
-als Datenstrom für sehr grosse Bestände, Anbindung an `Tiff-Cardealer-Theme-Swiss`.
+Export des Archivs als Datenstrom für sehr grosse Bestände, Anbindung an
+`Tiff-Cardealer-Theme-Swiss`.

@@ -7,7 +7,7 @@ import { PageHeader, Tag, Notice, formatDay } from './ui.jsx'
 export default function Listings({ onOpenVehicle }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
-  const [message, setMessage] = useState(null)
+  const [message, setMessage] = useState(null) // { text, tone }
   const [busyId, setBusyId] = useState(null)
 
   async function reload() {
@@ -27,14 +27,25 @@ export default function Listings({ onOpenVehicle }) {
     setError(null)
     setMessage(null)
     try {
-      await action()
-      setMessage(t('listings.done'))
+      const result = await action()
+      setMessage(describeResult(result))
       await reload()
     } catch (err) {
       setError(err.message)
     } finally {
       setBusyId(null)
     }
+  }
+
+  /**
+   * Ein Push meldet die Fotos getrennt: die Fahrzeugdaten können oben sein, die Fotos aber nicht —
+   * das soll nicht wie ein Fehlschlag des Ganzen aussehen, aber auch nicht wie «alles erledigt».
+   */
+  function describeResult(result) {
+    const photos = result?.photos ?? (result?.status === 'synced' || result?.status === 'none' ? result : null)
+    if (photos?.status === 'failed') return { text: t('listings.photosFailed', { error: photos.reason }), tone: 'amber' }
+    if (photos?.status === 'synced') return { text: t('listings.photosDone', { uploaded: photos.uploaded, total: photos.total }), tone: 'green' }
+    return { text: t('listings.done'), tone: 'green' }
   }
 
   if (!data) return <p className="p-6 text-steel">{error ?? t('common.loading')}</p>
@@ -45,7 +56,7 @@ export default function Listings({ onOpenVehicle }) {
       <p className="max-w-3xl text-sm text-steel">{t('listings.intro')}</p>
       {!data.configured && <Notice tone="amber">{t('listings.notConfigured')}</Notice>}
       {error && <Notice>{error}</Notice>}
-      {message && <Notice tone="green">{message}</Notice>}
+      {message && <Notice tone={message.tone}>{message.text}</Notice>}
 
       {data.rows.length === 0 ? (
         <div className="card p-8 text-center text-steel">{t('listings.empty')}</div>
@@ -79,6 +90,13 @@ export default function Listings({ onOpenVehicle }) {
                       {row.soldStillListed && <div className="mt-1 text-xs font-semibold text-danger">{t('listings.soldStillListed')}</div>}
                       {row.lastError && <div className="mt-1 text-xs text-danger">{t('listings.lastError', { error: row.lastError })}</div>}
                       {row.syncedAt && <div className="mt-1 text-xs text-steel">{t('listings.syncedAt', { date: formatDay(row.syncedAt) })}</div>}
+                      <div className={`mt-1 text-xs ${row.photos.pending ? 'text-warn' : 'text-steel'}`}>
+                        {row.photos.total === 0
+                          ? t('listings.photos.none')
+                          : row.listingId
+                            ? t('listings.photos.count', { total: row.photos.total, synced: row.photos.synced })
+                            : t('listings.photos.local', { total: row.photos.total })}
+                      </div>
                       {state === 'incomplete' && (
                         <div className="mt-1 text-xs text-warn">{t('listings.missing', { fields: row.missing.map((f) => t(`listings.fields.${f}`)).join(', ') })}</div>
                       )}
@@ -93,6 +111,11 @@ export default function Listings({ onOpenVehicle }) {
                         {state !== 'incomplete' && row.status !== 'sold' && (
                           <button className="btn" disabled={busy || !data.configured} onClick={post('push')}>
                             {row.listingId ? t('listings.actions.update') : t('listings.actions.push')}
+                          </button>
+                        )}
+                        {row.listingId && row.photos.pending && row.status !== 'sold' && (
+                          <button className="btn" disabled={busy || !data.configured} onClick={post('photos')}>
+                            {t('listings.actions.photos')}
                           </button>
                         )}
                         {row.listingId && (

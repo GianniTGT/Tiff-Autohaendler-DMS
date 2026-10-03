@@ -3,6 +3,7 @@ import {
   activateAutoScout24Listing,
   deactivateAutoScout24Listing,
   removeAutoScout24Listing,
+  syncPhotosToAutoScout24,
 } from '../services/autoscout24-sync.js'
 
 import { getListings } from '../services/listings.js'
@@ -21,6 +22,15 @@ export async function registerAutoScout24Routes(app) {
         modelKey: request.body?.modelKey,
       })
       return { ok: true, data: result }
+    } catch (err) {
+      return reply.code(400).send({ ok: false, error: clientMessage(err) })
+    }
+  })
+
+  /** Nur die Fotos abgleichen — nach Umsortieren, oder wenn sie beim Push scheiterten. */
+  app.post('/api/vehicles/:id/autoscout24/photos', { preHandler: app.requireAuth }, async (request, reply) => {
+    try {
+      return { ok: true, data: await syncPhotosToAutoScout24(request.tenantId, request.params.id) }
     } catch (err) {
       return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }

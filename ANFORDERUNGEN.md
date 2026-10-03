@@ -239,9 +239,13 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Angebotspreise sind brutto und werden für Positionen mit dem Normalsatz in Netto umgerechnet.
   Mit dem Verkauf (Rechnung oder von Hand) wird ein AutoScout24-Inserat deaktiviert — nach dem Commit, nie in der
   Transaktion; scheitert der Aufruf, bleibt der Verkauf, der Fehler steht am Fahrzeug und in der Übersicht
-  («Verkauft, aber noch inseriert»). Eine Gutschrift schaltet das Inserat nicht von selbst wieder ein. **Noch offen:** Fotos
-  an AutoScout24 mitschicken, abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als
-  Datenstrom für sehr grosse Archive.
+  («Verkauft, aber noch inseriert»). Eine Gutschrift schaltet das Inserat nicht von selbst wieder ein. **Fotos gehen
+  mit dem Push an AutoScout24** (zwei Schritte laut OpenAPI-Spezifikation: Upload pro Datei, dann die geordnete
+  Bildliste; hochgeladen wird nur, was dort noch fehlt — der Bildschlüssel steht am Foto —, die Reihenfolge mit
+  Titelbild zuerst wird bei jedem Push neu gesetzt; ein Foto-Fehler lässt den Push der Fahrzeugdaten bestehen und
+  steht am Fahrzeug, «Fotos übertragen» holt nach; ohne eigene Fotos wird die Bildliste dort nicht angerührt).
+  **Noch offen:** abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als Datenstrom für sehr grosse
+  Archive.
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 
