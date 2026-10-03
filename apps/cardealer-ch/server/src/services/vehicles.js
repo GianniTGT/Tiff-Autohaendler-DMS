@@ -90,6 +90,7 @@ function camelizeRow(row) {
   // Zustand des AutoScout24-Inserats: nur lesbar, nie über PATCH setzbar (nicht in FIELD_MAP).
   out.autoscout24Active = row.autoscout24_active ?? null
   out.autoscout24LastError = row.autoscout24_last_error ?? null
+  out.autoscout24PhotosStale = row.autoscout24_photos_stale ?? false
   return out
 }
 

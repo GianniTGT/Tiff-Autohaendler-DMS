@@ -1,9 +1,11 @@
 /**
  * Fotos an AutoScout24 — mit einem Ersatz-Client, ohne Netzwerk und ohne echte Zugangsdaten.
  * Prüft die Zusagen aus autoscout24-sync.js: nur hochladen, was dort noch fehlt; Titelbild zuerst;
- * Reihenfolge und Löschungen kommen ohne erneuten Upload an; ein Foto-Fehler lässt den Push der
- * Fahrzeugdaten bestehen und wird am Fahrzeug sichtbar; ohne eigene Fotos wird bei AutoScout24
- * nichts angerührt; ein entferntes Inserat vergisst seine Bildschlüssel.
+ * Reihenfolge und Löschungen kommen ohne erneuten Upload an und gelten bis dahin als «ausstehend»;
+ * ein Foto-Fehler lässt den Push der Fahrzeugdaten bestehen und wird am Fahrzeug sichtbar, ohne
+ * einen fremden Fehler zu überschreiben; eine abgelehnte Bildliste vergisst die Schlüssel; wer hier
+ * nie Fotos hatte, lässt die Bildliste dort in Ruhe, wer alle löscht, leert sie; ein entferntes
+ * Inserat vergisst seine Bildschlüssel. Dazu die HTTP-Route «Fotos übertragen».
  * Übersprungen ohne DATABASE_URL/MIGRATE_DATABASE_URL.
  */
 import { test } from 'node:test'
@@ -12,33 +14,41 @@ import os from 'node:os'
 import path from 'node:path'
 import fs from 'node:fs'
 import pg from 'pg'
+import Fastify from 'fastify'
 
 const hasDb = Boolean(process.env.DATABASE_URL && process.env.MIGRATE_DATABASE_URL)
 process.env.OBJECT_STORAGE_LOCAL_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'tiff-as24-photos-')) // vor dem Import
 
 const { closePool } = await import('@tiff/core-db')
+const { registerRoutes } = await import('../src/routes/index.js')
+const { createUser } = await import('../src/services/auth.js')
 const { createVehicle, getVehicle } = await import('../src/services/vehicles.js')
 const photos = await import('../src/services/photos.js')
 const sync = await import('../src/services/autoscout24-sync.js')
+const { AutoScout24ApiError } = await import('../src/integrations/autoscout24/client.js')
 const { getListings } = await import('../src/services/listings.js')
 const { updateTenantSettings } = await import('../src/services/tenant-settings.js')
 
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64, 1)])
 const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 2)])
 
-/** Zeichnet Uploads und gesetzte Bildlisten auf; `failUploadsWith` lässt den nächsten Upload scheitern. */
+/** Zeichnet Uploads und gesetzte Bildlisten auf; `failNextUpload`/`rejectNextList` lassen den nächsten Schritt scheitern. */
 function fakeClient() {
   const uploads = [] // { listingId, fileName, type, size }
   const imageLists = [] // [listingId, keys]
   const calls = []
-  let failNext = null
+  let failUpload = null
+  let rejectList = null
   let n = 0
   return {
     uploads,
     imageLists,
     calls,
     failNextUpload(message) {
-      failNext = message
+      failUpload = message
+    },
+    rejectNextList(status) {
+      rejectList = status
     },
     reset() {
       uploads.length = 0
@@ -60,9 +70,9 @@ function fakeClient() {
       calls.push('removeListing')
     },
     uploadImage: async (_c, _s, listingId, form) => {
-      if (failNext) {
-        const m = failNext
-        failNext = null
+      if (failUpload) {
+        const m = failUpload
+        failUpload = null
         throw new Error(m)
       }
       const file = form.get('file')
@@ -71,6 +81,11 @@ function fakeClient() {
       return { key: `k-${n}` }
     },
     setImages: async (_c, _s, listingId, keys) => {
+      if (rejectList) {
+        const status = rejectList
+        rejectList = null
+        throw new AutoScout24ApiError(status, 'unknown image key')
+      }
       imageLists.push([listingId, [...keys]])
     },
   }
@@ -89,7 +104,8 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
   const client = fakeClient()
 
   t.after(async () => {
-    await adminPool.query('DELETE FROM vehicles WHERE tenant_id = $1', [tenantId])
+    sync.configureAutoScout24Client(null)
+    for (const table of ['vehicles', 'sessions', 'users']) await adminPool.query(`DELETE FROM ${table} WHERE tenant_id = $1`, [tenantId])
     await adminPool.query('DELETE FROM tenants WHERE id = $1', [tenantId])
     await adminPool.end()
     await closePool()
@@ -107,6 +123,8 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
     warrantyType: 'from-delivery',
     askingPriceRappen: 2_400_000,
   }
+  const listingRow = async (vehicleId) => (await getListings(tenantId)).rows.find((r) => r.id === vehicleId)
+
   const car = await createVehicle(tenantId, base)
   const p1 = await photos.addPhoto(tenantId, car.id, JPEG)
   const p2 = await photos.addPhoto(tenantId, car.id, PNG)
@@ -138,7 +156,10 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
         [p3.id, 'k-3'],
       ],
     )
-    assert.equal((await getVehicle(tenantId, car.id)).autoscout24LastError, null)
+    const v = await getVehicle(tenantId, car.id)
+    assert.equal(v.autoscout24LastError, null)
+    assert.equal(v.autoscout24PhotosStale, false)
+    assert.deepEqual((await listingRow(car.id)).photos, { total: 3, synced: 3, pending: false })
   })
 
   await t.test('zweiter Push: kein erneuter Upload, die Liste wird trotzdem neu gesetzt', async () => {
@@ -149,16 +170,29 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
     assert.deepEqual(client.imageLists, [['L-1', ['k-1', 'k-2', 'k-3']]])
   })
 
-  await t.test('umsortieren und löschen kommen ohne Upload an; ein neues Foto geht allein hinauf', async () => {
+  await t.test('umsortieren und löschen gelten als ausstehend, kommen ohne Upload an; ein neues Foto geht allein hinauf', async () => {
     client.reset()
     await photos.movePhoto(tenantId, car.id, p3.id, -1) // p3 vor p1
+    assert.deepEqual((await listingRow(car.id)).photos, { total: 3, synced: 3, pending: true }, 'Umsortieren allein macht das Inserat veraltet')
+
     await photos.deletePhoto(tenantId, car.id, p1.id)
+    assert.deepEqual((await listingRow(car.id)).photos, { total: 2, synced: 2, pending: true }, 'gelöscht hier, aber noch im Inserat')
     const p4 = await photos.addPhoto(tenantId, car.id, JPEG)
 
     const result = await sync.syncPhotosToAutoScout24(tenantId, car.id, { client })
     assert.deepEqual(result, { status: 'synced', total: 3, uploaded: 1, reused: 2 })
     assert.deepEqual(client.uploads.map((u) => u.fileName), [`${p4.id}.jpg`])
     assert.deepEqual(client.imageLists, [['L-1', ['k-1', 'k-3', 'k-4']]], 'Titelbild p2, dann p3, dann das neue; der Key des gelöschten p1 fehlt')
+    assert.deepEqual((await listingRow(car.id)).photos, { total: 3, synced: 3, pending: false })
+  })
+
+  await t.test('Titelbild wechseln gilt als ausstehend, bis die Liste neu gesetzt ist', async () => {
+    client.reset()
+    await photos.setCover(tenantId, car.id, p3.id)
+    assert.equal((await listingRow(car.id)).photos.pending, true)
+    await sync.syncPhotosToAutoScout24(tenantId, car.id, { client })
+    assert.deepEqual(client.imageLists[0][1][0], 'k-3', 'neues Titelbild zuerst')
+    assert.equal((await listingRow(car.id)).photos.pending, false)
   })
 
   await t.test('scheitert ein Upload, bleibt der Push der Fahrzeugdaten bestehen und der Fehler steht am Fahrzeug', async () => {
@@ -172,9 +206,7 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
     assert.match(result.photos.reason, /Bild zu gross/)
     assert.equal(client.imageLists.length, 0, 'keine halbe Liste setzen')
     assert.match((await getVehicle(tenantId, car.id)).autoscout24LastError, /^Fotos: Bild zu gross/)
-
-    const listing = (await getListings(tenantId)).rows.find((r) => r.id === car.id)
-    assert.deepEqual(listing.photos, { total: 4, synced: 3, pending: true })
+    assert.deepEqual((await listingRow(car.id)).photos, { total: 4, synced: 3, pending: true })
 
     // «Fotos übertragen» holt nur das fehlende nach und löscht den Fehler.
     client.reset()
@@ -182,7 +214,15 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
     assert.deepEqual(retry, { status: 'synced', total: 4, uploaded: 1, reused: 3 })
     assert.deepEqual(client.uploads.map((u) => u.fileName), [`${p5.id}.png`])
     assert.equal((await getVehicle(tenantId, car.id)).autoscout24LastError, null)
-    assert.deepEqual((await getListings(tenantId)).rows.find((r) => r.id === car.id).photos, { total: 4, synced: 4, pending: false })
+    assert.deepEqual((await listingRow(car.id)).photos, { total: 4, synced: 4, pending: false })
+  })
+
+  await t.test('ein fremder Fehler am Fahrzeug wird vom Foto-Abgleich nicht überschrieben', async () => {
+    client.reset()
+    await adminPool.query('UPDATE vehicles SET autoscout24_last_error = $1 WHERE id = $2', ['Deaktivieren: Dienst nicht erreichbar', car.id])
+    await sync.syncPhotosToAutoScout24(tenantId, car.id, { client })
+    assert.equal((await getVehicle(tenantId, car.id)).autoscout24LastError, 'Deaktivieren: Dienst nicht erreichbar')
+    await adminPool.query('UPDATE vehicles SET autoscout24_last_error = NULL WHERE id = $1', [car.id])
   })
 
   await t.test('«Fotos übertragen» hält auch seinen eigenen Fehler fest und wirft ihn', async () => {
@@ -194,11 +234,31 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
     await photos.deletePhoto(tenantId, car.id, p6.id)
   })
 
+  await t.test('lehnt AutoScout24 die Bildliste ab, werden die Schlüssel vergessen und der nächste Versuch lädt alles neu', async () => {
+    client.reset()
+    client.rejectNextList(400)
+    await assert.rejects(() => sync.syncPhotosToAutoScout24(tenantId, car.id, { client }), /Bildliste abgelehnt \(400\)/)
+    assert.ok((await photos.listPhotos(tenantId, car.id)).every((p) => p.autoscout24ImageKey === null))
+    assert.match((await getVehicle(tenantId, car.id)).autoscout24LastError, /^Fotos: AutoScout24 hat die Bildliste abgelehnt/)
+
+    client.reset()
+    const result = await sync.syncPhotosToAutoScout24(tenantId, car.id, { client })
+    assert.deepEqual(result, { status: 'synced', total: 4, uploaded: 4, reused: 0 })
+    assert.equal((await getVehicle(tenantId, car.id)).autoscout24LastError, null)
+
+    // Ein Serverfehler dort (5xx) ist kein Urteil über die Keys — die bleiben.
+    client.reset()
+    client.rejectNextList(503)
+    await assert.rejects(() => sync.syncPhotosToAutoScout24(tenantId, car.id, { client }))
+    assert.ok((await photos.listPhotos(tenantId, car.id)).every((p) => p.autoscout24ImageKey !== null))
+  })
+
   await t.test('Inserat entfernen vergisst die Bildschlüssel; der nächste Push lädt alles neu', async () => {
     client.reset()
     await sync.removeAutoScout24Listing(tenantId, car.id, { client })
     const stored = await photos.listPhotos(tenantId, car.id)
     assert.ok(stored.length === 4 && stored.every((p) => p.autoscout24ImageKey === null))
+    assert.equal((await listingRow(car.id)).photos.pending, false, 'ohne Inserat ist nichts ausstehend')
 
     client.reset()
     const result = await sync.pushVehicleToAutoScout24(tenantId, car.id, { client })
@@ -206,14 +266,49 @@ test('Fotos an AutoScout24', { skip: !hasDb }, async (t) => {
     assert.deepEqual(result.photos, { status: 'synced', total: 4, uploaded: 4, reused: 0 })
   })
 
-  await t.test('ohne eigene Fotos wird die Bildliste bei AutoScout24 nicht angerührt', async () => {
+  await t.test('wer hier nie Fotos hatte, lässt die Bildliste bei AutoScout24 in Ruhe; wer alle löscht, leert sie', async () => {
     client.reset()
     const bare = await createVehicle(tenantId, base)
     const result = await sync.pushVehicleToAutoScout24(tenantId, bare.id, { client })
     assert.deepEqual(result.photos, { status: 'none', total: 0, uploaded: 0, reused: 0 })
     assert.equal(client.uploads.length, 0)
     assert.equal(client.imageLists.length, 0)
-    const listing = (await getListings(tenantId)).rows.find((r) => r.id === bare.id)
-    assert.deepEqual(listing.photos, { total: 0, synced: 0, pending: false })
+    assert.deepEqual((await listingRow(bare.id)).photos, { total: 0, synced: 0, pending: false })
+
+    client.reset()
+    for (const p of await photos.listPhotos(tenantId, car.id)) await photos.deletePhoto(tenantId, car.id, p.id)
+    assert.deepEqual((await listingRow(car.id)).photos, { total: 0, synced: 0, pending: true }, 'gelöscht hier, noch im Inserat')
+    const cleared = await sync.syncPhotosToAutoScout24(tenantId, car.id, { client })
+    assert.deepEqual(cleared, { status: 'synced', total: 0, uploaded: 0, reused: 0 })
+    assert.deepEqual(client.imageLists, [['L-1', []]])
+    assert.equal((await listingRow(car.id)).photos.pending, false)
+  })
+
+  await t.test('HTTP: POST /api/vehicles/:id/autoscout24/photos antwortet wie der Push mit { photos }, 400 ohne Inserat', async () => {
+    sync.configureAutoScout24Client(client)
+    const app = Fastify()
+    await registerRoutes(app)
+    await app.ready()
+    try {
+      await createUser({ tenantId, email: 'chef@fotos.ch', name: 'Chef', password: 'ChefPasswort123', role: 'inhaber' })
+      const login = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { tenantSlug: slug, email: 'chef@fotos.ch', password: 'ChefPasswort123' } })
+      const cookie = login.cookies.map((c) => `${c.name}=${c.value}`).join('; ')
+
+      client.reset()
+      await photos.addPhoto(tenantId, car.id, JPEG)
+      const ok = await app.inject({ method: 'POST', url: `/api/vehicles/${car.id}/autoscout24/photos`, headers: { cookie } })
+      assert.equal(ok.statusCode, 200)
+      assert.deepEqual(ok.json().data.photos, { status: 'synced', total: 1, uploaded: 1, reused: 0 })
+
+      const bare = await createVehicle(tenantId, base)
+      const noListing = await app.inject({ method: 'POST', url: `/api/vehicles/${bare.id}/autoscout24/photos`, headers: { cookie } })
+      assert.equal(noListing.statusCode, 400)
+      assert.match(noListing.json().error, /kein AutoScout24-Inserat/)
+
+      const anonymous = await app.inject({ method: 'POST', url: `/api/vehicles/${car.id}/autoscout24/photos` })
+      assert.equal(anonymous.statusCode, 401)
+    } finally {
+      await app.close()
+    }
   })
 })

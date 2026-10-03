@@ -42,7 +42,7 @@ export default function Listings({ onOpenVehicle }) {
    * das soll nicht wie ein Fehlschlag des Ganzen aussehen, aber auch nicht wie «alles erledigt».
    */
   function describeResult(result) {
-    const photos = result?.photos ?? (result?.status === 'synced' || result?.status === 'none' ? result : null)
+    const photos = result?.photos
     if (photos?.status === 'failed') return { text: t('listings.photosFailed', { error: photos.reason }), tone: 'amber' }
     if (photos?.status === 'synced') return { text: t('listings.photosDone', { uploaded: photos.uploaded, total: photos.total }), tone: 'green' }
     return { text: t('listings.done'), tone: 'green' }

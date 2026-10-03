@@ -4,16 +4,17 @@
  * Fahrzeug einmal erfassen, hier gezielt an AutoScout24 schicken.
  */
 import { withTenant } from '@tiff/core-db'
-import { createAutoScout24Client } from '../integrations/autoscout24/client.js'
+import { createAutoScout24Client, AutoScout24ApiError } from '../integrations/autoscout24/client.js'
 import { resolveMakeAndModelKeys } from '../integrations/autoscout24/lookup.js'
 import { mapVehicleToAutoScout24Listing } from '../integrations/autoscout24/mapping.js'
 import { getVehicle, updateVehicle } from './vehicles.js'
 import { decryptSecret } from './secrets.js'
 import {
   listPhotosForAutoScout24,
-  getPhotoBytesByStorageKey,
+  getPhotoBytes,
   setAutoScout24ImageKey,
   clearAutoScout24ImageKeys,
+  markPhotosSynced,
 } from './photos.js'
 
 // Austauschbar, damit Tests ohne Netzwerk und ohne echte Zugangsdaten laufen (configureAutoScout24Client).
@@ -30,10 +31,22 @@ async function setListingState(tenantId, vehicleId, { active, error }) {
   )
 }
 
-/** Nur den Fehlertext setzen oder löschen, ohne den Aktiv-Zustand anzufassen. */
+/** Nur den Fehlertext setzen, ohne den Aktiv-Zustand anzufassen. */
 async function setListingError(tenantId, vehicleId, error) {
   await withTenant(tenantId, (client) =>
-    client.query('UPDATE vehicles SET autoscout24_last_error = $1 WHERE id = $2', [error ?? null, vehicleId]),
+    client.query('UPDATE vehicles SET autoscout24_last_error = $1 WHERE id = $2', [error, vehicleId]),
+  )
+}
+
+const PHOTO_ERROR_PREFIX = 'Fotos: '
+
+/** Nur einen Foto-Fehler löschen — ein fremder (z. B. die gescheiterte Deaktivierung beim Verkauf) bleibt stehen. */
+async function clearPhotoError(tenantId, vehicleId) {
+  await withTenant(tenantId, (client) =>
+    client.query('UPDATE vehicles SET autoscout24_last_error = NULL WHERE id = $1 AND autoscout24_last_error LIKE $2', [
+      vehicleId,
+      `${PHOTO_ERROR_PREFIX}%`,
+    ]),
   )
 }
 
@@ -103,17 +116,20 @@ export async function pushVehicleToAutoScout24(tenantId, vehicleId, { client = d
   // Fahrzeug (Übersicht, Inserate) und «Fotos übertragen» versucht es gezielt noch einmal.
   let photos
   try {
-    photos = await syncPhotos(client, credentials, sellerId, tenantId, vehicleId, listingId)
-    await setListingError(tenantId, vehicleId, null)
+    photos = await syncPhotos(client, credentials, sellerId, updated, listingId)
+    await clearPhotoError(tenantId, vehicleId)
   } catch (err) {
     photos = { status: 'failed', reason: err.message }
-    await setListingError(tenantId, vehicleId, `Fotos: ${err.message}`)
+    await setListingError(tenantId, vehicleId, PHOTO_ERROR_PREFIX + err.message)
   }
 
   return { listingId, payload, vehicle: updated, photos }
 }
 
 const EXTENSION_BY_TYPE = Object.freeze({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' })
+
+/** Antwortcodes, mit denen AutoScout24 die Bildliste selbst ablehnt — nicht Netz, nicht Zugang, nicht deren Server. */
+const LIST_REJECTED_STATUSES = new Set([400, 404, 409, 422])
 
 /**
  * Fotos des Fahrzeugs zum Inserat bringen — zwei Schritte wie in client.js beschrieben.
@@ -123,14 +139,23 @@ const EXTENSION_BY_TYPE = Object.freeze({ 'image/jpeg': 'jpg', 'image/png': 'png
  * ersten sechs nicht noch einmal kostet. Die geordnete Liste (Titelbild zuerst) wird dagegen bei
  * jedem Aufruf neu gesetzt — so kommen auch Umsortieren und Löschen an, ohne dass ein Byte hinaufgeht.
  *
- * Ohne eigene Fotos wird die Bildliste bei AutoScout24 NICHT angerührt: ein Händler, der dort von Hand
- * Bilder eingestellt hat, soll sie durch eine Preisänderung hier nicht verlieren.
+ * Lehnt AutoScout24 die Liste ab (4xx), taugt mindestens ein gespeicherter Key nichts mehr — etwa weil
+ * ein nie angehängtes Bild dort bereinigt oder das Inserat dort neu angelegt wurde. Dann werden alle
+ * Keys vergessen, damit der nächste Versuch frisch hochlädt, statt ewig dieselbe Liste zu schicken.
  *
+ * Fahrzeuge, die hier nie Fotos hatten, lassen die Bildliste bei AutoScout24 unangetastet: ein Händler,
+ * der dort von Hand Bilder eingestellt hat, soll sie durch eine Preisänderung nicht verlieren. Wurden
+ * die Fotos hier dagegen alle gelöscht (Kennzeichen `autoscout24_photos_stale`, Migration 20), ist das
+ * DMS die Quelle und die Liste wird geleert.
+ *
+ * @param {object} vehicle Ergebnis von getVehicle()/updateVehicle() — mit tenantId, id, autoscout24PhotosStale
  * @returns {Promise<{status: 'synced'|'none', total: number, uploaded: number, reused: number}>}
  */
-async function syncPhotos(client, credentials, sellerId, tenantId, vehicleId, listingId) {
+async function syncPhotos(client, credentials, sellerId, vehicle, listingId) {
+  const { tenantId, id: vehicleId } = vehicle
   const photos = await listPhotosForAutoScout24(tenantId, vehicleId)
-  if (photos.length === 0) return { status: 'none', total: 0, uploaded: 0, reused: 0 }
+
+  if (photos.length === 0 && !vehicle.autoscout24PhotosStale) return { status: 'none', total: 0, uploaded: 0, reused: 0 }
 
   const keys = []
   let uploaded = 0
@@ -139,10 +164,10 @@ async function syncPhotos(client, credentials, sellerId, tenantId, vehicleId, li
       keys.push(photo.autoscout24ImageKey)
       continue
     }
-    const buffer = await getPhotoBytesByStorageKey(photo.storageKey)
-    if (!buffer) throw new Error('Ein Foto fehlt im Objektspeicher — bitte löschen und neu hochladen.')
+    const stored = await getPhotoBytes(tenantId, vehicleId, photo.id)
+    if (!stored) throw new Error('Ein Foto fehlt im Objektspeicher — bitte löschen und neu hochladen.')
     const form = new FormData()
-    form.append('file', new Blob([buffer], { type: photo.contentType }), `${photo.id}.${EXTENSION_BY_TYPE[photo.contentType] ?? 'bin'}`)
+    form.append('file', new Blob([stored.buffer], { type: stored.contentType }), `${photo.id}.${EXTENSION_BY_TYPE[stored.contentType] ?? 'bin'}`)
     const result = await client.uploadImage(credentials, sellerId, listingId, form)
     if (!result?.key) throw new Error('AutoScout24 hat für ein Foto keinen Bildschlüssel zurückgegeben.')
     await setAutoScout24ImageKey(tenantId, vehicleId, photo.id, result.key)
@@ -150,7 +175,16 @@ async function syncPhotos(client, credentials, sellerId, tenantId, vehicleId, li
     uploaded += 1
   }
 
-  await client.setImages(credentials, sellerId, listingId, keys)
+  try {
+    await client.setImages(credentials, sellerId, listingId, keys)
+  } catch (err) {
+    if (err instanceof AutoScout24ApiError && LIST_REJECTED_STATUSES.has(err.status)) {
+      await clearAutoScout24ImageKeys(tenantId, vehicleId)
+      throw new Error(`AutoScout24 hat die Bildliste abgelehnt (${err.status}); beim nächsten Versuch werden alle Fotos neu hochgeladen.`)
+    }
+    throw err
+  }
+  await markPhotosSynced(tenantId, vehicleId)
   return { status: 'synced', total: photos.length, uploaded, reused: photos.length - uploaded }
 }
 
@@ -160,43 +194,43 @@ async function syncPhotos(client, credentials, sellerId, tenantId, vehicleId, li
  * sie am Fahrzeug fest; bei Erfolg wird ein früherer Fehler gelöscht.
  */
 export async function syncPhotosToAutoScout24(tenantId, vehicleId, { client = defaultClient } = {}) {
-  const listingId = await requireListingId(tenantId, vehicleId)
+  const vehicle = await requireListedVehicle(tenantId, vehicleId)
   const { credentials, sellerId } = await getCredentials(tenantId)
   try {
-    const result = await syncPhotos(client, credentials, sellerId, tenantId, vehicleId, listingId)
-    await setListingError(tenantId, vehicleId, null)
+    const result = await syncPhotos(client, credentials, sellerId, vehicle, vehicle.autoscout24ListingId)
+    await clearPhotoError(tenantId, vehicleId)
     return result
   } catch (err) {
-    await setListingError(tenantId, vehicleId, `Fotos: ${err.message}`)
+    await setListingError(tenantId, vehicleId, PHOTO_ERROR_PREFIX + err.message)
     throw err
   }
 }
 
-async function requireListingId(tenantId, vehicleId) {
+async function requireListedVehicle(tenantId, vehicleId) {
   const vehicle = await getVehicle(tenantId, vehicleId)
   if (!vehicle) throw new Error('Fahrzeug nicht gefunden.')
   if (!vehicle.autoscout24ListingId) {
     throw new Error('Dieses Fahrzeug hat noch kein AutoScout24-Inserat — zuerst pushVehicleToAutoScout24() aufrufen.')
   }
-  return vehicle.autoscout24ListingId
+  return vehicle
 }
 
 export async function activateAutoScout24Listing(tenantId, vehicleId, { client = defaultClient } = {}) {
-  const listingId = await requireListingId(tenantId, vehicleId)
+  const { autoscout24ListingId: listingId } = await requireListedVehicle(tenantId, vehicleId)
   const { credentials, sellerId } = await getCredentials(tenantId)
   await client.activateListing(credentials, sellerId, listingId)
   await setListingState(tenantId, vehicleId, { active: true, error: null })
 }
 
 export async function deactivateAutoScout24Listing(tenantId, vehicleId, { client = defaultClient } = {}) {
-  const listingId = await requireListingId(tenantId, vehicleId)
+  const { autoscout24ListingId: listingId } = await requireListedVehicle(tenantId, vehicleId)
   const { credentials, sellerId } = await getCredentials(tenantId)
   await client.deactivateListing(credentials, sellerId, listingId)
   await setListingState(tenantId, vehicleId, { active: false, error: null })
 }
 
 export async function removeAutoScout24Listing(tenantId, vehicleId, { client = defaultClient } = {}) {
-  const listingId = await requireListingId(tenantId, vehicleId)
+  const { autoscout24ListingId: listingId } = await requireListedVehicle(tenantId, vehicleId)
   const { credentials, sellerId } = await getCredentials(tenantId)
   await client.removeListing(credentials, sellerId, listingId)
   await updateVehicle(tenantId, vehicleId, { autoscout24ListingId: null, autoscout24SyncedAt: null })
@@ -227,7 +261,7 @@ export async function deactivateListingAfterSale(tenantId, vehicleId, { client =
   } catch (err) {
     const reason = err.message
     try {
-      await withTenant(tenantId, (client2) => client2.query('UPDATE vehicles SET autoscout24_last_error = $1 WHERE id = $2', [reason, vehicleId]))
+      await setListingError(tenantId, vehicleId, reason)
     } catch {
       // der Fehler selbst lässt sich nicht festhalten — der Rückgabewert meldet ihn trotzdem
     }

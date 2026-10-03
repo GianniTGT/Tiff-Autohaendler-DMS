@@ -128,10 +128,6 @@ export function createAutoScout24Client({ baseUrl = PRODUCTION_BASE_URL, fetchIm
         body: keys.map((key) => ({ key })),
       }),
 
-    /** Welche Bilder AutoScout24 für das Inserat kennt: `[{ id, key, url }]`. */
-    getImages: (credentials, sellerId, listingId) =>
-      request('GET', `/public/v1/sellers/${sellerId}/listings/${listingId}/images`, { credentials }),
-
     /** Nachschlagewerke, um makeKey/modelKey zu finden — siehe lookup.js. */
     listMakes: (credentials, vehicleCategory = 'car') =>
       request('GET', `/public/v1/makes?vehicleCategory=${encodeURIComponent(vehicleCategory)}`, { credentials }),

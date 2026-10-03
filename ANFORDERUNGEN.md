@@ -242,8 +242,10 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   («Verkauft, aber noch inseriert»). Eine Gutschrift schaltet das Inserat nicht von selbst wieder ein. **Fotos gehen
   mit dem Push an AutoScout24** (zwei Schritte laut OpenAPI-Spezifikation: Upload pro Datei, dann die geordnete
   Bildliste; hochgeladen wird nur, was dort noch fehlt — der Bildschlüssel steht am Foto —, die Reihenfolge mit
-  Titelbild zuerst wird bei jedem Push neu gesetzt; ein Foto-Fehler lässt den Push der Fahrzeugdaten bestehen und
-  steht am Fahrzeug, «Fotos übertragen» holt nach; ohne eigene Fotos wird die Bildliste dort nicht angerührt).
+  Titelbild zuerst wird bei jedem Push neu gesetzt; Löschen und Umsortieren markieren das Fahrzeug bis zum nächsten
+  Abgleich; ein Foto-Fehler lässt den Push der Fahrzeugdaten bestehen und steht am Fahrzeug, «Fotos übertragen» holt
+  nach; lehnt AutoScout24 die Bildliste ab, werden die Schlüssel vergessen und alles neu hochgeladen; Fahrzeuge, die
+  hier nie Fotos hatten, lassen die Bildliste dort unangetastet).
   **Noch offen:** abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als Datenstrom für sehr grosse
   Archive.
 

@@ -27,6 +27,14 @@ export function detectImageType(buffer) {
   return null
 }
 
+/**
+ * Jede Foto-Änderung merkt am Fahrzeug «Fotos seit dem letzten Abgleich verändert» (Migration 20) — die
+ * Inserate-Übersicht zeigt das, und der Abgleich weiss, dass er die Bildliste neu setzen muss.
+ */
+function markPhotosChanged(client, vehicleId) {
+  return client.query('UPDATE vehicles SET autoscout24_photos_stale = true WHERE id = $1', [vehicleId])
+}
+
 function toPhoto(row) {
   return {
     id: row.id,
@@ -68,6 +76,7 @@ export async function addPhoto(tenantId, vehicleId, buffer) {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
         [id, tenantId, vehicleId, key, kind.type, buffer.length, Number(stats.last) + 1, Number(stats.n) === 0],
       )
+      await markPhotosChanged(client, vehicleId)
       return toPhoto(result.rows[0])
     } catch (err) {
       await store.deleteObject(key).catch(() => {}) // keine verwaiste Datei, wenn der Eintrag scheitert
@@ -92,6 +101,7 @@ export async function setCover(tenantId, vehicleId, photoId) {
     if (exists.rows.length === 0) return false
     await client.query('UPDATE vehicle_photos SET is_cover = false WHERE vehicle_id = $1', [vehicleId])
     await client.query('UPDATE vehicle_photos SET is_cover = true WHERE id = $1', [photoId])
+    await markPhotosChanged(client, vehicleId)
     return true
   })
 }
@@ -110,6 +120,7 @@ export async function movePhoto(tenantId, vehicleId, photoId, direction) {
     for (const [position, row] of rows.entries()) {
       await client.query('UPDATE vehicle_photos SET position = $1 WHERE id = $2', [position, row.id])
     }
+    await markPhotosChanged(client, vehicleId)
     return true
   })
 }
@@ -126,6 +137,7 @@ export async function deletePhoto(tenantId, vehicleId, photoId) {
         [vehicleId],
       )
     }
+    await markPhotosChanged(client, vehicleId)
     return row
   })
   if (!removed) return false
@@ -135,20 +147,22 @@ export async function deletePhoto(tenantId, vehicleId, photoId) {
 
 /**
  * Fotos in der Reihenfolge, in der sie bei AutoScout24 stehen sollen: Titelbild zuerst (dort ist das
- * erste Bild das Hauptbild), dann nach Position. Mit Speicherschlüssel, damit der Sync die Bytes
- * holen kann, ohne die Tabelle zu kennen.
+ * erste Bild das Hauptbild), dann nach Position. Die Bytes holt der Abgleich über getPhotoBytes() —
+ * mit Mandant und Fahrzeug, nie über einen rohen Speicherschlüssel.
  */
 export async function listPhotosForAutoScout24(tenantId, vehicleId) {
   return withTenant(tenantId, async (client) =>
     (
       await client.query('SELECT * FROM vehicle_photos WHERE vehicle_id = $1 ORDER BY is_cover DESC, position, created_at', [vehicleId])
-    ).rows.map((row) => ({ ...toPhoto(row), storageKey: row.storage_key })),
+    ).rows.map(toPhoto),
   )
 }
 
-/** Bytes eines Fotos über seinen Speicherschlüssel — für den Upload an AutoScout24. */
-export async function getPhotoBytesByStorageKey(storageKey) {
-  return store.getObject(storageKey)
+/** Nach einem erfolgreichen Abgleich: die Fotos bei AutoScout24 entsprechen wieder dem Stand hier. */
+export async function markPhotosSynced(tenantId, vehicleId) {
+  await withTenant(tenantId, (client) =>
+    client.query('UPDATE vehicles SET autoscout24_photos_stale = false WHERE id = $1', [vehicleId]),
+  )
 }
 
 export async function setAutoScout24ImageKey(tenantId, vehicleId, photoId, imageKey) {

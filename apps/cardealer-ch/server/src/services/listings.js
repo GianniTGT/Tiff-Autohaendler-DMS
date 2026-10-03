@@ -60,8 +60,12 @@ export async function getListings(tenantId) {
         // Verkauft, aber das Inserat ist nicht (nachweislich) abgeschaltet: das muss jemand sehen.
         soldStillListed: v.status === 'sold' && Boolean(v.autoscout24ListingId) && v.autoscout24Active !== false,
         syncedAt: v.autoscout24SyncedAt ?? null,
-        // Fotos: wie viele es gibt und wie viele davon bei AutoScout24 liegen (Migration 19).
-        photos: { ...photos, pending: Boolean(v.autoscout24ListingId) && photos.synced < photos.total },
+        // Fotos: wie viele es gibt, wie viele davon bei AutoScout24 liegen (Migration 19) und ob seit dem letzten
+        // Abgleich etwas geändert wurde — auch Löschen oder Umsortieren, das die Zählung allein nicht sieht (Migration 20).
+        photos: {
+          ...photos,
+          pending: Boolean(v.autoscout24ListingId) && (photos.synced < photos.total || v.autoscout24PhotosStale === true),
+        },
         missing,
         ready: missing.length === 0,
       }
