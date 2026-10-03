@@ -14,12 +14,16 @@
       "about": "Über uns",
       "support": "Support",
       "email": "info@tiff-software-solutions.com",
-      "phone": "",
+      "phone": "076 241 19 74",
+      "website": "tiff-software-solutions.com",
+      "version": "Version {version}",
+      "supportLabel": "Support",
+      "writeSupport": "Dem Support schreiben",
       "phoneLabel": "Telefon",
       "aboutTitle": "Über uns",
-      "aboutBody": "Tiff Software Solutions aus Bern baut Software für Schweizer Occasionshändler: den Tiff Autohändler Manager und die dazu passende Website. Eine Person als Ansprechpartner, Daten in der Schweiz, Deutsch als einzige Sprache — gebaut für den Betrieb, nicht für den Konzern.",
+      "aboutBody": "Etwas stimmt nicht? Schreiben Sie dem Support — mit Betrieb, Bildschirm und dem, was Sie erwartet hätten.",
       "supportTitle": "Support",
-      "supportBody": "Fragen, Fehler oder Wünsche: schreiben Sie uns oder rufen Sie an. Nennen Sie Betrieb, Bildschirm und was Sie erwartet hätten — so können wir am schnellsten helfen.\n\nBei einem Fehler, der die Arbeit blockiert, melden wir uns am selben Arbeitstag."
+      "supportBody": "Fragen, Fehler oder Wünsche: schreiben Sie uns oder rufen Sie an. Bei einem Fehler, der die Arbeit blockiert, melden wir uns am selben Arbeitstag."
     }
   },
   "common": {

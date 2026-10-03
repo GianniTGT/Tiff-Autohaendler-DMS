@@ -21,7 +21,7 @@ export const VEHICLE_STATUS_TONE = { in_stock: 'green', reserved: 'amber', sold:
  * hoch aufgeteilt); ein Kind mit `xl:[column-span:all]` nimmt die ganze Breite (Hinweise, Kopfzeile). Escape und Klick auf den
  * Hintergrund schliessen.
  */
-export function Dialog({ title, subtitle, onClose, children, columns = 1 }) {
+export function Dialog({ title, subtitle, onClose, children, columns = 1, size = 'full' }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose?.()
     window.addEventListener('keydown', onKey)
@@ -33,7 +33,7 @@ export function Dialog({ title, subtitle, onClose, children, columns = 1 }) {
       <div
         role="dialog"
         aria-modal="true"
-        className="flex h-[96vh] w-full max-w-[1480px] flex-col overflow-hidden rounded-tiff bg-canvas shadow-2xl"
+        className={`flex w-full flex-col overflow-hidden rounded-tiff bg-canvas shadow-2xl ${size === 'small' ? 'max-h-[92vh] max-w-xl' : 'h-[96vh] max-w-[1480px]'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-line-strong bg-white px-6 py-4">

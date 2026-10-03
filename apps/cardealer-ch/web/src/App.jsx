@@ -19,7 +19,7 @@ import Archive from './components/Archive.jsx'
 import Help from './components/Help.jsx'
 import Reports from './components/Reports.jsx'
 import Settings from './components/Settings.jsx'
-import tiffIcon from './assets/tiff-icon.png'
+import lockup from './assets/tiff-lockup-horizontal.png'
 
 /** Menü-Symbole: schlichte Strichzeichnungen, 24er-Raster, erben die Textfarbe. */
 const ICONS = {
@@ -214,20 +214,41 @@ export default function App() {
         </main>
         <VendorFooter onAbout={() => setAbout('about')} onSupport={() => setAbout('support')} />
         {about && (
-          <Dialog title={t(`app.footer.${about}Title`)} onClose={() => setAbout(null)}>
-            <div className="mx-auto max-w-2xl space-y-4">
-              <p className="whitespace-pre-line text-sm leading-relaxed text-ink">{t(`app.footer.${about}Body`)}</p>
-              <p className="text-sm">
-                <a className="text-brand underline" href={`mailto:${t('app.footer.email')}`}>
-                  {t('app.footer.email')}
+          <Dialog size="small" title={t(`app.footer.${about}Title`)} onClose={() => setAbout(null)}>
+            {/* Wie «About» im Manager: Marke, Produkt, Version, Hilfe-Kasten, Kontakt. */}
+            <div className="space-y-5 text-center">
+              <img src={lockup} alt={t('app.vendor')} className="mx-auto h-16 w-auto" />
+              <div>
+                <div className="font-display text-xl font-bold uppercase tracking-wide text-brand">{t('app.name')}</div>
+                <div className="text-sm text-steel">{t('app.footer.version', { version: __APP_VERSION__ })}</div>
+              </div>
+              <div className="card space-y-3 p-4 text-left">
+                <p className="text-sm text-ink">{t(`app.footer.${about}Body`)}</p>
+                <a
+                  className="btn-ghost"
+                  href={`mailto:${t('app.footer.email')}?subject=${encodeURIComponent(`${t('app.name')} ${__APP_VERSION__} — ${company?.name ?? ''}`)}`}
+                >
+                  {t('app.footer.writeSupport')}
                 </a>
-                {t('app.footer.phone') !== 'app.footer.phone' && t('app.footer.phone') && (
-                  <>
-                    {' · '}
-                    {t('app.footer.phoneLabel')} {t('app.footer.phone')}
-                  </>
-                )}
-              </p>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="font-semibold text-ink">{t('app.vendor')}</div>
+                <div className="text-steel">
+                  {t('app.footer.supportLabel')}:{' '}
+                  <a className="font-mono text-ink hover:underline" href={`mailto:${t('app.footer.email')}`}>
+                    {t('app.footer.email')}
+                  </a>
+                </div>
+                <div className="text-steel">
+                  {t('app.footer.phoneLabel')}:{' '}
+                  <a className="font-mono text-ink hover:underline" href={`tel:${t('app.footer.phone').replace(/\s+/g, '')}`}>
+                    {t('app.footer.phone')}
+                  </a>
+                </div>
+                <a className="font-mono text-brand underline" href={`https://${t('app.footer.website')}`} target="_blank" rel="noreferrer">
+                  {t('app.footer.website')}
+                </a>
+              </div>
             </div>
           </Dialog>
         )}
