@@ -30,6 +30,7 @@ export default function Settings({ onSettingsChanged }) {
       vatLiable: Boolean(data.vatLiable),
       vatMethod: data.vatMethod ?? '',
       netTaxRatePercent: data.netTaxRatePercent ?? '',
+      fiscalYearEndMonth: String(data.fiscalYearEndMonth ?? 12),
       qrIban: data.qrIban ?? '',
       leadAllowedOrigin: data.leadAllowedOrigin ?? '',
       autoscout24ClientId: data.autoscout24ClientId ?? '',
@@ -181,6 +182,18 @@ export default function Settings({ onSettingsChanged }) {
                 <input {...bind('netTaxRatePercent')} inputMode="decimal" />
               </label>
             )}
+            <label>
+              <span className="field-label">{t('settings.vat.fiscalYearEnd')}</span>
+              <select {...bind('fiscalYearEndMonth')}>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={String(i + 1)}>
+                    {new Date(2000, i, 1).toLocaleDateString('de-CH', { month: 'long' })}
+                    {i === 11 ? ` ${t('settings.vat.calendarYear')}` : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="text-xs text-steel sm:col-span-2">{t('settings.vat.fiscalYearEndHint')}</p>
           </div>
         </Panel>
 

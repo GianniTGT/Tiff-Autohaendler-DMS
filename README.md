@@ -145,10 +145,11 @@ Prozesses — bei mehreren Servern braucht es einen gemeinsamen Speicher).
   (multipart-Feld `file` und Bildliste als Array von `{ key }`, beides aus der OpenAPI-Spezifikation
   unter developers.autoscout24.ch) und die AutoScout24-Auswahlwerte (Farbe, Treibstoff, Zustand, …)
   im Fahrzeugformular.
-- **Aufbewahrungsfrist** rechnet mit dem Kalenderjahr (Ende des Belegjahres + 10 Jahre);
-  ein abweichendes Geschäftsjahr kann sie nur verlängern.
+- **Aufbewahrungsfrist** rechnet 10 Jahre ab Ende des Geschäftsjahres; dessen Ende
+  (Monat) steht in den Einstellungen, Standard Dezember. Ob der Treuhänder dieselbe Lesart
+  von OR 958f hat, ist zu bestätigen.
 
 ## Noch offen
 
-Export des Archivs als Datenstrom für sehr grosse Bestände, Anbindung an
-`Tiff-Cardealer-Theme-Swiss`.
+Anbindung an `Tiff-Cardealer-Theme-Swiss` (es gibt noch keine Schweizer Website als
+Gegenstelle).

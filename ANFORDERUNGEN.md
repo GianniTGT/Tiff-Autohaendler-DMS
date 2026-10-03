@@ -246,8 +246,9 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Abgleich; ein Foto-Fehler lässt den Push der Fahrzeugdaten bestehen und steht am Fahrzeug, «Fotos übertragen» holt
   nach; lehnt AutoScout24 die Bildliste ab, werden die Schlüssel vergessen und alles neu hochgeladen; Fahrzeuge, die
   hier nie Fotos hatten, lassen die Bildliste dort unangetastet).
-  **Noch offen:** abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als Datenstrom für sehr grosse
-  Archive.
+  **Aufbewahrungsfrist** rechnet ab Ende des Geschäftsjahres des Betriebs (Monat in den Einstellungen, Migration 21;
+  Standard Dezember). **Archiv-Export streamt** (ZIP Datei für Datei, Index und Liesmich zuletzt) — auch ein Archiv mit
+  tausenden Belegen belegt nie mehr Speicher als ein PDF. **Demo-Betrieb** per `npm run seed:demo` (LOKAL-TESTEN.md).
 
 ## 10. Was ein Mensch klären muss (nicht Code)
 

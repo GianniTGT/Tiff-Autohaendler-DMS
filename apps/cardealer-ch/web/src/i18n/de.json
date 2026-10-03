@@ -514,7 +514,10 @@
       "liable": "MWST-pflichtig",
       "method": "Abrechnungsart",
       "choose": "— nicht festgelegt —",
-      "netRate": "Saldosteuersatz in % (von der ESTV zugeteilt)"
+      "netRate": "Saldosteuersatz in % (von der ESTV zugeteilt)",
+      "fiscalYearEnd": "Geschäftsjahr endet im",
+      "calendarYear": "(Kalenderjahr)",
+      "fiscalYearEndHint": "Massgebend für die Aufbewahrungsfrist im Archiv: 10 Jahre ab Ende des Geschäftsjahres, in dem der Beleg entstand (OR 958f). Standard ist Dezember."
     },
     "payment": {
       "title": "Zahlungen",
@@ -842,7 +845,7 @@
   },
   "archive": {
     "title": "Belegarchiv",
-    "intro": "Rechnungen, Mahnungen und Verträge werden mit SHA-256-Hash unveränderlich abgelegt. Aufbewahrung: 10 Jahre (OR 958f, GeBüV).",
+    "intro": "Rechnungen, Mahnungen und Verträge werden mit SHA-256-Hash unveränderlich abgelegt. Aufbewahrung: 10 Jahre ab Ende des Geschäftsjahres (OR 958f, GeBüV); das Geschäftsjahr-Ende steht in den Einstellungen.",
     "empty": "Noch keine Belege.",
     "types": {
       "invoice": "Rechnung",

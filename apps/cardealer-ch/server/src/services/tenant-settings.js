@@ -14,6 +14,8 @@ export const FIELD_MAP = Object.freeze({
   vatLiable: 'vat_liable',
   vatMethod: 'vat_method',
   netTaxRatePercent: 'net_tax_rate_percent',
+  // Monat, in dem das Geschäftsjahr endet (1–12; 12 = Kalenderjahr) — für die Aufbewahrungsfrist (OR 958f).
+  fiscalYearEndMonth: 'fiscal_year_end_month',
   addressStreet: 'address_street',
   addressZip: 'address_zip',
   addressCity: 'address_city',
@@ -69,6 +71,10 @@ function validate(fields) {
     const n = Number(fields.netTaxRatePercent)
     if (!Number.isFinite(n) || n < 0 || n > 10) throw new Error('Der Saldosteuersatz muss zwischen 0 und 10 % liegen.')
   }
+  if (fields.fiscalYearEndMonth != null && fields.fiscalYearEndMonth !== '') {
+    const m = Number(fields.fiscalYearEndMonth)
+    if (!Number.isInteger(m) || m < 1 || m > 12) throw new Error('Das Geschäftsjahr-Ende muss ein Monat von 1 bis 12 sein.')
+  }
   if (fields.qrIban != null && fields.qrIban !== '' && !isValidQrIban(fields.qrIban)) {
     throw new Error('Das ist keine gültige QR-IBAN (CH…, Instituts-ID 30000–31999, Prüfziffer stimmt nicht).')
   }
@@ -94,7 +100,19 @@ export async function updateTenantSettings(tenantId, fields) {
     if (WRITE_ONLY.has(key) && value === '') continue // leer lassen heisst: Geheimnis behalten
     columns.push(column)
     values.push(
-      key === 'qrIban' && value ? normalizeIban(value) : key === 'leadAllowedOrigin' && value ? normalizeOrigin(value) : WRITE_ONLY.has(key) ? encryptSecret(value) : value === '' ? null : value,
+      key === 'qrIban' && value
+        ? normalizeIban(value)
+        : key === 'leadAllowedOrigin' && value
+          ? normalizeOrigin(value)
+          : key === 'fiscalYearEndMonth'
+            ? value === '' || value == null
+              ? 12 // leer heisst Kalenderjahr, die Spalte kennt kein NULL
+              : Number(value)
+            : WRITE_ONLY.has(key)
+              ? encryptSecret(value)
+              : value === ''
+                ? null
+                : value,
     )
   }
   if (columns.length === 0) return getTenantSettings(tenantId)

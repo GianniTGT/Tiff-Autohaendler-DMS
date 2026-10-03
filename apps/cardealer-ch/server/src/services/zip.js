@@ -3,7 +3,14 @@
  * komprimiert, und so braucht der Archiv-Export keine zusätzliche
  * Abhängigkeit. Entspricht dem ZIP-Format ohne ZIP64 — gedacht für das
  * Belegarchiv eines Kleinbetriebs, nicht für Datenmengen über 4 GB.
+ *
+ * Zwei Formen, ein Format: `createZipStream()` schreibt Datei für Datei als
+ * Datenstrom — im Speicher liegt immer nur die aktuelle Datei plus das
+ * zentrale Verzeichnis (ein paar Dutzend Byte pro Datei). `createZip()` ist
+ * dieselbe Logik für den Fall, dass alles ohnehin schon im Speicher liegt
+ * (Tests, kleine Mengen).
  */
+import { Readable } from 'node:stream'
 import { crc32 } from 'node:zlib'
 
 const u16 = (n) => {
@@ -24,40 +31,62 @@ function dosDateTime(date) {
   return { time, day }
 }
 
+const FLAGS = 0x0800 // Dateinamen sind UTF-8
+
 /**
- * @param {{name: string, data: Buffer}[]} files  Namen mit '/' als Trenner; UTF-8
- * @returns {Buffer}
+ * Erzeugt die ZIP-Stücke in der Reihenfolge, in der sie in die Datei gehören.
+ * @param {Iterable<{name: string, data: Buffer}>|AsyncIterable<{name: string, data: Buffer}>} files
  */
-export function createZip(files, now = new Date()) {
+async function* zipChunks(files, now) {
   const { time, day } = dosDateTime(now)
-  const parts = []
   const central = []
   let offset = 0
+  let count = 0
 
-  for (const file of files) {
+  for await (const file of files) {
     if (file.data.length > 0xfffffffe) throw new Error(`Datei ${file.name} ist für ZIP ohne ZIP64 zu gross.`)
     const name = Buffer.from(file.name, 'utf8')
     const crc = crc32(file.data)
-    const flags = 0x0800 // Dateinamen sind UTF-8
     const local = Buffer.concat([
-      u32(0x04034b50), u16(20), u16(flags), u16(0), u16(time), u16(day),
+      u32(0x04034b50), u16(20), u16(FLAGS), u16(0), u16(time), u16(day),
       u32(crc), u32(file.data.length), u32(file.data.length), u16(name.length), u16(0), name,
     ])
-    parts.push(local, file.data)
+    yield local
+    yield file.data
     central.push(
       Buffer.concat([
-        u32(0x02014b50), u16(20), u16(20), u16(flags), u16(0), u16(time), u16(day),
+        u32(0x02014b50), u16(20), u16(20), u16(FLAGS), u16(0), u16(time), u16(day),
         u32(crc), u32(file.data.length), u32(file.data.length), u16(name.length), u16(0), u16(0),
         u16(0), u16(0), u32(0), u32(offset), name,
       ]),
     )
     offset += local.length + file.data.length
+    count += 1
   }
 
   const centralBuffer = Buffer.concat(central)
-  const end = Buffer.concat([
-    u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length),
+  yield centralBuffer
+  yield Buffer.concat([
+    u32(0x06054b50), u16(0), u16(0), u16(count), u16(count),
     u32(centralBuffer.length), u32(offset), u16(0),
   ])
-  return Buffer.concat([...parts, centralBuffer, end])
+}
+
+/**
+ * ZIP als Datenstrom — für den Export grosser Archive, ohne alles auf einmal zu laden.
+ * @param {Iterable<{name: string, data: Buffer}>|AsyncIterable<{name: string, data: Buffer}>} files
+ * @returns {Readable}
+ */
+export function createZipStream(files, now = new Date()) {
+  return Readable.from(zipChunks(files, now))
+}
+
+/**
+ * @param {{name: string, data: Buffer}[]} files  Namen mit '/' als Trenner; UTF-8
+ * @returns {Promise<Buffer>}
+ */
+export async function createZip(files, now = new Date()) {
+  const parts = []
+  for await (const chunk of zipChunks(files, now)) parts.push(chunk)
+  return Buffer.concat(parts)
 }
