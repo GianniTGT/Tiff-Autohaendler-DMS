@@ -1,10 +1,11 @@
 import { canSeeCompanyTotals } from '@tiff/core-auth'
 import { listArchive, verifyArchived, buildArchiveExport } from '../services/archive-browser.js'
-import { getArchivedPdf, archiveIfComplete } from '../services/archive.js'
+import { getArchivedPdf, archiveIfComplete, archivePdf } from '../services/archive.js'
 import { getInvoice } from '../services/invoices.js'
 import { getReminder } from '../services/reminders.js'
 import { getCreditNote } from '../services/credit-notes.js'
-import { renderInvoicePdfBuffer, renderReminderPdfBuffer, renderCreditNotePdfBuffer, withLogo } from '../services/invoice-pdf.js'
+import { getSalesDocument } from '../services/sales-documents.js'
+import { renderInvoicePdfBuffer, renderReminderPdfBuffer, renderCreditNotePdfBuffer, renderSalesDocumentPdfBuffer, withLogo } from '../services/invoice-pdf.js'
 import { withTenant } from '@tiff/core-db'
 
 /** Belegarchiv: Liste, Integritätsprüfung und das archivierte PDF eines Dokuments (Verträge; Rechnungen/Mahnungen haben eigene Wege). */
@@ -30,12 +31,22 @@ export async function registerArchiveRoutes(app) {
     )
     if (!row) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
     if (row.pdf_hash) return { ok: true, data: { archived: true } }
-    if (!['invoice', 'reminder', 'credit_note'].includes(row.type)) {
+    if (!['invoice', 'reminder', 'credit_note', 'offer', 'order', 'delivery_note'].includes(row.type)) {
       return reply.code(400).send({ ok: false, error: 'Dieser Beleg kann nicht nachträglich archiviert werden.' })
     }
-    const load = { invoice: getInvoice, reminder: getReminder, credit_note: getCreditNote }[row.type]
-    const render = { invoice: renderInvoicePdfBuffer, reminder: renderReminderPdfBuffer, credit_note: renderCreditNotePdfBuffer }[row.type]
+    const sales = ['offer', 'order', 'delivery_note'].includes(row.type)
+    const load = sales ? getSalesDocument : { invoice: getInvoice, reminder: getReminder, credit_note: getCreditNote }[row.type]
+    const render = sales ? renderSalesDocumentPdfBuffer : { invoice: renderInvoicePdfBuffer, reminder: renderReminderPdfBuffer, credit_note: renderCreditNotePdfBuffer }[row.type]
     const document = await withLogo(request.tenantId, await load(request.tenantId, request.params.id))
+    // Offerte, Auftrag und Lieferschein brauchen keinen QR-Zahlteil: nur Rechnung und Mahnung werden darauf geprüft.
+    if (sales || row.type === 'credit_note') {
+      try {
+        await archivePdf(request.tenantId, { documentId: document.id, userId: request.userId, pdfBuffer: await render(document) })
+        return { ok: true, data: { archived: true } }
+      } catch (err) {
+        return { ok: true, data: { archived: false, reason: err.message } }
+      }
+    }
     return { ok: true, data: await archiveIfComplete(request.tenantId, request.userId, document, render) }
   })
 

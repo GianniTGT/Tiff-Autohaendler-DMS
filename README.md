@@ -89,7 +89,8 @@ entwickelt und getestet wird lokal.
 **Phase 1 bis 3 nach `ANFORDERUNGEN.md` §9 sind erreicht, Phase 4 (Oberfläche auf
 Niveau des Tiff Cardealer Managers) ist weit fortgeschritten.** Die Web-App
 hat: Übersicht, Fahrzeuge (Detail mit allen CH-Feldern, Kosten, Fotos, Verkauf,
-Verträge), Inserate (AutoScout24), Anfragen, Kunden, Rechnungen (Zahlungen,
+Verträge), Inserate (AutoScout24), Anfragen, Kunden, Offerten & Aufträge (Belegkette bis zur
+Rechnung, inkl. Lieferschein), Rechnungen (Zahlungen,
 `camt.054`, Mahnwesen, Gutschriften), Werkstatt, Kalender, Belegarchiv (inkl. ZIP-Export und
 Integritätsprüfung), Auswertungen (Gewinn, Lagerbestand, MWST), Einstellungen
 (Betrieb, Logo, QR-IBAN, AutoScout24, Anfragen-Eingang), Benutzer und Hilfe mit
@@ -148,5 +149,4 @@ Prozesses — bei mehreren Servern braucht es einen gemeinsamen Speicher).
 ## Noch offen
 
 Fotos an AutoScout24 mitschicken (braucht öffentliche Bild-URLs), Export des Archivs
-als Datenstrom für sehr grosse Bestände, Offerte/Auftrag/Lieferschein/Gutschrift
-(Tabelle vorbereitet, nicht verdrahtet), Anbindung an `Tiff-Cardealer-Theme-Swiss`.
+als Datenstrom für sehr grosse Bestände, Anbindung an `Tiff-Cardealer-Theme-Swiss`.

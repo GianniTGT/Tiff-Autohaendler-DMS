@@ -15,7 +15,7 @@ import { createObjectStore } from '../integrations/object-storage/store.js'
 import { createZip } from './zip.js'
 
 export const RETENTION_YEARS = 10
-export const ARCHIVE_TYPES = Object.freeze(['invoice', 'reminder', 'credit_note', 'sale_contract', 'purchase_contract'])
+export const ARCHIVE_TYPES = Object.freeze(['offer', 'order', 'delivery_note', 'invoice', 'reminder', 'credit_note', 'sale_contract', 'purchase_contract'])
 
 const store = createObjectStore()
 
@@ -74,7 +74,7 @@ export async function verifyArchived(tenantId, documentId) {
   return hash === row.pdf_hash ? { ok: true, hash, storedHash: row.pdf_hash } : { ok: false, reason: 'HASH_MISMATCH', hash, storedHash: row.pdf_hash }
 }
 
-const FOLDER = { invoice: 'Rechnungen', reminder: 'Mahnungen', credit_note: 'Gutschriften', sale_contract: 'Kaufvertraege', purchase_contract: 'Ankaufsvertraege' }
+const FOLDER = { offer: 'Offerten', order: 'Auftraege', delivery_note: 'Lieferscheine', invoice: 'Rechnungen', reminder: 'Mahnungen', credit_note: 'Gutschriften', sale_contract: 'Kaufvertraege', purchase_contract: 'Ankaufsvertraege' }
 /**
  * CSV-Zelle in Anführungszeichen. Beginnt der Text mit = + - @ (oder Tab/CR),
  * würde Excel ihn als Formel ausführen — der Name einer öffentlichen Anfrage

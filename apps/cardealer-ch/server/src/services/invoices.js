@@ -6,7 +6,7 @@
  * bereits vorgesehen (core-billing-Migration), aber noch nicht verdrahtet.
  */
 import { withTenant } from '@tiff/core-db'
-import { findTaxRate } from '@tiff/core-billing'
+import { priceLines, insertLines } from './document-lines.js'
 // Direkter Pfad, nicht der Paket-Barrel: qr-invoice.js hängt an `swissqrbill`
 // und ist bewusst nicht in @tiff/core-billing/src/index.js re-exportiert,
 // damit ein Vite-Bundle der Web-App es nie mitzieht (siehe der Kommentar
@@ -58,7 +58,7 @@ export async function nextDocumentNumber(client, tenantId, documentType, year) {
  *   Vorsteuerabzug auf dem Fahrzeug-Gesamtpreis herausgerechnet (das ist ein
  *   anderer Fall, siehe packages/core-billing/src/tax.js).
  */
-export async function createInvoice(tenantId, { partyId, vehicleId, lines, issueDate, dueDate }) {
+export async function createInvoice(tenantId, { partyId, vehicleId, lines, issueDate, dueDate, predecessorId }) {
   if (!Array.isArray(lines) || lines.length === 0) {
     throw new Error('Eine Rechnung braucht mindestens eine Position.')
   }
@@ -66,9 +66,6 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
   return withTenant(tenantId, async (client) => {
     const tenantResult = await client.query('SELECT * FROM tenants WHERE id = $1', [tenantId])
     const tenant = tenantResult.rows[0]
-
-    const taxRatesResult = await client.query('SELECT * FROM tax_rates')
-    const taxRates = taxRatesResult.rows
 
     const effectiveIssueDate = issueDate ?? new Date().toISOString().slice(0, 10)
     // "zahlbar innert 30 Tagen" ist die in der Offerte an den Piloten
@@ -79,20 +76,7 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
     const year = Number(effectiveIssueDate.slice(0, 4))
     const { number } = await nextDocumentNumber(client, tenantId, 'invoice', year)
 
-    let subtotalRappen = 0
-    let vatRappen = 0
-    const computedLines = lines.map((line, index) => {
-      const rate = findTaxRate(taxRates, line.taxCode ?? 'standard', effectiveIssueDate)
-      if (!rate) {
-        throw new Error(`Kein gültiger MWST-Satz für '${line.taxCode ?? 'standard'}' am ${effectiveIssueDate}.`)
-      }
-      const lineTotal = Math.round(Number(line.quantity ?? 1) * Number(line.unitPriceRappen))
-      const lineVat = Math.round((lineTotal * Number(rate.rate_percent)) / 100)
-      subtotalRappen += lineTotal
-      vatRappen += lineVat
-      return { ...line, position: index + 1, lineTotal, taxRateId: rate.id }
-    })
-    const totalRappen = subtotalRappen + vatRappen
+    const { computedLines, subtotalRappen, vatRappen, totalRappen } = await priceLines(client, lines, effectiveIssueDate)
 
     let qrReferenceType = 'NON'
     let qrReference = null
@@ -109,8 +93,8 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
     const docResult = await client.query(
       `INSERT INTO documents
          (id, tenant_id, party_id, type, number, status, issue_date, due_date, vehicle_id,
-          subtotal_rappen, vat_rappen, total_rappen, qr_reference_type, qr_reference)
-       VALUES (gen_random_uuid(), $1, $2, 'invoice', $3, 'issued', $4, $5, $6, $7, $8, $9, $10, $11)
+          subtotal_rappen, vat_rappen, total_rappen, qr_reference_type, qr_reference, predecessor_id)
+       VALUES (gen_random_uuid(), $1, $2, 'invoice', $3, 'issued', $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         tenantId,
@@ -124,18 +108,12 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
         totalRappen,
         qrReferenceType,
         qrReference,
+        predecessorId ?? null,
       ],
     )
     const document = docResult.rows[0]
 
-    for (const line of computedLines) {
-      await client.query(
-        `INSERT INTO document_lines
-           (id, document_id, position, description, quantity, unit_price_rappen, tax_rate_id, line_total_rappen)
-         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)`,
-        [document.id, line.position, line.description, line.quantity ?? 1, line.unitPriceRappen, line.taxRateId, line.lineTotal],
-      )
-    }
+    await insertLines(client, document.id, computedLines)
 
     return { ...document, lines: computedLines }
   })

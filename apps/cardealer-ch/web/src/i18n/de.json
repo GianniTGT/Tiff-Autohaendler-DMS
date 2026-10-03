@@ -38,7 +38,8 @@
     "listings": "Inserate",
     "users": "Benutzer",
     "archive": "Archiv",
-    "help": "Hilfe"
+    "help": "Hilfe",
+    "sales": "Offerten & Aufträge"
   },
   "status": {
     "in_stock": "Auf Lager",
@@ -826,7 +827,10 @@
       "reminder": "Mahnung",
       "sale_contract": "Kaufvertrag",
       "purchase_contract": "Ankaufsvertrag",
-      "credit_note": "Gutschrift"
+      "credit_note": "Gutschrift",
+      "offer": "Offerte",
+      "order": "Auftrag",
+      "delivery_note": "Lieferschein"
     },
     "filter": {
       "all": "Alle",
@@ -835,7 +839,10 @@
       "sale_contract": "Kaufverträge",
       "purchase_contract": "Ankaufsverträge",
       "open": "Nicht archiviert",
-      "credit_note": "Gutschriften"
+      "credit_note": "Gutschriften",
+      "offer": "Offerten",
+      "order": "Aufträge",
+      "delivery_note": "Lieferscheine"
     },
     "cols": {
       "number": "Nummer",
@@ -931,8 +938,87 @@
       "credit": {
         "title": "Gutschriften",
         "body": "Ausgestellte Rechnungen sind archiviert und unveränderlich. Ein Fehler oder ein Preisnachlass wird mit einer Gutschrift (GS-…) ausgeglichen: ganze Rechnung oder ein Teilbetrag, immer mit Grund. Die Gutschrift senkt den offenen Betrag (und stoppt damit Mahnungen) sowie Umsatz und MWST in der Periode, in der sie ausgestellt wird. Ausstellen dürfen Inhaber und Buchhaltung.\n\nDie MWST-Behandlung ist ein Entwurf und von einem Treuhänder zu bestätigen."
+      },
+      "chain": {
+        "title": "Offerte, Auftrag, Lieferschein",
+        "body": "Unter «Offerten & Aufträge» führen Sie ein Geschäft Schritt für Schritt: Offerte (30 Tage gültig) → Auftrag (reserviert das Fahrzeug) → Lieferschein (mit Fahrzeugdaten und Unterschriftsfeldern, ohne Preise) → Rechnung. Jeder Schritt übernimmt Kunde, Fahrzeug und Positionen; nichts muss neu getippt werden.\n\nAlle Belege werden beim Ausstellen unveränderlich archiviert. Fehler korrigieren Sie nicht durch Überschreiben: eine falsche Offerte lehnen Sie ab und stellen eine neue aus, einen falschen Auftrag stornieren Sie (bis ein Lieferschein existiert), eine falsche Rechnung gleichen Sie mit einer Gutschrift aus. Abgelaufene Offerten lassen sich nicht mehr in einen Auftrag wandeln."
       }
     },
     "contact": "Fragen oder Probleme? Tiff Software Solutions — info@tiff-software-solutions.com"
+  },
+  "sales": {
+    "title": "Offerten & Aufträge",
+    "intro": "Die Belegkette: Offerte → Auftrag → Lieferschein → Rechnung. Jeder Beleg wird beim Ausstellen unveränderlich archiviert; wandeln Sie ihn in den nächsten, statt etwas neu zu tippen.",
+    "addOffer": "+ Offerte",
+    "addOrder": "+ Auftrag",
+    "newOffer": "Neue Offerte",
+    "newOrder": "Neuer Auftrag",
+    "validUntil": "Gültig bis",
+    "validUntilHint": "Gültig bis (leer = 30 Tage)",
+    "validUntilShort": "gültig bis {date}",
+    "quantity": "Menge",
+    "unitPrice": "Einzelpreis netto (CHF)",
+    "addLine": "+ Position",
+    "removeLine": "Position entfernen",
+    "netTotal": "Total netto",
+    "vatAdded": "MWST wird beim Ausstellen berechnet",
+    "note": "Bemerkungen (erscheinen auf dem Beleg)",
+    "issue": "Ausstellen",
+    "created": "{number} ausgestellt und archiviert.",
+    "notArchived": "{number} ausgestellt, aber noch nicht archiviert: {reason}",
+    "empty": "Noch keine Belege.",
+    "filter": {
+      "all": "Alle",
+      "offer": "Offerten",
+      "order": "Aufträge",
+      "delivery_note": "Lieferscheine"
+    },
+    "types": {
+      "offer": "Offerte",
+      "order": "Auftrag",
+      "delivery_note": "Lieferschein",
+      "invoice": "Rechnung"
+    },
+    "status": {
+      "offer": {
+        "issued": "Offen",
+        "accepted": "Angenommen",
+        "declined": "Abgelehnt",
+        "expired": "Abgelaufen"
+      },
+      "order": {
+        "issued": "Bestätigt",
+        "delivered": "Geliefert",
+        "invoiced": "Verrechnet",
+        "cancelled": "Storniert"
+      },
+      "delivery_note": {
+        "issued": "Ausgestellt",
+        "invoiced": "Verrechnet"
+      }
+    },
+    "detail": {
+      "pdf": "PDF",
+      "chain": "Belegkette",
+      "from": "Aus",
+      "to": "Weiter",
+      "scope": "Lieferumfang",
+      "next": "Weiter in der Kette",
+      "expired": "Diese Offerte ist abgelaufen und lässt sich nicht mehr in einen Auftrag wandeln. Bitte eine neue Offerte ausstellen.",
+      "created": "{number} ausgestellt und archiviert.",
+      "deliveryNote": "Bemerkung für den Lieferschein (z. B. Anzahl Schlüssel, Zubehör)",
+      "make": {
+        "order": "Auftrag erstellen",
+        "delivery_note": "Lieferschein erstellen",
+        "invoice": "Rechnung erstellen"
+      },
+      "decline": "Offerte ablehnen",
+      "cancel": "Auftrag stornieren",
+      "reserveHint": "Ein Auftrag reserviert das Fahrzeug; Stornieren gibt es wieder frei.",
+      "confirm": {
+        "declined": "Diese Offerte ablehnen? Das lässt sich nicht rückgängig machen.",
+        "cancelled": "Diesen Auftrag stornieren? Das Fahrzeug wird wieder freigegeben."
+      }
+    }
   }
 }

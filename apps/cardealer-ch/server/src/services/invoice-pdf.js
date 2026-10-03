@@ -13,6 +13,7 @@ import { formatMoney } from '@tiff/core-billing'
 import { buildQrBill } from '@tiff/core-billing/src/qr-invoice.js'
 import { REMINDER_LABEL } from './reminders.js'
 import { loadLogoBuffer } from './tenant-logo.js'
+import { renderDeliveryNotePdf } from './delivery-note-pdf.js'
 
 /**
  * `swissqrbill` verlangt vollständige Adressfelder und stürzt sonst intern
@@ -109,7 +110,7 @@ export function renderReminderPdf(reminder) {
   return renderBillPdf(reminder, { title: REMINDER_LABEL[reminder.reminder_level]?.toUpperCase() ?? 'MAHNUNG' })
 }
 
-function renderBillPdf(invoice, { title, credit = false }) {
+function renderBillPdf(invoice, { title, credit = false, noQr = false, extraRows = null }) {
   const doc = new PDFDocument({
     size: PAGE.size,
     margins: PAGE.margins,
@@ -144,6 +145,11 @@ function renderBillPdf(invoice, { title, credit = false }) {
     ])
   }
 
+  if (extraRows?.length) {
+    sectionBar(doc, 'Angaben')
+    for (const row of extraRows) fieldRow(doc, row)
+  }
+
   sectionBar(doc, 'Positionen')
   drawLineItems(doc, invoice.lines)
 
@@ -158,8 +164,8 @@ function renderBillPdf(invoice, { title, credit = false }) {
 
   footers(doc, { dealer, docNo: invoice.number })
 
-  // Eine Gutschrift ist keine Zahlungsaufforderung: kein QR-Zahlteil.
-  if (credit) return doc
+  // Gutschrift, Offerte und Auftrag sind keine Zahlungsaufforderung: kein QR-Zahlteil.
+  if (credit || noQr) return doc
 
   const missingQrBillReason = describeMissingQrBillData(tenant, invoice.party, invoice)
 
@@ -206,6 +212,34 @@ export function renderInvoicePdfBuffer(invoice) {
 /** Gutschrift: dasselbe Layout wie die Rechnung, ohne Zahlteil, mit Bezug auf die Rechnung und Grund. */
 export function renderCreditNotePdf(creditNote) {
   return renderBillPdf(creditNote, { title: 'GUTSCHRIFT', credit: true })
+}
+
+/**
+ * Offerte, Auftrag (Auftragsbestätigung) und Lieferschein. Offerte und Auftrag teilen das Layout der
+ * Rechnung (Positionen, MWST), ohne Zahlteil; der Lieferschein ist ein eigenes Layout ohne Preise.
+ */
+export function renderSalesDocumentPdf(document) {
+  const dayText = (v) => (v ? shortDate(String(v).slice(0, 10)) : '')
+  if (document.type === 'delivery_note') return renderDeliveryNotePdf(document)
+  if (document.type === 'offer') {
+    return renderBillPdf(document, {
+      title: 'OFFERTE',
+      noQr: true,
+      extraRows: [[{ label: 'Gültig bis', value: dayText(document.due_date) }, { label: 'Bemerkungen', value: document.note ?? '' }]],
+    })
+  }
+  return renderBillPdf(document, {
+    title: 'AUFTRAGSBESTÄTIGUNG',
+    noQr: true,
+    extraRows: [[
+      { label: 'Zu Offerte', value: document.predecessor ? `${document.predecessor.number} vom ${dayText(document.predecessor.issue_date)}` : '' },
+      { label: 'Bemerkungen', value: document.note ?? '' },
+    ]],
+  })
+}
+
+export function renderSalesDocumentPdfBuffer(document) {
+  return collect(renderSalesDocumentPdf(document))
 }
 
 export function renderCreditNotePdfBuffer(creditNote) {

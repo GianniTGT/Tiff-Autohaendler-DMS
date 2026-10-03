@@ -229,7 +229,11 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Website kommen über einen Schlüssel-geschützten Eingang. **Gutschriften** (GS-JJJJ-NNNNN, ganze Rechnung
   oder Teilbetrag, mit Pflichtgrund, sofort archiviert; verbucht wie eine Zahlung der Art `credit_note`, senkt so
   Restbetrag, Mahnwesen und die MWST der Periode der Ausstellung; nur Inhaber/Buchhaltung). Die
-  MWST-Behandlung (Entgeltsminderung) ist Entwurf und vom Treuhänder zu bestätigen. **Noch offen:** Fotos
+  MWST-Behandlung (Entgeltsminderung) ist Entwurf und vom Treuhänder zu bestätigen. **Belegkette Offerte → Auftrag →
+  Lieferschein → Rechnung** (OF/AU/LS-Nummern, jeder Beleg beim Ausstellen archiviert, Umwandlung statt Neutippen,
+  Auftrag reserviert das Fahrzeug, Offerten verfallen nach «gültig bis», Lieferschein ohne Preise mit
+  Fahrzeugdaten und Unterschriftsfeldern; Korrektur nur durch Ablehnen/Stornieren/Gutschrift, nie durch
+  Überschreiben). **Noch offen:** Fotos
   an AutoScout24 mitschicken, abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als
   Datenstrom für sehr grosse Archive.
 

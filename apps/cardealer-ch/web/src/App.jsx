@@ -7,6 +7,7 @@ import VehicleList from './components/VehicleList.jsx'
 import VehicleDetail from './components/VehicleDetail.jsx'
 import CustomerList from './components/CustomerList.jsx'
 import InvoiceList from './components/InvoiceList.jsx'
+import Sales from './components/Sales.jsx'
 import Workshop from './components/Workshop.jsx'
 import Calendar from './components/Calendar.jsx'
 import InvoiceDetail from './components/InvoiceDetail.jsx'
@@ -31,6 +32,7 @@ const TABS = [
   { key: 'listings', label: 'nav.listings', Screen: Listings },
   { key: 'leads', label: 'nav.leads', Screen: Leads },
   { key: 'customers', label: 'nav.customers', Screen: CustomerList },
+  { key: 'sales', label: 'nav.sales', Screen: Sales, billingOnly: true },
   { key: 'invoices', label: 'documents.invoices.title', Screen: InvoiceList, billingOnly: true },
   { key: 'recon', label: 'nav.recon', Screen: Workshop },
   { key: 'calendar', label: 'nav.calendar', Screen: Calendar },

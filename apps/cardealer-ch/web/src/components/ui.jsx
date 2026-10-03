@@ -67,3 +67,7 @@ export const todayIso = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
+
+/** Anzeigestatus eines Belegs der Kette: «abgelaufen» steht nicht in der Datenbank, sondern ergibt sich aus «gültig bis». */
+export const salesState = (doc) => (doc.expired ? 'expired' : doc.status)
+export const STATE_TONE = { issued: 'amber', accepted: 'green', declined: 'gray', expired: 'red', delivered: 'brand', invoiced: 'green', cancelled: 'gray' }
