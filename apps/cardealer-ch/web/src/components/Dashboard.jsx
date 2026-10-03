@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
-import { formatMoney } from '@tiff/core-billing'
+import { formatMoney, dealHealth } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { PageHeader, formatDay } from './ui.jsx'
 
@@ -9,12 +9,23 @@ import { PageHeader, formatDay } from './ui.jsx'
  * (Balken und drei Zahlen), darunter «Zu erledigen» als eine Liste mit Etikett, Text und Aktion.
  */
 
-function Kpi({ label, value, sub, accent }) {
+/**
+ * Kennzahl-Kachel. `tone` färbt die ganze Kachel wie den Gewinn-Block am Fahrzeug: brand (Kapital),
+ * good/thin/loss (Gewinn nach Marge). Ohne tone: weiss mit grüner Oberkante.
+ */
+const KPI_TONE = {
+  brand: 'bg-brand-wash border-t-brand text-brand-deep',
+  good: 'bg-profit-bg border-t-profit text-profit',
+  thin: 'bg-warn-bg border-t-warn text-warn',
+  loss: 'bg-danger-bg border-t-danger text-danger',
+}
+function Kpi({ label, value, sub, accent, tone }) {
+  const toned = tone ? KPI_TONE[tone] : accent ? 'bg-white border-t-brand-gold text-brand-deep' : 'bg-white border-t-brand text-brand-deep'
   return (
-    <div className={`card min-w-0 p-4 ${accent ? 'border-t-4 border-t-brand-gold' : 'border-t-4 border-t-brand'}`}>
-      <div className="text-xs font-semibold uppercase tracking-wider text-steel">{label}</div>
-      <div className="num mt-1 font-display text-2xl font-bold text-brand-deep sm:text-3xl">{value}</div>
-      <div className="mt-0.5 min-h-[1rem] text-xs text-steel">{sub ?? ''}</div>
+    <div className={`card min-w-0 border-t-4 p-4 ${toned}`}>
+      <div className={`text-xs font-semibold uppercase tracking-wider ${tone ? 'opacity-80' : 'text-steel'}`}>{label}</div>
+      <div className="num mt-1 font-display text-2xl font-bold sm:text-3xl">{value}</div>
+      <div className={`mt-0.5 min-h-[1rem] text-xs ${tone ? 'opacity-80' : 'text-steel'}`}>{sub ?? ''}</div>
     </div>
   )
 }
@@ -92,6 +103,9 @@ export default function Dashboard({ onOpenVehicle, onNavigate }) {
       ]
     : []
   const segmentTotal = segments.reduce((s, x) => s + x.value, 0) || 1
+  // Gewinn-Kachel in der Farbe der Marge über den ganzen Bestand — dieselbe Beurteilung wie am Fahrzeug.
+  const lotMarginPct = money && money.askingRappen > 0 ? Math.round((money.projectedProfitRappen / money.askingRappen) * 1000) / 10 : null
+  const lotHealth = lotMarginPct == null ? null : dealHealth(lotMarginPct / 100)
 
   // «Zu erledigen» — alles, was Aufmerksamkeit braucht, in einer Liste: dringend zuerst.
   const open = (id) => () => onOpenVehicle(id)
@@ -118,8 +132,14 @@ export default function Dashboard({ onOpenVehicle, onNavigate }) {
       <p className="text-sm text-steel">{t('dashboard.intro')}</p>
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <Kpi label={t('dashboard.kpi.cashTiedUp')} value={money ? formatMoney(money.investedRappen) : t('common.none')} sub={money ? t('dashboard.kpi.cashTiedUpSub') : restricted} />
-        <Kpi label={t('dashboard.kpi.projectedProfit')} value={money ? formatMoney(money.projectedProfitRappen) : t('common.none')} sub={money ? t('dashboard.kpi.projectedProfitSub') : restricted} accent />
+        <Kpi label={t('dashboard.kpi.cashTiedUp')} value={money ? formatMoney(money.investedRappen) : t('common.none')} sub={money ? t('dashboard.kpi.cashTiedUpSub') : restricted} tone={money ? 'brand' : undefined} />
+        <Kpi
+          label={t('dashboard.kpi.projectedProfit')}
+          value={money ? formatMoney(money.projectedProfitRappen) : t('common.none')}
+          sub={money ? (lotHealth ? `${t(`vehicle.detail.health.${lotHealth}`)} · ${t('vehicle.detail.economics.marginPct', { pct: lotMarginPct })}` : t('dashboard.kpi.projectedProfitSub')) : restricted}
+          tone={lotHealth ?? undefined}
+          accent
+        />
         <Kpi label={t('dashboard.kpi.onLot')} value={counts.onLot} sub={`${counts.reserved} ${t('status.reserved').toLowerCase()} · ${t('dashboard.kpi.onLotSub')}`} />
         <Kpi
           label={t('dashboard.kpi.soldThisYear')}
