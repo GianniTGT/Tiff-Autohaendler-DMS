@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { t } from '../i18n/index.js'
 
 const TAG_TONES = {
@@ -14,13 +15,29 @@ export function Tag({ tone = 'gray', children }) {
 
 export const VEHICLE_STATUS_TONE = { in_stock: 'green', reserved: 'amber', sold: 'brand', written_off: 'red' }
 
-/** Seitenpanel von rechts — Detailansichten (Fahrzeug, Rechnung). */
-export function Drawer({ title, subtitle, onClose, children }) {
+/**
+ * Detailfenster — zentriert und so gross wie der Bildschirm erlaubt, damit möglichst alles auf einmal
+ * sichtbar ist, statt als schmales Seitenpanel. `columns={2}` setzt die Kinder zweispaltig (ab xl, gleich
+ * hoch aufgeteilt); ein Kind mit `xl:[column-span:all]` nimmt die ganze Breite (Hinweise, Kopfzeile). Escape und Klick auf den
+ * Hintergrund schliessen.
+ */
+export function Dialog({ title, subtitle, onClose, children, columns = 1 }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose?.()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-brand-deep/40" onClick={onClose}>
-      <div className="h-full w-full max-w-3xl overflow-y-auto bg-canvas shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-line-strong bg-white px-6 py-4">
-          <div>
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-brand-deep/50 p-2 sm:p-4" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="flex h-[96vh] w-full max-w-[1480px] flex-col overflow-hidden rounded-tiff bg-canvas shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-line-strong bg-white px-6 py-4">
+          <div className="min-w-0">
             <h2 className="page-title">{title}</h2>
             {subtitle && <p className="mt-0.5 text-sm text-steel">{subtitle}</p>}
           </div>
@@ -28,15 +45,16 @@ export function Drawer({ title, subtitle, onClose, children }) {
             {t('common.close')}
           </button>
         </div>
-        <div className="space-y-5 p-6">{children}</div>
+        {/* Zwei Spalten als Mehrspaltensatz: die Kästen füllen beide Spalten gleich hoch, in Lesereihenfolge. */}
+        <div className={`flex-1 overflow-y-auto p-5 ${columns === 2 ? 'xl:columns-2 xl:gap-5 [&>*]:mb-5 [&>*]:break-inside-avoid' : 'space-y-5'}`}>{children}</div>
       </div>
     </div>
   )
 }
 
-export function Panel({ title, children, actions }) {
+export function Panel({ title, children, actions, className = '' }) {
   return (
-    <section className="card">
+    <section className={`card ${className}`}>
       <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
         <h3 className="panel-title">{title}</h3>
         {actions}
@@ -46,9 +64,9 @@ export function Panel({ title, children, actions }) {
   )
 }
 
-export function Notice({ tone = 'red', children }) {
+export function Notice({ tone = 'red', children, className = '' }) {
   const cls = { red: 'bg-danger-bg text-danger', green: 'bg-profit-bg text-profit', amber: 'bg-warn-bg text-warn' }[tone]
-  return <p className={`rounded-lg px-3 py-2 text-sm ${cls}`}>{children}</p>
+  return <p className={`rounded-lg px-3 py-2 text-sm ${cls} ${className}`}>{children}</p>
 }
 
 export function PageHeader({ title, children }) {
@@ -57,6 +75,35 @@ export function PageHeader({ title, children }) {
       <h2 className="page-title">{title}</h2>
       <div className="flex flex-wrap items-center gap-2">{children}</div>
     </div>
+  )
+}
+
+/** Fusszeile des Herstellers — auf jeder Seite dieselbe Linie: Firma, Über uns, Support, E-Mail, Telefon. */
+export function VendorFooter({ onAbout, onSupport, className = '' }) {
+  const phone = t('app.footer.phone')
+  const email = t('app.footer.email')
+  return (
+    <footer className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line bg-white px-6 py-3 text-xs text-steel ${className}`}>
+      <span>
+        © {new Date().getFullYear()} {t('app.vendor')} · {t('app.footer.place')}
+      </span>
+      <nav className="flex flex-wrap items-center gap-x-5 gap-y-1">
+        <button type="button" className="hover:text-brand hover:underline" onClick={onAbout}>
+          {t('app.footer.about')}
+        </button>
+        <button type="button" className="hover:text-brand hover:underline" onClick={onSupport}>
+          {t('app.footer.support')}
+        </button>
+        <a className="hover:text-brand hover:underline" href={`mailto:${email}`}>
+          {email}
+        </a>
+        {phone && phone !== 'app.footer.phone' && (
+          <a className="hover:text-brand hover:underline" href={`tel:${phone.replace(/\s+/g, '')}`}>
+            {t('app.footer.phoneLabel')} {phone}
+          </a>
+        )}
+      </nav>
+    </footer>
   )
 }
 

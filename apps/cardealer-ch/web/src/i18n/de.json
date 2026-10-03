@@ -7,7 +7,19 @@
     "signedInAs": "Angemeldet als",
     "signOut": "Abmelden",
     "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
-    "vendor": "Tiff Software Solutions"
+    "vendor": "Tiff Software Solutions",
+    "footer": {
+      "place": "Bern",
+      "about": "Über uns",
+      "support": "Support",
+      "email": "info@tiff-software-solutions.com",
+      "phone": "",
+      "phoneLabel": "Telefon",
+      "aboutTitle": "Über uns",
+      "aboutBody": "Tiff Software Solutions aus Bern baut Software für Schweizer Occasionshändler: den Tiff Autohändler Manager und die dazu passende Website. Eine Person als Ansprechpartner, Daten in der Schweiz, Deutsch als einzige Sprache — gebaut für den Betrieb, nicht für den Konzern.",
+      "supportTitle": "Support",
+      "supportBody": "Fragen, Fehler oder Wünsche: schreiben Sie uns oder rufen Sie an. Nennen Sie Betrieb, Bildschirm und was Sie erwartet hätten — so können wir am schnellsten helfen.\n\nBei einem Fehler, der die Arbeit blockiert, melden wir uns am selben Arbeitstag."
+    }
   },
   "common": {
     "back": "Zurück",
@@ -257,8 +269,9 @@
         "seller": "Verkäufer (Privatperson)",
         "buyer": "Käufer",
         "warranty": "Gewährleistung (Monate)",
+        "warrantyShort": "Garantie (Mt.)",
         "choose": "— wählen —",
-        "issue": "Ausstellen und archivieren",
+        "issue": "Ausstellen",
         "preview": "Vorschau",
         "issued": "Ausgestellte Verträge",
         "none": "Noch keine Verträge ausgestellt.",

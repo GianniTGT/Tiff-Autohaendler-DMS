@@ -37,6 +37,8 @@ import { createCreditNote } from '../src/services/credit-notes.js'
 import { archiveIfComplete } from '../src/services/archive.js'
 import { renderInvoicePdfBuffer, renderReminderPdfBuffer, withLogo } from '../src/services/invoice-pdf.js'
 import { issueContract } from '../src/services/contracts.js'
+import { setLogo } from '../src/services/tenant-logo.js'
+import { demoLogoPng } from './demo-logo.mjs'
 
 // ---------------------------------------------------------------------------------------------
 // Argumente
@@ -233,6 +235,8 @@ try {
     qrIban: 'CH44 3199 9123 0008 8901 2', // gültige Test-QR-IBAN
   })
   step('Betriebsdaten (Adresse, UID, MWST effektiv, QR-IBAN)')
+  await setLogo(tenantId, demoLogoPng(legalName.replace(/ AG$/, '')))
+  step('Platzhalter-Logo (Seitenleiste und Briefkopf)')
 
   // --- Benutzer: drei Rollen, dasselbe Passwort — für die Vorführung
   const ownerId = await createUser({ tenantId, email, name: 'Daniel Aebi', password, role: 'inhaber' })

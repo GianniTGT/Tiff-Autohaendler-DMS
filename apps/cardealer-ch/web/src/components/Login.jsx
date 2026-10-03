@@ -25,7 +25,8 @@ export default function Login({ onLoggedIn }) {
   }
 
   return (
-    <div className="login-bg grid min-h-full place-items-center p-4">
+    <div className="login-bg flex min-h-full flex-col">
+      <div className="grid flex-1 place-items-center p-4">
       <form onSubmit={handleSubmit} className="card w-full max-w-sm space-y-4 p-6 shadow-2xl">
         <img src={lockup} alt={t('app.vendor')} className="mx-auto h-14 w-auto" />
         <div className="text-center">
@@ -83,6 +84,11 @@ export default function Login({ onLoggedIn }) {
           {t('login.submit')}
         </button>
       </form>
+      </div>
+      <p className="px-6 py-3 text-center text-xs text-on-brand-dim">
+        © {new Date().getFullYear()} {t('app.vendor')} · {t('app.footer.place')} · {t('app.footer.email')}
+        {t('app.footer.phone') !== 'app.footer.phone' && t('app.footer.phone') ? ` · ${t('app.footer.phoneLabel')} ${t('app.footer.phone')}` : ''}
+      </p>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import { formatMoney, francsToRappen, rappenToFrancs } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import { Drawer, Panel, Tag, Notice, VEHICLE_STATUS_TONE, formatDay, listingNotice } from './ui.jsx'
+import { Dialog, Panel, Tag, Notice, VEHICLE_STATUS_TONE, formatDay, listingNotice } from './ui.jsx'
 import VehiclePhotos from './VehiclePhotos.jsx'
 
 const COST_KINDS = ['part', 'labor', 'transport', 'fee', 'detail']
@@ -249,9 +249,9 @@ export default function VehicleDetail({ vehicleId, role, onClose, onChanged }) {
 
   if (!vehicle || !form) {
     return (
-      <Drawer title={t('common.loading')} onClose={onClose}>
+      <Dialog title={t('common.loading')} onClose={onClose}>
         {error && <Notice>{error}</Notice>}
-      </Drawer>
+      </Dialog>
     )
   }
 
@@ -261,7 +261,7 @@ export default function VehicleDetail({ vehicleId, role, onClose, onChanged }) {
   const sellerQuery = contracts.sellerId ? `?sellerPartyId=${contracts.sellerId}` : ''
 
   return (
-    <Drawer
+    <Dialog
       title={label}
       subtitle={
         <>
@@ -274,201 +274,208 @@ export default function VehicleDetail({ vehicleId, role, onClose, onChanged }) {
       {error && <Notice>{error}</Notice>}
       {message && <Notice tone="green">{message}</Notice>}
 
-      {!isWorkshop && (
-      <Panel title={t('vehicle.detail.sections.economics')}>
-        {economics && (
-          <>
-            <Row label={t('vehicle.detail.economics.purchase')} value={formatMoney(economics.purchaseRappen)} />
-            <Row label={t('vehicle.detail.economics.parts')} value={formatMoney(economics.partsRappen)} />
-            <Row label={t('vehicle.detail.economics.labor')} value={formatMoney(economics.laborRappen)} />
-            <Row label={t('vehicle.detail.economics.other')} value={formatMoney(economics.otherRappen)} />
-            <Row label={t('vehicle.detail.economics.invested')} value={formatMoney(economics.totalInvestedRappen)} strong />
-            <Row
-              label={economics.realized ? t('vehicle.detail.economics.price') : t('vehicle.detail.economics.priceAsking')}
-              value={formatMoney(economics.priceRappen)}
-            />
-            <Row
-              label={t('vehicle.detail.economics.profit')}
-              value={`${formatMoney(economics.profitRappen)} (${economics.marginPct} %)`}
-              strong
-              tone={economics.health === 'loss' ? 'loss' : economics.health === 'good' ? 'good' : undefined}
-            />
-            <p className="mt-1 text-xs text-steel">{t(`vehicle.detail.health.${economics.health}`)}</p>
-          </>
-        )}
-        {vehicle.notionalInputTaxRappen > 0 && (
-          <p className="mt-2 text-xs text-steel">
-            {t('vehicle.detail.notionalInputTax')}: {formatMoney(Number(vehicle.notionalInputTaxRappen))}
-          </p>
-        )}
-      </Panel>
-      )}
-
-      <form onSubmit={save} className="space-y-5">
-        {SECTIONS.filter(([section]) => !(isWorkshop && section === 'pricing')).map(([section, list]) => (
-          <Panel key={section} title={t(`vehicle.detail.sections.${section}`)}>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{list.map(renderField)}</div>
+      {/* Zwei Spalten: links die Fahrzeugdaten (ein Formular), rechts Zahlen, Fotos, Kosten, Verkauf, Verträge. */}
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,11fr)_minmax(0,9fr)]">
+        <form onSubmit={save} className="space-y-5">
+          {SECTIONS.filter(([section]) => !(isWorkshop && section === 'pricing')).map(([section, list]) => (
+            <Panel key={section} title={t(`vehicle.detail.sections.${section}`)}>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{list.map(renderField)}</div>
+            </Panel>
+          ))}
+          <Panel title={t('vehicle.detail.sections.notes')}>
+            <textarea className="field" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </Panel>
-        ))}
-        <Panel title={t('vehicle.detail.sections.notes')}>
-          <textarea className="field" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-        </Panel>
-        <button type="submit" disabled={busy} className="btn">
-          {t('common.save')}
-        </button>
-      </form>
-
-      <VehiclePhotos vehicleId={vehicle.id} onChanged={onChanged} />
-
-      <Panel title={t('vehicle.detail.sections.costs')}>
-        {costs.length === 0 ? (
-          <p className="mb-3 text-sm text-steel">{t('vehicle.detail.cost.empty')}</p>
-        ) : (
-          <table className="mb-3 w-full text-sm">
-            <tbody>
-              {costs.map((c) => (
-                <tr key={c.id} className="border-b border-line last:border-0">
-                  <td className="py-1.5 text-steel">{t(`vehicle.detail.cost.kinds.${c.kind}`)}</td>
-                  <td className="py-1.5">{c.description}</td>
-                  <td className="num py-1.5 text-right">{formatMoney(c.amountRappen)}</td>
-                  <td className="py-1.5 text-right">
-                    <button className="text-xs text-danger underline" onClick={() => removeCost(c.id)} disabled={busy}>
-                      {t('vehicle.detail.cost.remove')}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <form onSubmit={addCost} className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_1fr_8rem_auto]">
-          <select className="field" aria-label={t('vehicle.detail.cost.kind')} value={costForm.kind} onChange={(e) => setCostForm({ ...costForm, kind: e.target.value })}>
-            {COST_KINDS.map((k) => (
-              <option key={k} value={k}>
-                {t(`vehicle.detail.cost.kinds.${k}`)}
-              </option>
-            ))}
-          </select>
-          <input required className="field" placeholder={t('vehicle.detail.cost.description')} value={costForm.description} onChange={(e) => setCostForm({ ...costForm, description: e.target.value })} />
-          <input required className="field" inputMode="decimal" placeholder={t('vehicle.detail.cost.amount')} value={costForm.amount} onChange={(e) => setCostForm({ ...costForm, amount: e.target.value })} />
-          <button type="submit" disabled={busy} className="btn">
-            {t('vehicle.detail.cost.add')}
-          </button>
-        </form>
-      </Panel>
-
-      {!isWorkshop && (
-      <Panel title={t('vehicle.detail.sections.sell')}>
-        {isSold ? (
-          <p className="text-sm">
-            {t('vehicle.detail.sell.soldOn', { date: formatDay(vehicle.soldAt) })} · {formatMoney(Number(vehicle.soldPriceRappen))}
-            {vehicle.soldViaInvoiceNumber && <span className="block text-xs text-steel">{t('vehicle.detail.sell.viaInvoice', { number: vehicle.soldViaInvoiceNumber })}</span>}
-          </p>
-        ) : vehicle.status === 'written_off' ? null : (
-          <form onSubmit={sell} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-3">
-            <label>
-              <span className="field-label">{t('vehicle.detail.sell.price')}</span>
-              <input required className="field" inputMode="decimal" value={sellForm.price} onChange={(e) => setSellForm({ ...sellForm, price: e.target.value })} />
-            </label>
-            <label>
-              <span className="field-label">{t('vehicle.detail.sell.date')}</span>
-              <input className="field" type="date" value={sellForm.date} onChange={(e) => setSellForm({ ...sellForm, date: e.target.value })} />
-            </label>
-            <label>
-              <span className="field-label">{t('vehicle.detail.sell.buyer')}</span>
-              <select className="field" value={sellForm.buyerId} onChange={(e) => setSellForm({ ...sellForm, buyerId: e.target.value })}>
-                <option value="">{t('vehicle.detail.sell.chooseBuyer')}</option>
-                {parties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {partyName(p)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="submit" disabled={busy} className="btn sm:col-span-3">
-              {t('vehicle.detail.sell.submit')}
+          <div className="flex justify-end">
+            <button type="submit" disabled={busy} className="btn">
+              {t('common.save')}
             </button>
-          </form>
-        )}
-      </Panel>
+          </div>
+        </form>
 
-      )}
+        <div className="space-y-5">
+          {!isWorkshop && (
+            <Panel title={t('vehicle.detail.sections.economics')}>
+              {economics && (
+                <>
+                  <Row label={t('vehicle.detail.economics.purchase')} value={formatMoney(economics.purchaseRappen)} />
+                  <Row label={t('vehicle.detail.economics.parts')} value={formatMoney(economics.partsRappen)} />
+                  <Row label={t('vehicle.detail.economics.labor')} value={formatMoney(economics.laborRappen)} />
+                  <Row label={t('vehicle.detail.economics.other')} value={formatMoney(economics.otherRappen)} />
+                  <Row label={t('vehicle.detail.economics.invested')} value={formatMoney(economics.totalInvestedRappen)} strong />
+                  <Row
+                    label={economics.realized ? t('vehicle.detail.economics.price') : t('vehicle.detail.economics.priceAsking')}
+                    value={formatMoney(economics.priceRappen)}
+                  />
+                  <Row
+                    label={t('vehicle.detail.economics.profit')}
+                    value={`${formatMoney(economics.profitRappen)} (${economics.marginPct} %)`}
+                    strong
+                    tone={economics.health === 'loss' ? 'loss' : economics.health === 'good' ? 'good' : undefined}
+                  />
+                  <p className="mt-1 text-xs text-steel">{t(`vehicle.detail.health.${economics.health}`)}</p>
+                </>
+              )}
+              {vehicle.notionalInputTaxRappen > 0 && (
+                <p className="mt-2 text-xs text-steel">
+                  {t('vehicle.detail.notionalInputTax')}: {formatMoney(Number(vehicle.notionalInputTaxRappen))}
+                </p>
+              )}
+            </Panel>
+          )}
 
-      {!isWorkshop && (
-      <Panel title={t('vehicle.detail.sections.contracts')}>
-        <Notice tone="amber">{t('vehicle.detail.contracts.note')}</Notice>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label className="block">
-              <span className="field-label">{t('vehicle.detail.contracts.seller')}</span>
-              <select className="field" value={contracts.sellerId} onChange={(e) => setContracts({ ...contracts, sellerId: e.target.value })}>
-                <option value="">{vehicle.sellerPartyId ? '' : t('vehicle.detail.contracts.choose')}</option>
-                {parties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {partyName(p)}
+          <VehiclePhotos vehicleId={vehicle.id} onChanged={onChanged} />
+
+          <Panel title={t('vehicle.detail.sections.costs')}>
+            {costs.length === 0 ? (
+              <p className="mb-3 text-sm text-steel">{t('vehicle.detail.cost.empty')}</p>
+            ) : (
+              <table className="mb-3 w-full text-sm">
+                <tbody>
+                  {costs.map((c) => (
+                    <tr key={c.id} className="border-b border-line last:border-0">
+                      <td className="py-1.5 text-steel">{t(`vehicle.detail.cost.kinds.${c.kind}`)}</td>
+                      <td className="py-1.5">{c.description}</td>
+                      <td className="num py-1.5 text-right">{formatMoney(c.amountRappen)}</td>
+                      <td className="py-1.5 text-right">
+                        <button className="text-xs text-danger underline" onClick={() => removeCost(c.id)} disabled={busy}>
+                          {t('vehicle.detail.cost.remove')}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <form onSubmit={addCost} className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_1fr_8rem_auto]">
+              <select className="field" aria-label={t('vehicle.detail.cost.kind')} value={costForm.kind} onChange={(e) => setCostForm({ ...costForm, kind: e.target.value })}>
+                {COST_KINDS.map((k) => (
+                  <option key={k} value={k}>
+                    {t(`vehicle.detail.cost.kinds.${k}`)}
                   </option>
                 ))}
               </select>
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <a className="btn-ghost" href={`/api/vehicles/${vehicle.id}/ankaufsvertrag.pdf${sellerQuery}`} target="_blank" rel="noreferrer">
-                {t('vehicle.detail.contracts.preview')}
-              </a>
-              <button type="button" className="btn" disabled={busy} onClick={() => issue('purchase')}>
-                {t('vehicle.detail.contracts.issue')}
+              <input required className="field" placeholder={t('vehicle.detail.cost.description')} value={costForm.description} onChange={(e) => setCostForm({ ...costForm, description: e.target.value })} />
+              <input required className="field" inputMode="decimal" placeholder={t('vehicle.detail.cost.amount')} value={costForm.amount} onChange={(e) => setCostForm({ ...costForm, amount: e.target.value })} />
+              <button type="submit" disabled={busy} className="btn">
+                {t('vehicle.detail.cost.add')}
               </button>
-            </div>
-            <p className="text-xs text-steel">{t('vehicle.detail.contracts.ankauf')}</p>
-          </div>
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <label className="block">
-                <span className="field-label">{t('vehicle.detail.contracts.buyer')}</span>
-                <select className="field" value={contracts.buyerId} onChange={(e) => setContracts({ ...contracts, buyerId: e.target.value })}>
-                  <option value="">{vehicle.buyerPartyId ? '' : t('vehicle.detail.contracts.choose')}</option>
-                  {parties.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {partyName(p)}
-                    </option>
+            </form>
+          </Panel>
+
+          {!isWorkshop && (
+            <Panel title={t('vehicle.detail.sections.sell')}>
+              {isSold ? (
+                <p className="text-sm">
+                  {t('vehicle.detail.sell.soldOn', { date: formatDay(vehicle.soldAt) })} · {formatMoney(Number(vehicle.soldPriceRappen))}
+                  {vehicle.soldViaInvoiceNumber && <span className="block text-xs text-steel">{t('vehicle.detail.sell.viaInvoice', { number: vehicle.soldViaInvoiceNumber })}</span>}
+                </p>
+              ) : vehicle.status === 'written_off' ? null : (
+                <form onSubmit={sell} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-3">
+                  <label>
+                    <span className="field-label">{t('vehicle.detail.sell.price')}</span>
+                    <input required className="field" inputMode="decimal" value={sellForm.price} onChange={(e) => setSellForm({ ...sellForm, price: e.target.value })} />
+                  </label>
+                  <label>
+                    <span className="field-label">{t('vehicle.detail.sell.date')}</span>
+                    <input className="field" type="date" value={sellForm.date} onChange={(e) => setSellForm({ ...sellForm, date: e.target.value })} />
+                  </label>
+                  <label>
+                    <span className="field-label">{t('vehicle.detail.sell.buyer')}</span>
+                    <select className="field" value={sellForm.buyerId} onChange={(e) => setSellForm({ ...sellForm, buyerId: e.target.value })}>
+                      <option value="">{t('vehicle.detail.sell.chooseBuyer')}</option>
+                      {parties.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {partyName(p)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button type="submit" disabled={busy} className="btn sm:col-span-3">
+                    {t('vehicle.detail.sell.submit')}
+                  </button>
+                </form>
+              )}
+            </Panel>
+          )}
+
+          {!isWorkshop && (
+            <Panel title={t('vehicle.detail.sections.contracts')}>
+              <Notice tone="amber">{t('vehicle.detail.contracts.note')}</Notice>
+              {/* Zwei gleich gebaute Spalten: Felder oben, Knöpfe auf einer Linie unten, Beschriftung darunter. */}
+              <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-brand">{t('vehicle.detail.contracts.ankauf')}</h4>
+                  <label className="block">
+                    <span className="field-label">{t('vehicle.detail.contracts.seller')}</span>
+                    <select className="field" value={contracts.sellerId} onChange={(e) => setContracts({ ...contracts, sellerId: e.target.value })}>
+                      <option value="">{vehicle.sellerPartyId ? '' : t('vehicle.detail.contracts.choose')}</option>
+                      {parties.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {partyName(p)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
+                    <a className="btn-ghost" href={`/api/vehicles/${vehicle.id}/ankaufsvertrag.pdf${sellerQuery}`} target="_blank" rel="noreferrer">
+                      {t('vehicle.detail.contracts.preview')}
+                    </a>
+                    <button type="button" className="btn" disabled={busy} onClick={() => issue('purchase')}>
+                      {t('vehicle.detail.contracts.issue')}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-brand">{t('vehicle.detail.contracts.kauf')}</h4>
+                  <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2">
+                    <label className="block">
+                      <span className="field-label">{t('vehicle.detail.contracts.buyer')}</span>
+                      <select className="field" value={contracts.buyerId} onChange={(e) => setContracts({ ...contracts, buyerId: e.target.value })}>
+                        <option value="">{vehicle.buyerPartyId ? '' : t('vehicle.detail.contracts.choose')}</option>
+                        {parties.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {partyName(p)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="field-label whitespace-nowrap">{t('vehicle.detail.contracts.warrantyShort')}</span>
+                      <input className="field" inputMode="numeric" value={contracts.warrantyMonths} onChange={(e) => setContracts({ ...contracts, warrantyMonths: e.target.value })} />
+                    </label>
+                  </div>
+                  <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
+                    <a className="btn-ghost" href={`/api/vehicles/${vehicle.id}/kaufvertrag.pdf?${contractQuery}`} target="_blank" rel="noreferrer">
+                      {t('vehicle.detail.contracts.preview')}
+                    </a>
+                    <button type="button" className="btn" disabled={busy} onClick={() => issue('sale')}>
+                      {t('vehicle.detail.contracts.issue')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-steel">{t('vehicle.detail.contracts.issueHint')}</p>
+              <h4 className="mt-4 text-xs font-semibold uppercase tracking-wider text-steel">{t('vehicle.detail.contracts.issued')}</h4>
+              {issued.length === 0 ? (
+                <p className="mt-1 text-sm text-steel">{t('vehicle.detail.contracts.none')}</p>
+              ) : (
+                <ul className="mt-1 divide-y divide-line text-sm">
+                  {issued.map((c) => (
+                    <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                      <span>
+                        <b>{c.number}</b> · {t(`vehicle.detail.contracts.types.${c.type}`)} · {c.partyName ?? t('common.none')} · {formatDay(c.issueDate)}
+                      </span>
+                      <a className="text-brand underline" href={`/api/documents/${c.id}/pdf`} target="_blank" rel="noreferrer">
+                        PDF
+                      </a>
+                    </li>
                   ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="field-label">{t('vehicle.detail.contracts.warranty')}</span>
-                <input className="field" inputMode="numeric" value={contracts.warrantyMonths} onChange={(e) => setContracts({ ...contracts, warrantyMonths: e.target.value })} />
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <a className="btn-ghost" href={`/api/vehicles/${vehicle.id}/kaufvertrag.pdf?${contractQuery}`} target="_blank" rel="noreferrer">
-                {t('vehicle.detail.contracts.preview')}
-              </a>
-              <button type="button" className="btn" disabled={busy} onClick={() => issue('sale')}>
-                {t('vehicle.detail.contracts.issue')}
-              </button>
-            </div>
-            <p className="text-xs text-steel">{t('vehicle.detail.contracts.kauf')}</p>
-          </div>
+                </ul>
+              )}
+            </Panel>
+          )}
         </div>
-        <p className="mt-3 text-xs text-steel">{t('vehicle.detail.contracts.issueHint')}</p>
-        <h4 className="mt-4 text-xs font-semibold uppercase tracking-wider text-steel">{t('vehicle.detail.contracts.issued')}</h4>
-        {issued.length === 0 ? (
-          <p className="mt-1 text-sm text-steel">{t('vehicle.detail.contracts.none')}</p>
-        ) : (
-          <ul className="mt-1 divide-y divide-line text-sm">
-            {issued.map((c) => (
-              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
-                <span>
-                  <b>{c.number}</b> · {t(`vehicle.detail.contracts.types.${c.type}`)} · {c.partyName ?? t('common.none')} · {formatDay(c.issueDate)}
-                </span>
-                <a className="text-brand underline" href={`/api/documents/${c.id}/pdf`} target="_blank" rel="noreferrer">
-                  PDF
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
-      )}
-    </Drawer>
+      </div>
+    </Dialog>
   )
 }

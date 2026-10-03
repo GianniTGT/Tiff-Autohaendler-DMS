@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import { formatMoney } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import { Drawer, Panel, Tag, Notice, formatDay, salesState, STATE_TONE, listingNotice } from './ui.jsx'
+import { Dialog, Panel, Tag, Notice, formatDay, salesState, STATE_TONE, listingNotice } from './ui.jsx'
 
 /** Was sich aus welchem Beleg als Nächstes machen lässt (spiegelt services/sales-documents.js; der Server prüft selbst). */
 const NEXT_STEPS = {
@@ -66,9 +66,9 @@ export default function SalesDetail({ docId, onClose, onChanged, onOpenDoc, onOp
 
   if (!doc) {
     return (
-      <Drawer title={t('common.loading')} onClose={onClose}>
+      <Dialog title={t('common.loading')} onClose={onClose}>
         {error && <Notice>{error}</Notice>}
-      </Drawer>
+      </Dialog>
     )
   }
 
@@ -80,22 +80,24 @@ export default function SalesDetail({ docId, onClose, onChanged, onOpenDoc, onOp
   const vat = Number(doc.vat_rappen)
 
   return (
-    <Drawer
+    <Dialog
+      columns={2}
       title={doc.number}
       subtitle={`${t(`sales.types.${doc.type}`)} · ${doc.party ? partyName({ kind: doc.party.kind, companyName: doc.party.company_name, firstName: doc.party.first_name, lastName: doc.party.last_name }) : t('common.none')} · ${formatDay(doc.issue_date)}`}
       onClose={onClose}
     >
-      {error && <Notice>{error}</Notice>}
-      {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Tag tone={STATE_TONE[state]}>{t(`sales.status.${doc.type}.${state}`)}</Tag>
-        {doc.type === 'offer' && doc.due_date && <span className="text-sm text-steel">{t('sales.validUntilShort', { date: formatDay(doc.due_date) })}</span>}
-        <a className="btn-ghost" href={`/api/sales-documents/${doc.id}/pdf`} target="_blank" rel="noreferrer">
-          {t('sales.detail.pdf')}
-        </a>
+      <div className="space-y-3 xl:[column-span:all]">
+        {error && <Notice>{error}</Notice>}
+        {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
+        <div className="flex flex-wrap items-center gap-2">
+          <Tag tone={STATE_TONE[state]}>{t(`sales.status.${doc.type}.${state}`)}</Tag>
+          {doc.type === 'offer' && doc.due_date && <span className="text-sm text-steel">{t('sales.validUntilShort', { date: formatDay(doc.due_date) })}</span>}
+          <a className="btn-ghost" href={`/api/sales-documents/${doc.id}/pdf`} target="_blank" rel="noreferrer">
+            {t('sales.detail.pdf')}
+          </a>
+        </div>
+        {doc.expired && <Notice tone="amber">{t('sales.detail.expired')}</Notice>}
       </div>
-      {doc.expired && <Notice tone="amber">{t('sales.detail.expired')}</Notice>}
 
       <Panel title={t('sales.detail.chain')}>
         <ol className="space-y-1 text-sm">
@@ -182,6 +184,6 @@ export default function SalesDetail({ docId, onClose, onChanged, onOpenDoc, onOp
           {doc.type === 'order' && <p className="mt-2 text-xs text-steel">{t('sales.detail.reserveHint')}</p>}
         </Panel>
       )}
-    </Drawer>
+    </Dialog>
   )
 }

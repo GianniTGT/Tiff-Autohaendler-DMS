@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import { formatMoney, francsToRappen, rappenToFrancs } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import { Drawer, Panel, Tag, Notice, formatDay, todayIso } from './ui.jsx'
+import { Dialog, Panel, Tag, Notice, formatDay, todayIso } from './ui.jsx'
 
 const MAX_REMINDER_LEVEL = 3
 
@@ -85,9 +85,9 @@ export default function InvoiceDetail({ invoiceId, role, onClose, onChanged }) {
 
   if (!invoice) {
     return (
-      <Drawer title={t('common.loading')} onClose={onClose}>
+      <Dialog title={t('common.loading')} onClose={onClose}>
         {error && <Notice>{error}</Notice>}
-      </Drawer>
+      </Dialog>
     )
   }
 
@@ -100,22 +100,24 @@ export default function InvoiceDetail({ invoiceId, role, onClose, onChanged }) {
   const creditable = Math.max(0, total - credited)
 
   return (
-    <Drawer
+    <Dialog
+      columns={2}
       title={invoice.number}
       subtitle={`${invoice.party ? partyName({ kind: invoice.party.kind, companyName: invoice.party.company_name, firstName: invoice.party.first_name, lastName: invoice.party.last_name }) : t('common.none')} · ${t('documents.invoices.detail.dueOn')} ${formatDay(invoice.due_date)}`}
       onClose={onClose}
     >
-      {error && <Notice>{error}</Notice>}
-      {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
-      {!invoice.tenant?.qr_iban && <Notice tone="amber">{t('documents.invoices.detail.noQr')}</Notice>}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Tag tone={outstanding === 0 ? 'green' : overdue ? 'red' : 'amber'}>
-          {t(`documents.invoices.status.${outstanding === 0 ? 'paid' : overdue ? 'overdue' : 'issued'}`)}
-        </Tag>
-        <a className="btn-ghost" href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noreferrer">
-          {t('documents.invoices.detail.pdfInvoice')}
-        </a>
+      <div className="space-y-3 xl:[column-span:all]">
+        {error && <Notice>{error}</Notice>}
+        {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
+        {!invoice.tenant?.qr_iban && <Notice tone="amber">{t('documents.invoices.detail.noQr')}</Notice>}
+        <div className="flex flex-wrap items-center gap-2">
+          <Tag tone={outstanding === 0 ? 'green' : overdue ? 'red' : 'amber'}>
+            {t(`documents.invoices.status.${outstanding === 0 ? 'paid' : overdue ? 'overdue' : 'issued'}`)}
+          </Tag>
+          <a className="btn-ghost" href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noreferrer">
+            {t('documents.invoices.detail.pdfInvoice')}
+          </a>
+        </div>
       </div>
 
       <Panel title={t('documents.invoices.detail.positions')}>
@@ -271,6 +273,6 @@ export default function InvoiceDetail({ invoiceId, role, onClose, onChanged }) {
         )}
         {level >= MAX_REMINDER_LEVEL && outstanding > 0 && <p className="mt-2 text-xs text-steel">{t('documents.invoices.detail.reminderBlocked')}</p>}
       </Panel>
-    </Drawer>
+    </Dialog>
   )
 }

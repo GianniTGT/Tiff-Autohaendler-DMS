@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from './api.js'
+import { Dialog, VendorFooter } from './components/ui.jsx'
 import { t } from './i18n/index.js'
 import Login from './components/Login.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -50,6 +51,7 @@ export default function App() {
   const [openInvoiceId, setOpenInvoiceId] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [company, setCompany] = useState(null)
+  const [about, setAbout] = useState(null) // 'about' | 'support' | null
 
   useEffect(() => {
     api
@@ -137,7 +139,7 @@ export default function App() {
         </div>
       </aside>
 
-      <div className="min-w-0">
+      <div className="flex min-w-0 flex-col">
         <header className="flex items-center justify-end gap-3 border-b border-line-strong bg-white px-6 py-2 text-sm text-steel lg:hidden">
           <span>
             {t('app.signedInAs')}: {t(`roles.${session.role}`)}
@@ -146,7 +148,7 @@ export default function App() {
             {t('app.signOut')}
           </button>
         </header>
-        <main>
+        <main className="flex-1">
           <Screen
             key={`${active.key}-${refreshKey}`}
             role={session.role}
@@ -157,6 +159,25 @@ export default function App() {
             onSettingsChanged={() => setRefreshKey((k) => k + 1)}
           />
         </main>
+        <VendorFooter onAbout={() => setAbout('about')} onSupport={() => setAbout('support')} />
+        {about && (
+          <Dialog title={t(`app.footer.${about}Title`)} onClose={() => setAbout(null)}>
+            <div className="mx-auto max-w-2xl space-y-4">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink">{t(`app.footer.${about}Body`)}</p>
+              <p className="text-sm">
+                <a className="text-brand underline" href={`mailto:${t('app.footer.email')}`}>
+                  {t('app.footer.email')}
+                </a>
+                {t('app.footer.phone') !== 'app.footer.phone' && t('app.footer.phone') && (
+                  <>
+                    {' · '}
+                    {t('app.footer.phoneLabel')} {t('app.footer.phone')}
+                  </>
+                )}
+              </p>
+            </div>
+          </Dialog>
+        )}
       </div>
 
       {openInvoiceId && (
