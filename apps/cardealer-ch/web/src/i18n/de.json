@@ -21,9 +21,14 @@
       "writeSupport": "Dem Support schreiben",
       "phoneLabel": "Telefon",
       "aboutTitle": "Über uns",
-      "aboutBody": "Etwas stimmt nicht? Schreiben Sie dem Support — mit Betrieb, Bildschirm und dem, was Sie erwartet hätten.",
+      "aboutBody": "Etwas stimmt nicht? So helfen wir am schnellsten:",
+      "beforeWriting": {
+        "screenshot": "Bildschirmfoto machen (Windows: Taste Druck oder Windows + Shift + S) und anhängen.",
+        "where": "Betrieb, Bildschirm und die Schritte nennen, die zum Problem geführt haben.",
+        "expected": "Beschreiben, was passiert ist und was Sie stattdessen erwartet hätten."
+      },
       "supportTitle": "Support",
-      "supportBody": "Fragen, Fehler oder Wünsche: schreiben Sie uns oder rufen Sie an. Bei einem Fehler, der die Arbeit blockiert, melden wir uns am selben Arbeitstag."
+      "supportBody": "Fragen, Fehler oder Wünsche? So helfen wir am schnellsten:"
     }
   },
   "common": {

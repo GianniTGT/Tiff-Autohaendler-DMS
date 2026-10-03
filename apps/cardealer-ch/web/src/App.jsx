@@ -238,22 +238,22 @@ export default function App() {
                 <div className="text-sm text-steel">{t('app.footer.version', { version: __APP_VERSION__ })}</div>
               </div>
               <div className="card space-y-3 p-4 text-left">
-                <p className="text-sm text-ink">{t(`app.footer.${about}Body`)}</p>
+                <p className="text-sm font-semibold text-ink">{t(`app.footer.${about}Body`)}</p>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-ink">
+                  {['screenshot', 'where', 'expected'].map((k) => (
+                    <li key={k}>{t(`app.footer.beforeWriting.${k}`)}</li>
+                  ))}
+                </ul>
                 <a
                   className="btn-ghost"
                   href={`mailto:${t('app.footer.email')}?subject=${encodeURIComponent(`${t('app.name')} ${__APP_VERSION__} — ${company?.name ?? ''}`)}`}
                 >
                   {t('app.footer.writeSupport')}
                 </a>
+                <p className="font-mono text-xs text-steel">{t('app.footer.email')}</p>
               </div>
               <div className="space-y-1 text-sm">
                 <div className="font-semibold text-ink">{t('app.vendor')}</div>
-                <div className="text-steel">
-                  {t('app.footer.supportLabel')}:{' '}
-                  <a className="font-mono text-ink hover:underline" href={`mailto:${t('app.footer.email')}`}>
-                    {t('app.footer.email')}
-                  </a>
-                </div>
                 <div className="text-steel">
                   {t('app.footer.phoneLabel')}:{' '}
                   <a className="font-mono text-ink hover:underline" href={`tel:${t('app.footer.phone').replace(/\s+/g, '')}`}>
