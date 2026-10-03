@@ -10,7 +10,19 @@ import { mapVehicleToAutoScout24Listing } from '../integrations/autoscout24/mapp
 import { getVehicle, updateVehicle } from './vehicles.js'
 import { decryptSecret } from './secrets.js'
 
-const defaultClient = createAutoScout24Client()
+// Austauschbar, damit Tests ohne Netzwerk und ohne echte Zugangsdaten laufen (configureAutoScout24Client).
+let defaultClient = createAutoScout24Client()
+
+export function configureAutoScout24Client(client) {
+  defaultClient = client ?? createAutoScout24Client()
+}
+
+/** Zustand des Inserats am Fahrzeug festhalten (siehe Migration 18). `error: null` löscht einen früheren Fehler. */
+async function setListingState(tenantId, vehicleId, { active, error }) {
+  await withTenant(tenantId, (client) =>
+    client.query('UPDATE vehicles SET autoscout24_active = $1, autoscout24_last_error = $2 WHERE id = $3', [active, error ?? null, vehicleId]),
+  )
+}
 
 async function getCredentials(tenantId) {
   return withTenant(tenantId, async (client) => {
@@ -86,12 +98,14 @@ export async function activateAutoScout24Listing(tenantId, vehicleId, { client =
   const listingId = await requireListingId(tenantId, vehicleId)
   const { credentials, sellerId } = await getCredentials(tenantId)
   await client.activateListing(credentials, sellerId, listingId)
+  await setListingState(tenantId, vehicleId, { active: true, error: null })
 }
 
 export async function deactivateAutoScout24Listing(tenantId, vehicleId, { client = defaultClient } = {}) {
   const listingId = await requireListingId(tenantId, vehicleId)
   const { credentials, sellerId } = await getCredentials(tenantId)
   await client.deactivateListing(credentials, sellerId, listingId)
+  await setListingState(tenantId, vehicleId, { active: false, error: null })
 }
 
 export async function removeAutoScout24Listing(tenantId, vehicleId, { client = defaultClient } = {}) {
@@ -99,4 +113,35 @@ export async function removeAutoScout24Listing(tenantId, vehicleId, { client = d
   const { credentials, sellerId } = await getCredentials(tenantId)
   await client.removeListing(credentials, sellerId, listingId)
   await updateVehicle(tenantId, vehicleId, { autoscout24ListingId: null, autoscout24SyncedAt: null })
+  await setListingState(tenantId, vehicleId, { active: null, error: null })
+}
+
+/**
+ * Nach einem Verkauf das Inserat abschalten — damit niemand ein Auto anfragt, das nicht mehr da ist.
+ *
+ * Läuft NACH dem Verkauf und ausserhalb jeder Datenbank-Transaktion (ein Aufruf ins Netz gehört nicht
+ * hinein), und wirft nie: scheitert AutoScout24 oder fehlen Zugangsdaten, bleibt der Verkauf bestehen. Der
+ * Fehler wird am Fahrzeug festgehalten und erscheint in der Übersicht und unter Inserate, mit Möglichkeit,
+ * es erneut zu versuchen.
+ *
+ * Deaktiviert, nicht gelöscht: bei einer Gutschrift (Verkauf aufgehoben) lässt sich das Inserat wieder aktivieren.
+ *
+ * @returns {Promise<{status: 'none'|'already'|'deactivated'|'failed', reason?: string}>}
+ */
+export async function deactivateListingAfterSale(tenantId, vehicleId, { client = defaultClient } = {}) {
+  try {
+    const vehicle = await getVehicle(tenantId, vehicleId)
+    if (!vehicle?.autoscout24ListingId) return { status: 'none' }
+    if (vehicle.autoscout24Active === false) return { status: 'already' }
+    await deactivateAutoScout24Listing(tenantId, vehicleId, { client })
+    return { status: 'deactivated' }
+  } catch (err) {
+    const reason = err.message
+    try {
+      await withTenant(tenantId, (client2) => client2.query('UPDATE vehicles SET autoscout24_last_error = $1 WHERE id = $2', [reason, vehicleId]))
+    } catch {
+      // der Fehler selbst lässt sich nicht festhalten — der Rückgabewert meldet ihn trotzdem
+    }
+    return { status: 'failed', reason }
+  }
 }

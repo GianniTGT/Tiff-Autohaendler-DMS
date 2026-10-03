@@ -87,6 +87,9 @@ function camelizeRow(row) {
   }
   out.soldViaDocumentId = row.sold_via_document_id ?? null
   out.soldViaInvoiceNumber = row.sold_via_number ?? null
+  // Zustand des AutoScout24-Inserats: nur lesbar, nie über PATCH setzbar (nicht in FIELD_MAP).
+  out.autoscout24Active = row.autoscout24_active ?? null
+  out.autoscout24LastError = row.autoscout24_last_error ?? null
   return out
 }
 

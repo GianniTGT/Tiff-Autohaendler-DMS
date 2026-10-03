@@ -8,6 +8,7 @@
 import { withTenant } from '@tiff/core-db'
 import { priceLines, insertLines } from './document-lines.js'
 import { markSoldByInvoice } from './vehicle-sale.js'
+import { deactivateListingAfterSale } from './autoscout24-sync.js'
 // Direkter Pfad, nicht der Paket-Barrel: qr-invoice.js hängt an `swissqrbill`
 // und ist bewusst nicht in @tiff/core-billing/src/index.js re-exportiert,
 // damit ein Vite-Bundle der Web-App es nie mitzieht (siehe der Kommentar
@@ -64,7 +65,7 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
     throw new Error('Eine Rechnung braucht mindestens eine Position.')
   }
 
-  return withTenant(tenantId, async (client) => {
+  const created = await withTenant(tenantId, async (client) => {
     const tenantResult = await client.query('SELECT * FROM tenants WHERE id = $1', [tenantId])
     const tenant = tenantResult.rows[0]
 
@@ -120,6 +121,10 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
 
     return { ...document, lines: computedLines, soldVehicle }
   })
+
+  // Das Inserat erst nach dem Commit abschalten (Netzaufruf nie in der Transaktion); scheitert es, bleibt der Verkauf.
+  const listing = created.soldVehicle ? await deactivateListingAfterSale(tenantId, vehicleId) : { status: 'none' }
+  return { ...created, listing }
 }
 
 export async function getInvoice(tenantId, id) {

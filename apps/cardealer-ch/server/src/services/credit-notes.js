@@ -122,7 +122,14 @@ export async function createCreditNote(tenantId, userId, invoiceId, { reason, mo
   } catch (err) {
     archive = { archived: false, reason: err.message }
   }
-  return { ...(await getCreditNote(tenantId, document.id)), archive, vehicleEffect }
+  // Wird der Verkauf aufgehoben, bleibt ein deaktiviertes Inserat deaktiviert (ein Netzaufruf ohne Rückfrage wäre
+  // hier zu viel); die Oberfläche weist darauf hin.
+  let listingStaysInactive = false
+  if (vehicleEffect === 'released') {
+    const v = await withTenant(tenantId, async (client) => (await client.query('SELECT autoscout24_listing_id, autoscout24_active FROM vehicles WHERE id = $1', [document.vehicle_id])).rows[0])
+    listingStaysInactive = Boolean(v?.autoscout24_listing_id) && v.autoscout24_active === false
+  }
+  return { ...(await getCreditNote(tenantId, document.id)), archive, vehicleEffect, listingStaysInactive }
 }
 
 /** Gutschrift mit Positionen, Partei, Betrieb und Nummer der zugehörigen Rechnung. */

@@ -9,6 +9,7 @@ import {
 } from '../services/vehicles.js'
 import { listCosts, addCost, deleteCost } from '../services/vehicle-costs.js'
 import { renderKaufvertrag, renderAnkaufsvertrag, issueContract, listContracts } from '../services/contracts.js'
+import { deactivateListingAfterSale } from '../services/autoscout24-sync.js'
 import { clientMessage } from './http-errors.js'
 
 // Felder, die nur sieht, wer Preise sehen darf (roles.js: canSeePurchasePrices), und die nur setzen darf, wer Geschäfte macht.
@@ -54,7 +55,9 @@ export async function registerVehicleRoutes(app) {
     try {
       const vehicle = await sellVehicle(request.tenantId, request.params.id, request.body ?? {})
       if (!vehicle) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
-      return { ok: true, data: vehicle }
+      // Inserat abschalten: nach dem Verkauf, wirft nie (siehe autoscout24-sync.js).
+      const listing = await deactivateListingAfterSale(request.tenantId, request.params.id)
+      return { ok: true, data: { ...vehicle, listing } }
     } catch (err) {
       return reply.code(400).send({ ok: false, error: clientMessage(err) })
     }

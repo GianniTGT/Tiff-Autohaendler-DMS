@@ -82,3 +82,14 @@ export function netPriceText(grossRappen, vatPercent) {
   const net = vatPercent ? Math.round(Number(grossRappen) / (1 + vatPercent / 100)) : Number(grossRappen)
   return (net / 100).toFixed(2)
 }
+
+/**
+ * Text und Ton zur automatischen Inserat-Abschaltung beim Verkauf (Antwort `listing` des Servers).
+ * `deactivated`: erledigt. `failed`: der Verkauf steht, aber das Inserat läuft vielleicht noch — Warnung mit Grund.
+ * `none`/`already`: nichts zu melden.
+ */
+export function listingNotice(listing) {
+  if (listing?.status === 'deactivated') return { tone: 'green', key: 'listing.deactivated' }
+  if (listing?.status === 'failed') return { tone: 'amber', key: 'listing.failed', vars: { reason: listing.reason ?? '' } }
+  return null
+}

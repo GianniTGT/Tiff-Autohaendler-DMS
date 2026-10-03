@@ -110,8 +110,15 @@ export function summarizeDashboard(vehicles, costsByVehicle, { today, canSeeTota
     if (reasons.length) needsDoing.push({ id: v.id, label: vehicleLabel(v), reasons })
   }
 
+  // Verkauft, aber das AutoScout24-Inserat läuft (oder ist nicht als abgeschaltet bestätigt): Interessenten
+  // würden ein Auto anfragen, das nicht mehr da ist.
+  const soldStillListed = vehicles
+    .filter((v) => v.status === 'sold' && v.autoscout24ListingId && v.autoscout24Active !== false)
+    .map((v) => ({ id: v.id, label: vehicleLabel(v), error: v.autoscout24LastError ?? null }))
+
   return {
     counts,
+    soldStillListed,
     money,
     soldThisYear: { count: soldThisYear.length, profitRappen: soldThisYearProfitRappen },
     ageing,

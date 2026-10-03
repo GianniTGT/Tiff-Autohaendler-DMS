@@ -76,7 +76,8 @@ export default function InvoiceDetail({ invoiceId, role, onClose, onChanged }) {
         ? t('documents.invoices.credit.created', { number: created.number })
         : t('documents.invoices.credit.notArchived', { number: created.number, reason: created.archive?.reason ?? '' })
       const effect = created.vehicleEffect ? ` ${t(`documents.invoices.credit.vehicle.${created.vehicleEffect}`)}` : ''
-      setNotice({ tone: created.archive?.archived ? 'green' : 'amber', text: base + effect })
+      const stays = created.listingStaysInactive ? ` ${t('listing.staysInactive')}` : ''
+      setNotice({ tone: created.archive?.archived ? 'green' : 'amber', text: base + effect + stays })
       setCreditForm({ mode: 'full', amount: '', reason: '' })
     })
   }

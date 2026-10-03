@@ -62,7 +62,7 @@ export default function Listings({ onOpenVehicle }) {
             </thead>
             <tbody>
               {data.rows.map((row) => {
-                const state = row.listingId ? 'listed' : row.ready ? 'notListed' : 'incomplete'
+                const state = row.listingId ? (row.active === true ? 'active' : row.active === false ? 'inactive' : 'listed') : row.ready ? 'notListed' : 'incomplete'
                 const busy = busyId === row.id
                 const post = (suffix) => () => run(row.id, () => api.post(`/api/vehicles/${row.id}/autoscout24/${suffix}`))
                 return (
@@ -75,7 +75,9 @@ export default function Listings({ onOpenVehicle }) {
                     </td>
                     <td className="num p-3 text-right">{formatMoney(row.askingPriceRappen)}</td>
                     <td className="p-3">
-                      <Tag tone={state === 'listed' ? 'green' : state === 'incomplete' ? 'amber' : 'gray'}>{t(`listings.state.${state}`)}</Tag>
+                      <Tag tone={state === 'active' || state === 'listed' ? 'green' : state === 'incomplete' ? 'amber' : 'gray'}>{t(`listings.state.${state}`)}</Tag>
+                      {row.soldStillListed && <div className="mt-1 text-xs font-semibold text-danger">{t('listings.soldStillListed')}</div>}
+                      {row.lastError && <div className="mt-1 text-xs text-danger">{t('listings.lastError', { error: row.lastError })}</div>}
                       {row.syncedAt && <div className="mt-1 text-xs text-steel">{t('listings.syncedAt', { date: formatDay(row.syncedAt) })}</div>}
                       {state === 'incomplete' && (
                         <div className="mt-1 text-xs text-warn">{t('listings.missing', { fields: row.missing.map((f) => t(`listings.fields.${f}`)).join(', ') })}</div>
@@ -88,17 +90,17 @@ export default function Listings({ onOpenVehicle }) {
                             {t('listings.actions.edit')}
                           </button>
                         )}
-                        {state !== 'incomplete' && (
+                        {state !== 'incomplete' && row.status !== 'sold' && (
                           <button className="btn" disabled={busy || !data.configured} onClick={post('push')}>
                             {row.listingId ? t('listings.actions.update') : t('listings.actions.push')}
                           </button>
                         )}
                         {row.listingId && (
                           <>
-                            <button className="btn-ghost" disabled={busy || !data.configured} onClick={post('activate')}>
+                            <button className="btn-ghost" disabled={busy || !data.configured || row.active === true || row.status === 'sold'} onClick={post('activate')}>
                               {t('listings.actions.activate')}
                             </button>
-                            <button className="btn-ghost" disabled={busy || !data.configured} onClick={post('deactivate')}>
+                            <button className={row.soldStillListed ? 'btn' : 'btn-ghost'} disabled={busy || !data.configured || row.active === false} onClick={post('deactivate')}>
                               {t('listings.actions.deactivate')}
                             </button>
                             <button

@@ -116,7 +116,8 @@
       "inspectionExpired": "MFK abgelaufen",
       "inspectionDueSoon": "MFK bald fällig",
       "ageing": "Lange Standzeit",
-      "needsDoing": "Zu erledigen"
+      "needsDoing": "Zu erledigen",
+      "soldStillListed": "Verkauft, aber noch inseriert"
     },
     "daysLeft": "in {n} Tagen",
     "daysAgo": "seit {n} Tagen",
@@ -128,7 +129,9 @@
       "noInspection": "MFK-Datum fehlt",
       "noIdentifier": "VIN/Stammnummer fehlt"
     },
-    "restricted": "Nur für Inhaber und Buchhaltung sichtbar."
+    "restricted": "Nur für Inhaber und Buchhaltung sichtbar.",
+    "soldStillListedHint": "Inserat jetzt deaktivieren",
+    "soldStillListedError": "Abschalten fehlgeschlagen: {error}"
   },
   "vehicle": {
     "fields": {
@@ -767,7 +770,9 @@
     "state": {
       "listed": "Inseriert",
       "notListed": "Nicht inseriert",
-      "incomplete": "Unvollständig"
+      "incomplete": "Unvollständig",
+      "active": "Aktiv",
+      "inactive": "Deaktiviert"
     },
     "syncedAt": "Zuletzt übertragen {date}",
     "missing": "Fehlt: {fields}",
@@ -791,7 +796,9 @@
       "edit": "Fahrzeug ergänzen"
     },
     "done": "Erledigt.",
-    "confirmRemove": "Das Inserat bei AutoScout24 wirklich löschen?"
+    "confirmRemove": "Das Inserat bei AutoScout24 wirklich löschen?",
+    "soldStillListed": "Verkauft — das Inserat läuft noch!",
+    "lastError": "Letzter Fehler: {error}"
   },
   "users": {
     "title": "Benutzer",
@@ -948,7 +955,7 @@
       },
       "chain": {
         "title": "Offerte, Auftrag, Lieferschein",
-        "body": "Unter «Offerten & Aufträge» führen Sie ein Geschäft Schritt für Schritt: Offerte (30 Tage gültig) → Auftrag (reserviert das Fahrzeug) → Lieferschein (mit Fahrzeugdaten und Unterschriftsfeldern, ohne Preise) → Rechnung. Jeder Schritt übernimmt Kunde, Fahrzeug und Positionen; nichts muss neu getippt werden.\n\nAlle Belege werden beim Ausstellen unveränderlich archiviert. Fehler korrigieren Sie nicht durch Überschreiben: eine falsche Offerte lehnen Sie ab und stellen eine neue aus, einen falschen Auftrag stornieren Sie (bis ein Lieferschein existiert), eine falsche Rechnung gleichen Sie mit einer Gutschrift aus. Abgelaufene Offerten lassen sich nicht mehr in einen Auftrag wandeln.\n\nMit der Rechnung ist der Verkauf abgeschlossen: Das Fahrzeug gilt als verkauft, Verkaufspreis ist das Rechnungstotal inkl. MWST (Zubehör auf derselben Rechnung zählt mit — bei Bedarf den Verkaufspreis im Fahrzeug korrigieren). Eine Teilgutschrift mindert den Verkaufspreis, eine Vollgutschrift hebt den Verkauf auf. Von Hand abgeschlossene Verkäufe bleiben davon unberührt."
+        "body": "Unter «Offerten & Aufträge» führen Sie ein Geschäft Schritt für Schritt: Offerte (30 Tage gültig) → Auftrag (reserviert das Fahrzeug) → Lieferschein (mit Fahrzeugdaten und Unterschriftsfeldern, ohne Preise) → Rechnung. Jeder Schritt übernimmt Kunde, Fahrzeug und Positionen; nichts muss neu getippt werden.\n\nAlle Belege werden beim Ausstellen unveränderlich archiviert. Fehler korrigieren Sie nicht durch Überschreiben: eine falsche Offerte lehnen Sie ab und stellen eine neue aus, einen falschen Auftrag stornieren Sie (bis ein Lieferschein existiert), eine falsche Rechnung gleichen Sie mit einer Gutschrift aus. Abgelaufene Offerten lassen sich nicht mehr in einen Auftrag wandeln.\n\nMit der Rechnung ist der Verkauf abgeschlossen: Das Fahrzeug gilt als verkauft, Verkaufspreis ist das Rechnungstotal inkl. MWST (Zubehör auf derselben Rechnung zählt mit — bei Bedarf den Verkaufspreis im Fahrzeug korrigieren). Eine Teilgutschrift mindert den Verkaufspreis, eine Vollgutschrift hebt den Verkauf auf. Von Hand abgeschlossene Verkäufe bleiben davon unberührt.\n\nIst das Fahrzeug bei AutoScout24 inseriert, wird das Inserat beim Verkauf automatisch deaktiviert (nicht gelöscht). Klappt das nicht, bleibt der Verkauf bestehen und die Übersicht zeigt «Verkauft, aber noch inseriert» mit dem Grund; unter Inserate lässt sich der Versuch wiederholen. Hebt eine Gutschrift den Verkauf auf, wird das Inserat nicht von selbst wieder aktiviert."
       }
     },
     "contact": "Fragen oder Probleme? Tiff Software Solutions — info@tiff-software-solutions.com"
@@ -1028,5 +1035,10 @@
       }
     },
     "grossToNet": "Der Angebotspreis (inkl. MWST) wurde mit {rate} % in den Nettopreis umgerechnet; die MWST kommt beim Ausstellen wieder dazu."
+  },
+  "listing": {
+    "deactivated": "Das AutoScout24-Inserat wurde deaktiviert.",
+    "failed": "Achtung: Das AutoScout24-Inserat konnte nicht deaktiviert werden ({reason}). Bitte unter Inserate erneut versuchen.",
+    "staysInactive": "Das AutoScout24-Inserat bleibt deaktiviert — unter Inserate bei Bedarf wieder aktivieren."
   }
 }

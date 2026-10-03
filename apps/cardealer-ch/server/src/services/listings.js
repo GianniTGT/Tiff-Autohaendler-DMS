@@ -49,6 +49,10 @@ export async function getListings(tenantId) {
         status: v.status,
         askingPriceRappen: v.askingPriceRappen,
         listingId: v.autoscout24ListingId ?? null,
+        active: v.autoscout24Active ?? null,
+        lastError: v.autoscout24LastError ?? null,
+        // Verkauft, aber das Inserat ist nicht (nachweislich) abgeschaltet: das muss jemand sehen.
+        soldStillListed: v.status === 'sold' && Boolean(v.autoscout24ListingId) && v.autoscout24Active !== false,
         syncedAt: v.autoscout24SyncedAt ?? null,
         missing,
         ready: missing.length === 0,

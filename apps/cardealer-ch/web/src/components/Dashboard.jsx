@@ -114,6 +114,15 @@ export default function Dashboard({ onOpenVehicle }) {
           onOpen={onOpenVehicle}
           render={(i) => t('dashboard.onLotDays', { n: i.days })}
         />
+        {data.soldStillListed.length > 0 && (
+          <Section
+            title={t('dashboard.sections.soldStillListed')}
+            tone="red"
+            items={data.soldStillListed}
+            onOpen={onOpenVehicle}
+            render={(i) => (i.error ? t('dashboard.soldStillListedError', { error: i.error }) : t('dashboard.soldStillListedHint'))}
+          />
+        )}
         <Section
           title={t('dashboard.sections.needsDoing')}
           items={data.needsDoing}

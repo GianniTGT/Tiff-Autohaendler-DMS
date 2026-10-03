@@ -236,7 +236,10 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Überschreiben). **Verkaufsabschluss an der Rechnung:** eine Rechnung mit Fahrzeug setzt es auf «verkauft»
   (Preis = Brutto-Rechnungstotal, Käufer, Datum, auslösende Rechnung); Teilgutschrift mindert den
   Verkaufspreis, Vollgutschrift hebt den Verkauf auf (nur für Verkäufe, die diese Rechnung ausgelöst hat).
-  Angebotspreise sind brutto und werden für Positionen mit dem Normalsatz in Netto umgerechnet. **Noch offen:** Fotos
+  Angebotspreise sind brutto und werden für Positionen mit dem Normalsatz in Netto umgerechnet.
+  Mit dem Verkauf (Rechnung oder von Hand) wird ein AutoScout24-Inserat deaktiviert — nach dem Commit, nie in der
+  Transaktion; scheitert der Aufruf, bleibt der Verkauf, der Fehler steht am Fahrzeug und in der Übersicht
+  («Verkauft, aber noch inseriert»). Eine Gutschrift schaltet das Inserat nicht von selbst wieder ein. **Noch offen:** Fotos
   an AutoScout24 mitschicken, abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als
   Datenstrom für sehr grosse Archive.
 

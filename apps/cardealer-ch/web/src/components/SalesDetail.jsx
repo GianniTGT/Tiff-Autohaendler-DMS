@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import { formatMoney } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import { Drawer, Panel, Tag, Notice, formatDay, salesState, STATE_TONE } from './ui.jsx'
+import { Drawer, Panel, Tag, Notice, formatDay, salesState, STATE_TONE, listingNotice } from './ui.jsx'
 
 /** Was sich aus welchem Beleg als Nächstes machen lässt (spiegelt services/sales-documents.js; der Server prüft selbst). */
 const NEXT_STEPS = {
@@ -51,9 +51,10 @@ export default function SalesDetail({ docId, onClose, onChanged, onOpenDoc, onOp
   const convert = (to) =>
     run(async () => {
       const created = await api.post(`/api/sales-documents/${docId}/convert`, { to, note: to === 'delivery_note' ? note || undefined : undefined })
+      const ln = listingNotice(created.listing)
       setNotice({
-        tone: created.archive?.archived ? 'green' : 'amber',
-        text: (created.archive?.archived ? t('sales.detail.created', { number: created.number }) : t('sales.notArchived', { number: created.number, reason: created.archive?.reason ?? '' })) + (created.soldVehicle ? ` ${t('documents.invoices.vehicleSold')}` : ''),
+        tone: created.archive?.archived && ln?.tone !== 'amber' ? 'green' : 'amber',
+        text: (created.archive?.archived ? t('sales.detail.created', { number: created.number }) : t('sales.notArchived', { number: created.number, reason: created.archive?.reason ?? '' })) + (created.soldVehicle ? ` ${t('documents.invoices.vehicleSold')}` : '') + (ln ? ` ${t(ln.key, ln.vars)}` : ''),
       })
       setNote('')
     })

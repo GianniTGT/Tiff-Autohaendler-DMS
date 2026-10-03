@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import { formatMoney, francsToRappen, rappenToFrancs } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import { Drawer, Panel, Tag, Notice, VEHICLE_STATUS_TONE, formatDay } from './ui.jsx'
+import { Drawer, Panel, Tag, Notice, VEHICLE_STATUS_TONE, formatDay, listingNotice } from './ui.jsx'
 import VehiclePhotos from './VehiclePhotos.jsx'
 
 const COST_KINDS = ['part', 'labor', 'transport', 'fee', 'detail']
@@ -198,13 +198,15 @@ export default function VehicleDetail({ vehicleId, role, onClose, onChanged }) {
 
   const sell = (event) => {
     event.preventDefault()
-    return run(() =>
-      api.post(`/api/vehicles/${vehicleId}/sell`, {
+    return run(async () => {
+      const sold = await api.post(`/api/vehicles/${vehicleId}/sell`, {
         soldPriceRappen: francsToRappen(sellForm.price),
         soldAt: sellForm.date || undefined,
         buyerPartyId: sellForm.buyerId || undefined,
-      }),
-    )
+      })
+      const ln = listingNotice(sold.listing)
+      if (ln) setMessage(t(ln.key, ln.vars))
+    })
   }
 
   const label = vehicle ? [vehicle.make, vehicle.model].filter(Boolean).join(' ') || t('vehicle.unknown') : ''

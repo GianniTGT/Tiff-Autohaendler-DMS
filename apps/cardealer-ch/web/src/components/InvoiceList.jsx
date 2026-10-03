@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import { formatMoney, francsToRappen } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import { PageHeader, Tag, Notice, formatDay, todayIso, netPriceText } from './ui.jsx'
+import { PageHeader, Tag, Notice, formatDay, todayIso, netPriceText, listingNotice } from './ui.jsx'
 
 const EMPTY_FORM = { partyId: '', vehicleId: '', description: '', price: '' }
 const FILTERS = ['all', 'open', 'overdue', 'paid', 'credited']
@@ -68,7 +68,11 @@ export default function InvoiceList({ onOpenInvoice }) {
       const base = created.archive?.archived
         ? t('documents.invoices.archivedOk', { number: created.number })
         : t('documents.invoices.notArchived', { number: created.number, reason: created.archive?.reason ?? '' })
-      setNotice({ tone: created.archive?.archived ? 'green' : 'amber', text: created.soldVehicle ? `${base} ${t('documents.invoices.vehicleSold')}` : base })
+      const ln = listingNotice(created.listing)
+      setNotice({
+        tone: created.archive?.archived && ln?.tone !== 'amber' ? 'green' : 'amber',
+        text: [base, created.soldVehicle ? t('documents.invoices.vehicleSold') : null, ln ? t(ln.key, ln.vars) : null].filter(Boolean).join(' '),
+      })
       setForm(EMPTY_FORM)
       setShowForm(false)
       await reload()
