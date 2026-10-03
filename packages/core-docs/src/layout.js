@@ -274,7 +274,7 @@ export function clause(doc, { number, title, body, draftNote }) {
 }
 
 /** Zuletzt geschrieben, weil "von N" erst nach dem letzten Abschnitt feststeht. Falle 3. */
-export function footers(doc, { dealer, docNo, product = 'Tiff Autohändler DMS' }) {
+export function footers(doc, { dealer, docNo, product = 'Tiff Autohändler Manager' }) {
   const range = doc.bufferedPageRange()
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i)

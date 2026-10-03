@@ -1,7 +1,7 @@
 {
   "_hinweis": "Einzige Sprache dieses Produkts. Kein Sprachumschalter, kein en.json — siehe ANFORDERUNGEN.md §1. Kuratierter Startbestand aus Tiff-Cardealer-Manager/src/i18n/de.json (816 von 1249 Strings bereits Deutsch), bereinigt um US-Recht (titleStatus, odometerStatus, buyer.license) und Desktop-only-Inhalte (Wiederherstellungsschlüssel, Etikettendruck, Backup-Dialoge) — die entfallen mit dem lokalen SQLCipher-Modell (ANFORDERUNGEN.md §3).",
   "app": {
-    "name": "Tiff Autohändler DMS",
+    "name": "Tiff Autohändler Manager",
     "loading": "Wird geladen…",
     "errorTitle": "Etwas ist schiefgelaufen",
     "signedInAs": "Angemeldet als",
@@ -898,6 +898,19 @@
   },
   "help": {
     "title": "Hilfe",
+    "intro": {
+      "title": "So arbeiten Sie mit dem Manager",
+      "body": "Alles dreht sich um das Fahrzeug: einmal erfassen, dann daraus Inserat, Offerte, Vertrag und Rechnung erzeugen. Nichts wird zweimal getippt, jeder Beleg wird beim Ausstellen archiviert. Der Alltag in sieben Schritten:",
+      "steps": {
+        "vehicle": { "title": "Fahrzeug erfassen", "body": "Fahrzeuge → Fahrzeug erfassen. Im Detail Kosten, Fotos (Titelbild zuerst) und Verträge." },
+        "workshop": { "title": "Werkstatt", "body": "Aufträge mit Schätzung und Frist; ein erledigter Auftrag mit Betrag schreibt die Kostenzeile am Fahrzeug." },
+        "listing": { "title": "Inserieren", "body": "Inserate zeigt, was für AutoScout24 noch fehlt; Übertragen schickt Daten und Fotos hinauf, nie Einkaufs- oder Verkaufspreis." },
+        "leads": { "title": "Anfragen und Kunden", "body": "Interessenten mit Status führen, zu Kunde machen, Termine im Kalender." },
+        "chain": { "title": "Offerte → Auftrag → Lieferschein → Rechnung", "body": "Jeder Schritt übernimmt Kunde, Fahrzeug und Positionen; die Rechnung schliesst den Verkauf ab." },
+        "payments": { "title": "Zahlungen und Mahnungen", "body": "Zahlung erfassen oder camt.054 der Bank einlesen; überfällige Rechnungen mahnen; Fehler per Gutschrift ausgleichen." },
+        "archive": { "title": "Archiv und Auswertungen", "body": "Belege prüfen und als ZIP exportieren; Gewinn, Lagerbestand und MWST unter Auswertungen." }
+      }
+    },
     "checklist": {
       "title": "Einrichtung",
       "allDone": "Alles Nötige ist eingerichtet.",

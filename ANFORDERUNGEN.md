@@ -1,4 +1,4 @@
-# Tiff Autohändler DMS — Anforderungen und Architektur
+# Tiff Autohändler Manager — Anforderungen und Architektur
 
 **Stand: 17. September 2026.** Dieses Dokument beantwortet die Ausgangsfrage — *„schaue alles
 was zu diesem Markt passt und was gemacht werden muss"* — und ist die Grundlage für alles,
@@ -73,7 +73,7 @@ Folgt der bereits bestehenden Empfehlung in `SCHWEIZ-SAAS.md` §2–§3, bestät
 `CLAUDE.md` §27 (dortige Bezeichnung: `tiff-suite`):
 
 ```
-tiff-autohaendler-dms/          npm workspaces, ein Repo
+tiff-autohaendler-manager/      npm workspaces, ein Repo (GitHub-Repo heisst noch Tiff-Autohaendler-DMS)
   packages/
     core-db/       Migrationen, withTenant(), Row-Level-Security
     core-auth/     Sitzungen, Rollen, Einladungen, Audit

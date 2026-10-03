@@ -1,7 +1,10 @@
-# Tiff Autohändler DMS
+# Tiff Autohändler Manager
 
 Dealer-Management-System für Schweizer Occasionshändler — nur Schweiz, nur
 Deutsch. Kein US-Markt, kein Sprachumschalter, kein Craigslist.
+
+**Bedienung für den Betrieb:** [`BEDIENUNG.md`](./BEDIENUNG.md) — Einrichtung, der Alltag vom
+Fahrzeug bis zur bezahlten Rechnung, Rollen, Archiv. Dieselbe Einführung steht in der App unter Hilfe.
 
 **Warum dieses Repo existiert und wie es zu `Tiff-Cardealer-Manager` steht:
 siehe [`ANFORDERUNGEN.md`](./ANFORDERUNGEN.md).** Das ist die Grundlage für

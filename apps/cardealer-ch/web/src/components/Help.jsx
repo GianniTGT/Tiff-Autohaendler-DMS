@@ -40,6 +40,17 @@ export default function Help({ role, onNavigate }) {
     <div className="space-y-4 p-6">
       <PageHeader title={t('help.title')} />
 
+      <Panel title={t('help.intro.title')}>
+        <p className="whitespace-pre-line text-sm leading-relaxed text-ink">{t('help.intro.body')}</p>
+        <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-ink">
+          {['vehicle', 'workshop', 'listing', 'leads', 'chain', 'payments', 'archive'].map((step) => (
+            <li key={step}>
+              <span className="font-semibold">{t(`help.intro.steps.${step}.title`)}</span> — {t(`help.intro.steps.${step}.body`)}
+            </li>
+          ))}
+        </ol>
+      </Panel>
+
       <Panel title={t('help.checklist.title')}>
         {!tenant ? (
           <p className="text-sm text-steel">{t('common.loading')}</p>

@@ -1,8 +1,8 @@
 {
-  "name": "tiff-autohaendler-dms",
+  "name": "tiff-autohaendler-manager",
   "private": true,
   "version": "0.1.0",
-  "description": "Tiff Autohändler DMS — Schweizer Dealer-Management-System für Occasionshändler (nur CH-Markt, nur Deutsch).",
+  "description": "Tiff Autohändler Manager — Schweizer Dealer-Management für Occasionshändler (nur CH-Markt, nur Deutsch).",
   "workspaces": [
     "packages/*",
     "apps/*/server",
