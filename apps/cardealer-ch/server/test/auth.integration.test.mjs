@@ -82,7 +82,8 @@ test('login flow: success, wrong password, wrong tenant, session lifecycle', { s
     const session = await login({ tenantSlug: TENANT_SLUG, email: USER_EMAIL, password: USER_PASSWORD })
     const cookieValue = encodeSessionCookie(session.tenantId, session.sessionId)
     const resolved = await validateSessionCookie(cookieValue)
-    assert.deepEqual(resolved, { tenantId: session.tenantId, userId: session.userId, role: 'inhaber' })
+    assert.deepEqual(resolved, { tenantId: session.tenantId, userId: session.userId, name: session.name, role: 'inhaber' })
+    assert.ok(typeof resolved.name === 'string' && resolved.name.length > 0, 'der Name der Person gehört zur Sitzung (Seitenleiste)')
   })
 
   await t.test('a session cookie with the session id swapped to another tenant resolves to nothing', async () => {

@@ -53,7 +53,7 @@ Betrag erledigt, entsteht die Kostenzeile am Fahrzeug von selbst. Fristen ersche
 **Inserate** zeigt pro Fahrzeug, ob es für AutoScout24 bereit ist und was noch fehlt
 (Farbe, Karosserieform, Zustand …). «Übertragen» schickt Fahrzeugdaten und Fotos hinauf —
 Einkaufspreis, Verkaufspreis und Käuferdaten gehen nie mit. Danach «Aktivieren». Ändern sich
-Fotos, zeigt die Übersicht «ausstehend»; «Fotos übertragen» setzt die Reihenfolge dort neu.
+Fotos, zeigt die Inserate-Seite «ausstehend»; «Fotos übertragen» setzt die Reihenfolge dort neu.
 Beim Verkauf wird das Inserat automatisch deaktiviert.
 
 ### 4. Anfragen und Kunden
@@ -93,7 +93,7 @@ Teilgutschrift mindert den Verkaufspreis des Fahrzeugs, eine Vollgutschrift hebt
 
 ## Überblick behalten
 
-- **Übersicht:** Fahrzeuge auf Lager, gebundenes Kapital, erwarteter Gewinn, Verkäufe des
+- **Dashboard:** Fahrzeuge auf Lager, gebundenes Kapital, erwarteter Gewinn, Verkäufe des
   Jahres, neue Anfragen, offene Werkstattaufträge, überfällige Rechnungen, MFK-Fristen, lange
   Standzeiten und was noch zu erledigen ist. Firmenzahlen sehen nur Inhaber und Buchhaltung.
 - **Auswertungen:** Verkäufe und Gewinn je Zeitraum, Lagerbestand nach Alter, MWST-Abrechnung

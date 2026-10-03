@@ -61,7 +61,7 @@ export async function login({ tenantSlug, email, password }) {
 
   return withTenant(tenantId, async (client) => {
     const userResult = await client.query(
-      'SELECT id, password_hash, role, active FROM users WHERE lower(email) = lower($1)',
+      'SELECT id, name, password_hash, role, active FROM users WHERE lower(email) = lower($1)',
       [email],
     )
     const user = userResult.rows[0]
@@ -78,6 +78,7 @@ export async function login({ tenantSlug, email, password }) {
     return {
       tenantId,
       userId: user.id,
+      name: user.name,
       role: user.role,
       sessionId: sessionResult.rows[0].id,
       expiresAt,
@@ -96,7 +97,7 @@ export async function validateSessionCookie(cookieValue) {
 
   return withTenant(decoded.tenantId, async (client) => {
     const result = await client.query(
-      `SELECT s.user_id, u.role, u.active
+      `SELECT s.user_id, u.name, u.role, u.active
          FROM sessions s
          JOIN users u ON u.id = s.user_id
         WHERE s.id = $1 AND s.expires_at > now()`,
@@ -104,7 +105,7 @@ export async function validateSessionCookie(cookieValue) {
     )
     const row = result.rows[0]
     if (!row || !row.active) return null
-    return { tenantId: decoded.tenantId, userId: row.user_id, role: row.role }
+    return { tenantId: decoded.tenantId, userId: row.user_id, name: row.name, role: row.role }
   }).catch(() => null) // eine ungültige tenantId (z.B. keine gültige UUID) ist ebenfalls "keine Sitzung"
 }
 

@@ -27,6 +27,7 @@ export default fp(async function authPlugin(fastify) {
     }
     request.tenantId = session.tenantId
     request.userId = session.userId
+    request.userName = session.name
     request.role = session.role
   })
 

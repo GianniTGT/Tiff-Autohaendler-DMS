@@ -8,6 +8,7 @@
     "signOut": "Abmelden",
     "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
     "vendor": "Tiff Software Solutions",
+    "company": "Betrieb",
     "footer": {
       "place": "Bern",
       "about": "Über uns",
@@ -38,7 +39,7 @@
     }
   },
   "nav": {
-    "dashboard": "Übersicht",
+    "dashboard": "Dashboard",
     "inventory": "Fahrzeuge",
     "recon": "Werkstatt",
     "customers": "Kunden",
@@ -109,6 +110,7 @@
     "connectionFailed": "Verbindung fehlgeschlagen."
   },
   "dashboard": {
+    "title_hinweis": "Bildschirmname wie im Manager: Dashboard.",
     "emptyTitle": "Noch keine Fahrzeuge",
     "emptyBody": "Erfassen Sie das erste Fahrzeug über die Fahrgestellnummer oder die Stammnummer.",
     "addVehicle": "+ Fahrzeug erfassen",
@@ -123,7 +125,7 @@
       "openJobs": "Offene Werkstattaufträge",
       "openJobsOverdue": "{n} überfällig"
     },
-    "title": "Übersicht",
+    "title": "Dashboard",
     "sections": {
       "inspectionExpired": "MFK abgelaufen",
       "inspectionDueSoon": "MFK bald fällig",
@@ -976,7 +978,7 @@
       },
       "listings": {
         "title": "Inserate und Fotos",
-        "body": "Ein Fahrzeug wird einmal hier erfasst und unter Inserate gezielt an AutoScout24 übertragen; Einkaufspreis, Verkaufspreis und Käuferdaten gehen nie hinauf. Die Fotos des Fahrzeugs gehen mit, das Titelbild zuerst. Hochgeladen wird nur, was bei AutoScout24 noch fehlt; Umsortieren, Löschen oder ein neues Titelbild gelten als «ausstehend», bis «Fotos übertragen» oder «Aktualisieren» die Reihenfolge dort neu setzt.\n\nScheitert ein Foto, bleiben die Fahrzeugdaten übertragen; der Grund steht in der Inserate-Übersicht. Beim Verkauf wird das Inserat automatisch deaktiviert. Die Zugangsdaten für AutoScout24 trägt der Inhaber unter Einstellungen ein; ohne sie zeigt die Seite, was zu einem Inserat noch fehlt, überträgt aber nichts."
+        "body": "Ein Fahrzeug wird einmal hier erfasst und unter Inserate gezielt an AutoScout24 übertragen; Einkaufspreis, Verkaufspreis und Käuferdaten gehen nie hinauf. Die Fotos des Fahrzeugs gehen mit, das Titelbild zuerst. Hochgeladen wird nur, was bei AutoScout24 noch fehlt; Umsortieren, Löschen oder ein neues Titelbild gelten als «ausstehend», bis «Fotos übertragen» oder «Aktualisieren» die Reihenfolge dort neu setzt.\n\nScheitert ein Foto, bleiben die Fahrzeugdaten übertragen; der Grund steht unter Inserate. Beim Verkauf wird das Inserat automatisch deaktiviert. Die Zugangsdaten für AutoScout24 trägt der Inhaber unter Einstellungen ein; ohne sie zeigt die Seite, was zu einem Inserat noch fehlt, überträgt aber nichts."
       },
       "archive": {
         "title": "Belegarchiv",
@@ -996,7 +998,7 @@
       },
       "chain": {
         "title": "Offerte, Auftrag, Lieferschein",
-        "body": "Unter «Offerten & Aufträge» führen Sie ein Geschäft Schritt für Schritt: Offerte (30 Tage gültig) → Auftrag (reserviert das Fahrzeug) → Lieferschein (mit Fahrzeugdaten und Unterschriftsfeldern, ohne Preise) → Rechnung. Jeder Schritt übernimmt Kunde, Fahrzeug und Positionen; nichts muss neu getippt werden.\n\nAlle Belege werden beim Ausstellen unveränderlich archiviert. Fehler korrigieren Sie nicht durch Überschreiben: eine falsche Offerte lehnen Sie ab und stellen eine neue aus, einen falschen Auftrag stornieren Sie (bis ein Lieferschein existiert), eine falsche Rechnung gleichen Sie mit einer Gutschrift aus. Abgelaufene Offerten lassen sich nicht mehr in einen Auftrag wandeln.\n\nMit der Rechnung ist der Verkauf abgeschlossen: Das Fahrzeug gilt als verkauft, Verkaufspreis ist das Rechnungstotal inkl. MWST (Zubehör auf derselben Rechnung zählt mit — bei Bedarf den Verkaufspreis im Fahrzeug korrigieren). Eine Teilgutschrift mindert den Verkaufspreis, eine Vollgutschrift hebt den Verkauf auf. Von Hand abgeschlossene Verkäufe bleiben davon unberührt.\n\nIst das Fahrzeug bei AutoScout24 inseriert, wird das Inserat beim Verkauf automatisch deaktiviert (nicht gelöscht). Klappt das nicht, bleibt der Verkauf bestehen und die Übersicht zeigt «Verkauft, aber noch inseriert» mit dem Grund; unter Inserate lässt sich der Versuch wiederholen. Hebt eine Gutschrift den Verkauf auf, wird das Inserat nicht von selbst wieder aktiviert."
+        "body": "Unter «Offerten & Aufträge» führen Sie ein Geschäft Schritt für Schritt: Offerte (30 Tage gültig) → Auftrag (reserviert das Fahrzeug) → Lieferschein (mit Fahrzeugdaten und Unterschriftsfeldern, ohne Preise) → Rechnung. Jeder Schritt übernimmt Kunde, Fahrzeug und Positionen; nichts muss neu getippt werden.\n\nAlle Belege werden beim Ausstellen unveränderlich archiviert. Fehler korrigieren Sie nicht durch Überschreiben: eine falsche Offerte lehnen Sie ab und stellen eine neue aus, einen falschen Auftrag stornieren Sie (bis ein Lieferschein existiert), eine falsche Rechnung gleichen Sie mit einer Gutschrift aus. Abgelaufene Offerten lassen sich nicht mehr in einen Auftrag wandeln.\n\nMit der Rechnung ist der Verkauf abgeschlossen: Das Fahrzeug gilt als verkauft, Verkaufspreis ist das Rechnungstotal inkl. MWST (Zubehör auf derselben Rechnung zählt mit — bei Bedarf den Verkaufspreis im Fahrzeug korrigieren). Eine Teilgutschrift mindert den Verkaufspreis, eine Vollgutschrift hebt den Verkauf auf. Von Hand abgeschlossene Verkäufe bleiben davon unberührt.\n\nIst das Fahrzeug bei AutoScout24 inseriert, wird das Inserat beim Verkauf automatisch deaktiviert (nicht gelöscht). Klappt das nicht, bleibt der Verkauf bestehen und das Dashboard zeigt «Verkauft, aber noch inseriert» mit dem Grund; unter Inserate lässt sich der Versuch wiederholen. Hebt eine Gutschrift den Verkauf auf, wird das Inserat nicht von selbst wieder aktiviert."
       }
     },
     "contact": "Fragen oder Probleme? Tiff Software Solutions — info@tiff-software-solutions.com"

@@ -19,7 +19,7 @@ export async function registerAuthRoutes(app) {
         secure: isProduction,
         expires: session.expiresAt,
       })
-      return { ok: true, data: { userId: session.userId, role: session.role } }
+      return { ok: true, data: { userId: session.userId, name: session.name, role: session.role } }
     } catch (err) {
       if (err instanceof LoginError) {
         return reply.code(401).send({ ok: false, error: 'INVALID_CREDENTIALS' })
@@ -36,6 +36,6 @@ export async function registerAuthRoutes(app) {
 
   app.get('/api/auth/me', { preHandler: app.requireAuth }, async (request) => ({
     ok: true,
-    data: { userId: request.userId, role: request.role },
+    data: { userId: request.userId, name: request.userName, role: request.role },
   }))
 }
