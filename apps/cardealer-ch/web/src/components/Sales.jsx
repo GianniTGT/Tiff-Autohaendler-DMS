@@ -4,7 +4,7 @@ import { formatMoney, francsToRappen } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
 import SalesDetail from './SalesDetail.jsx'
-import { PageHeader, Tag, Notice, formatDay, salesState, STATE_TONE } from './ui.jsx'
+import { PageHeader, Tag, Notice, formatDay, salesState, STATE_TONE, netPriceText } from './ui.jsx'
 
 const FILTERS = ['all', 'offer', 'order', 'delivery_note']
 const EMPTY_LINE = { description: '', quantity: '1', price: '' }
@@ -20,10 +20,12 @@ export default function Sales({ onOpenInvoice }) {
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
   const [openId, setOpenId] = useState(null)
+  const [vatPercent, setVatPercent] = useState(null)
 
   async function reload() {
     try {
-      const [d, p, v] = await Promise.all([api.get('/api/sales-documents'), api.get('/api/parties'), api.get('/api/vehicles')])
+      const [d, p, v, rate] = await Promise.all([api.get('/api/sales-documents'), api.get('/api/parties'), api.get('/api/vehicles'), api.get('/api/vat-rate')])
+      setVatPercent(rate.standardPercent)
       setDocs(d)
       setParties(p)
       setVehicles(v)
@@ -42,7 +44,7 @@ export default function Sales({ onOpenInvoice }) {
     // Erste Zeile aus dem Fahrzeug vorbelegen, solange sie noch leer ist.
     if (v && !form.lines[0].description && !form.lines[0].price) {
       next.lines = [
-        { description: [[v.make, v.model].filter(Boolean).join(' '), v.vin].filter(Boolean).join(', '), quantity: '1', price: v.askingPriceRappen != null ? String(v.askingPriceRappen / 100) : '' },
+        { description: [[v.make, v.model].filter(Boolean).join(' '), v.vin].filter(Boolean).join(', '), quantity: '1', price: netPriceText(v.askingPriceRappen, vatPercent) },
         ...form.lines.slice(1),
       ]
     }
@@ -124,6 +126,8 @@ export default function Sales({ onOpenInvoice }) {
                 </label>
               )}
             </div>
+
+            {form.vehicleId && vatPercent && <p className="text-xs text-steel">{t('sales.grossToNet', { rate: vatPercent })}</p>}
 
             <div className="space-y-2">
               <div className="grid grid-cols-[1fr_5rem_8rem_auto] gap-2 text-xs font-semibold uppercase tracking-wider text-steel">

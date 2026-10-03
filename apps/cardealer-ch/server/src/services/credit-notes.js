@@ -16,6 +16,7 @@
 import { withTenant } from '@tiff/core-db'
 import { nextDocumentNumber } from './invoices.js'
 import { archivePdf } from './archive.js'
+import { adjustSaleForCredit } from './vehicle-sale.js'
 import { renderCreditNotePdfBuffer, withLogo } from './invoice-pdf.js'
 
 const today = () => {
@@ -47,6 +48,7 @@ export async function createCreditNote(tenantId, userId, invoiceId, { reason, mo
     throw badInput('Der Betrag muss eine ganze Zahl in Rappen und grösser als 0 sein.')
   }
 
+  let vehicleEffect = null
   const document = await withTenant(tenantId, async (client) => {
     const invoice = (await client.query("SELECT * FROM documents WHERE id = $1 AND type = 'invoice' FOR UPDATE", [invoiceId])).rows[0]
     if (!invoice) return null
@@ -106,6 +108,8 @@ export async function createCreditNote(tenantId, userId, invoiceId, { reason, mo
     )
     const paid = Number((await client.query('SELECT COALESCE(SUM(amount_rappen), 0) AS paid FROM payments WHERE document_id = $1', [invoiceId])).rows[0].paid)
     if (invoiceTotal - paid <= 0) await client.query("UPDATE documents SET status = 'paid' WHERE id = $1", [invoiceId])
+    // Hat diese Rechnung das Fahrzeug verkauft: Preis mindern bzw. Verkauf aufheben.
+    vehicleEffect = await adjustSaleForCredit(client, invoice, { creditTotalRappen: total, fullyCredited: credited + total >= invoiceTotal })
     return note
   })
   if (!document) return null
@@ -118,7 +122,7 @@ export async function createCreditNote(tenantId, userId, invoiceId, { reason, mo
   } catch (err) {
     archive = { archived: false, reason: err.message }
   }
-  return { ...(await getCreditNote(tenantId, document.id)), archive }
+  return { ...(await getCreditNote(tenantId, document.id)), archive, vehicleEffect }
 }
 
 /** Gutschrift mit Positionen, Partei, Betrieb und Nummer der zugehörigen Rechnung. */

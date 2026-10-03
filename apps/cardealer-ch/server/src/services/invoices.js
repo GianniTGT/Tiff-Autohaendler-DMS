@@ -7,6 +7,7 @@
  */
 import { withTenant } from '@tiff/core-db'
 import { priceLines, insertLines } from './document-lines.js'
+import { markSoldByInvoice } from './vehicle-sale.js'
 // Direkter Pfad, nicht der Paket-Barrel: qr-invoice.js hängt an `swissqrbill`
 // und ist bewusst nicht in @tiff/core-billing/src/index.js re-exportiert,
 // damit ein Vite-Bundle der Web-App es nie mitzieht (siehe der Kommentar
@@ -114,8 +115,10 @@ export async function createInvoice(tenantId, { partyId, vehicleId, lines, issue
     const document = docResult.rows[0]
 
     await insertLines(client, document.id, computedLines)
+    // Verkaufsabschluss: eine Rechnung mit Fahrzeug verkauft es (siehe vehicle-sale.js).
+    const soldVehicle = await markSoldByInvoice(client, document)
 
-    return { ...document, lines: computedLines }
+    return { ...document, lines: computedLines, soldVehicle }
   })
 }
 

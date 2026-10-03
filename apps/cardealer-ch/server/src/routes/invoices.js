@@ -1,5 +1,6 @@
 import { canSeeCompanyTotals } from '@tiff/core-auth'
 import { createCreditNote, getCreditNote, listCreditNotes } from '../services/credit-notes.js'
+import { currentStandardVatPercent } from '../services/vat-rate.js'
 import { createInvoice, getInvoice, listInvoices, listRemindersForInvoice } from '../services/invoices.js'
 import { renderInvoicePdfBuffer, renderReminderPdfBuffer, renderCreditNotePdfBuffer, withLogo, describeMissingQrBillData } from '../services/invoice-pdf.js'
 import { archivePdf, getArchivedPdf, archiveIfComplete, ArchiveIntegrityError } from '../services/archive.js'
@@ -98,6 +99,9 @@ export async function registerInvoiceRoutes(app) {
       return reply.code(err.statusCode ?? 400).send({ ok: false, error: clientMessage(err) })
     }
   })
+
+  // Für die Vorbelegung: Angebotspreise sind brutto, Rechnungspositionen netto.
+  app.get('/api/vat-rate', billing, async (request) => ({ ok: true, data: { standardPercent: await currentStandardVatPercent(request.tenantId) } }))
 
   app.get('/api/invoices/:id/reminders', billing, async (request) => ({
     ok: true,

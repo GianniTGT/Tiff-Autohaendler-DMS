@@ -85,6 +85,8 @@ function camelizeRow(row) {
     const key = reverse[column]
     if (key) out[key] = value
   }
+  out.soldViaDocumentId = row.sold_via_document_id ?? null
+  out.soldViaInvoiceNumber = row.sold_via_number ?? null
   return out
 }
 
@@ -103,7 +105,10 @@ export async function listVehicles(tenantId, { status } = {}) {
 
 export async function getVehicle(tenantId, id) {
   return withTenant(tenantId, async (client) => {
-    const result = await client.query('SELECT * FROM vehicles WHERE id = $1', [id])
+    const result = await client.query(
+      'SELECT v.*, d.number AS sold_via_number FROM vehicles v LEFT JOIN documents d ON d.id = v.sold_via_document_id WHERE v.id = $1',
+      [id],
+    )
     return result.rows[0] ? camelizeRow(result.rows[0]) : null
   })
 }

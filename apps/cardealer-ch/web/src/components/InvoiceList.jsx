@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import { formatMoney, francsToRappen } from '@tiff/core-billing'
 import { t } from '../i18n/index.js'
 import { partyName } from './CustomerList.jsx'
-import { PageHeader, Tag, Notice, formatDay, todayIso } from './ui.jsx'
+import { PageHeader, Tag, Notice, formatDay, todayIso, netPriceText } from './ui.jsx'
 
 const EMPTY_FORM = { partyId: '', vehicleId: '', description: '', price: '' }
 const FILTERS = ['all', 'open', 'overdue', 'paid', 'credited']
@@ -27,11 +27,13 @@ export default function InvoiceList({ onOpenInvoice }) {
   const [filter, setFilter] = useState('all')
   const [camtResult, setCamtResult] = useState(null)
   const [notice, setNotice] = useState(null)
+  const [vatPercent, setVatPercent] = useState(null)
   const fileInput = useRef(null)
 
   async function reload() {
     try {
-      const [inv, par, veh] = await Promise.all([api.get('/api/invoices'), api.get('/api/parties'), api.get('/api/vehicles')])
+      const [inv, par, veh, rate] = await Promise.all([api.get('/api/invoices'), api.get('/api/parties'), api.get('/api/vehicles'), api.get('/api/vat-rate')])
+      setVatPercent(rate.standardPercent)
       setInvoices(inv)
       setParties(par)
       setVehicles(veh)
@@ -49,7 +51,7 @@ export default function InvoiceList({ onOpenInvoice }) {
     const next = { ...form, vehicleId }
     if (v) {
       next.description = [[v.make, v.model].filter(Boolean).join(' '), v.vin].filter(Boolean).join(', ')
-      if (v.askingPriceRappen != null) next.price = String(v.askingPriceRappen / 100)
+      if (v.askingPriceRappen != null) next.price = netPriceText(v.askingPriceRappen, vatPercent)
     }
     setForm(next)
   }
@@ -63,11 +65,10 @@ export default function InvoiceList({ onOpenInvoice }) {
         vehicleId: form.vehicleId || undefined,
         lines: [{ description: form.description, quantity: 1, unitPriceRappen: francsToRappen(form.price), taxCode: 'standard' }],
       })
-      setNotice(
-        created.archive?.archived
-          ? { tone: 'green', text: t('documents.invoices.archivedOk', { number: created.number }) }
-          : { tone: 'amber', text: t('documents.invoices.notArchived', { number: created.number, reason: created.archive?.reason ?? '' }) },
-      )
+      const base = created.archive?.archived
+        ? t('documents.invoices.archivedOk', { number: created.number })
+        : t('documents.invoices.notArchived', { number: created.number, reason: created.archive?.reason ?? '' })
+      setNotice({ tone: created.archive?.archived ? 'green' : 'amber', text: created.soldVehicle ? `${base} ${t('documents.invoices.vehicleSold')}` : base })
       setForm(EMPTY_FORM)
       setShowForm(false)
       await reload()
@@ -170,6 +171,7 @@ export default function InvoiceList({ onOpenInvoice }) {
                 </option>
               ))}
             </select>
+            {form.vehicleId && <p className="text-xs text-steel sm:col-span-2">{t('documents.invoices.sellsVehicle')}{vatPercent ? ` ${t('sales.grossToNet', { rate: vatPercent })}` : ''}</p>}
             <input
               required
               className="field"

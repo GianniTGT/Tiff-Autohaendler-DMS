@@ -53,7 +53,7 @@ export default function SalesDetail({ docId, onClose, onChanged, onOpenDoc, onOp
       const created = await api.post(`/api/sales-documents/${docId}/convert`, { to, note: to === 'delivery_note' ? note || undefined : undefined })
       setNotice({
         tone: created.archive?.archived ? 'green' : 'amber',
-        text: created.archive?.archived ? t('sales.detail.created', { number: created.number }) : t('sales.notArchived', { number: created.number, reason: created.archive?.reason ?? '' }),
+        text: (created.archive?.archived ? t('sales.detail.created', { number: created.number }) : t('sales.notArchived', { number: created.number, reason: created.archive?.reason ?? '' })) + (created.soldVehicle ? ` ${t('documents.invoices.vehicleSold')}` : ''),
       })
       setNote('')
     })

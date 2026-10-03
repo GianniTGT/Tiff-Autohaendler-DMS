@@ -72,9 +72,11 @@ export default function InvoiceDetail({ invoiceId, role, onClose, onChanged }) {
         reason: creditForm.reason,
         amountRappen: creditForm.mode === 'partial' ? francsToRappen(creditForm.amount) : undefined,
       })
-      setNotice(created.archive?.archived
-        ? { tone: 'green', text: t('documents.invoices.credit.created', { number: created.number }) }
-        : { tone: 'amber', text: t('documents.invoices.credit.notArchived', { number: created.number, reason: created.archive?.reason ?? '' }) })
+      const base = created.archive?.archived
+        ? t('documents.invoices.credit.created', { number: created.number })
+        : t('documents.invoices.credit.notArchived', { number: created.number, reason: created.archive?.reason ?? '' })
+      const effect = created.vehicleEffect ? ` ${t(`documents.invoices.credit.vehicle.${created.vehicleEffect}`)}` : ''
+      setNotice({ tone: created.archive?.archived ? 'green' : 'amber', text: base + effect })
       setCreditForm({ mode: 'full', amount: '', reason: '' })
     })
   }

@@ -233,7 +233,10 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Lieferschein → Rechnung** (OF/AU/LS-Nummern, jeder Beleg beim Ausstellen archiviert, Umwandlung statt Neutippen,
   Auftrag reserviert das Fahrzeug, Offerten verfallen nach «gültig bis», Lieferschein ohne Preise mit
   Fahrzeugdaten und Unterschriftsfeldern; Korrektur nur durch Ablehnen/Stornieren/Gutschrift, nie durch
-  Überschreiben). **Noch offen:** Fotos
+  Überschreiben). **Verkaufsabschluss an der Rechnung:** eine Rechnung mit Fahrzeug setzt es auf «verkauft»
+  (Preis = Brutto-Rechnungstotal, Käufer, Datum, auslösende Rechnung); Teilgutschrift mindert den
+  Verkaufspreis, Vollgutschrift hebt den Verkauf auf (nur für Verkäufe, die diese Rechnung ausgelöst hat).
+  Angebotspreise sind brutto und werden für Positionen mit dem Normalsatz in Netto umgerechnet. **Noch offen:** Fotos
   an AutoScout24 mitschicken, abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als
   Datenstrom für sehr grosse Archive.
 

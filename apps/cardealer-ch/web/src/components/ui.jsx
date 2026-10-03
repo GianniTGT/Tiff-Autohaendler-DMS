@@ -71,3 +71,14 @@ export const todayIso = () => {
 /** Anzeigestatus eines Belegs der Kette: «abgelaufen» steht nicht in der Datenbank, sondern ergibt sich aus «gültig bis». */
 export const salesState = (doc) => (doc.expired ? 'expired' : doc.status)
 export const STATE_TONE = { issued: 'amber', accepted: 'green', declined: 'gray', expired: 'red', delivered: 'brand', invoiced: 'green', cancelled: 'gray' }
+
+/**
+ * Angebotspreise sind brutto (inkl. MWST), Rechnungs- und Belegpositionen netto. Rechnet einen Bruttopreis in Rappen
+ * mit dem Normalsatz (z. B. 8.1) in einen Nettopreis in Franken-Schreibweise um ("1000.00"); ohne bekannten Satz bleibt
+ * der Betrag unverändert.
+ */
+export function netPriceText(grossRappen, vatPercent) {
+  if (grossRappen == null) return ''
+  const net = vatPercent ? Math.round(Number(grossRappen) / (1 + vatPercent / 100)) : Number(grossRappen)
+  return (net / 100).toFixed(2)
+}

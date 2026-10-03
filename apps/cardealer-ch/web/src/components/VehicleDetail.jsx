@@ -360,6 +360,7 @@ export default function VehicleDetail({ vehicleId, role, onClose, onChanged }) {
         {isSold ? (
           <p className="text-sm">
             {t('vehicle.detail.sell.soldOn', { date: formatDay(vehicle.soldAt) })} · {formatMoney(Number(vehicle.soldPriceRappen))}
+            {vehicle.soldViaInvoiceNumber && <span className="block text-xs text-steel">{t('vehicle.detail.sell.viaInvoice', { number: vehicle.soldViaInvoiceNumber })}</span>}
           </p>
         ) : vehicle.status === 'written_off' ? null : (
           <form onSubmit={sell} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-3">
