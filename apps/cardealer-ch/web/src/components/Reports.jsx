@@ -64,9 +64,11 @@ function VatReport({ initialRange }) {
         <div className="mt-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-steel">{t(`reports.method.${report.method}`)}</p>
           <Row label={t('reports.revenue')} value={formatMoney(report.totalRevenueRappen)} />
+          {report.creditTotalRappen > 0 && <Row label={t('reports.credits')} value={`− ${formatMoney(report.creditTotalRappen)}`} />}
           {report.method === 'effective' && (
             <>
               <Row label={t('reports.outputTax')} value={formatMoney(report.outputTaxRappen)} />
+              {report.creditVatRappen > 0 && <Row label={t('reports.creditVat')} value={`− ${formatMoney(report.creditVatRappen)}`} />}
               <Row label={t('reports.notional')} value={`− ${formatMoney(report.notionalInputTaxRappen)}`} />
             </>
           )}

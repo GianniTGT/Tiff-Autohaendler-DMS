@@ -34,14 +34,20 @@ export async function computeVatReport(tenantId, { from, to }) {
       )
     }
 
+    // Gutschriften mindern Umsatz und Steuer in der Periode, in der sie ausgestellt wurden.
     const invoiceTotalsResult = await client.query(
-      `SELECT COALESCE(SUM(vat_rappen), 0) AS output_tax, COALESCE(SUM(total_rappen), 0) AS revenue
+      `SELECT COALESCE(SUM(CASE WHEN type = 'credit_note' THEN -vat_rappen ELSE vat_rappen END), 0) AS output_tax,
+              COALESCE(SUM(CASE WHEN type = 'credit_note' THEN -total_rappen ELSE total_rappen END), 0) AS revenue,
+              COALESCE(SUM(CASE WHEN type = 'credit_note' THEN vat_rappen ELSE 0 END), 0) AS credit_vat,
+              COALESCE(SUM(CASE WHEN type = 'credit_note' THEN total_rappen ELSE 0 END), 0) AS credit_total
          FROM documents
-        WHERE type = 'invoice' AND issue_date BETWEEN $1 AND $2`,
+        WHERE type IN ('invoice', 'credit_note') AND issue_date BETWEEN $1 AND $2`,
       [from, to],
     )
     const outputTaxRappen = Number(invoiceTotalsResult.rows[0].output_tax)
     const totalRevenueRappen = Number(invoiceTotalsResult.rows[0].revenue)
+    const creditVatRappen = Number(invoiceTotalsResult.rows[0].credit_vat)
+    const creditTotalRappen = Number(invoiceTotalsResult.rows[0].credit_total)
 
     const notionalInputTaxResult = await client.query(
       `SELECT COALESCE(SUM(notional_input_tax_rappen), 0) AS notional_input_tax
@@ -71,6 +77,8 @@ export async function computeVatReport(tenantId, { from, to }) {
       outputTaxRappen,
       notionalInputTaxRappen,
       totalRevenueRappen,
+      creditVatRappen,
+      creditTotalRappen,
       payableRappen,
     }
   })

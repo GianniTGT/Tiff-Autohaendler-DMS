@@ -18,7 +18,7 @@ function buildChecklist(tenant, vehicleCount) {
   ]
 }
 
-const TOPICS = ['vat', 'qr', 'archive', 'roles', 'contracts']
+const TOPICS = ['vat', 'qr', 'archive', 'credit', 'roles', 'contracts']
 
 export default function Help({ role, onNavigate }) {
   const [tenant, setTenant] = useState(null)

@@ -90,7 +90,7 @@ entwickelt und getestet wird lokal.
 Niveau des Tiff Cardealer Managers) ist weit fortgeschritten.** Die Web-App
 hat: Übersicht, Fahrzeuge (Detail mit allen CH-Feldern, Kosten, Fotos, Verkauf,
 Verträge), Inserate (AutoScout24), Anfragen, Kunden, Rechnungen (Zahlungen,
-`camt.054`, Mahnwesen), Werkstatt, Kalender, Belegarchiv (inkl. ZIP-Export und
+`camt.054`, Mahnwesen, Gutschriften), Werkstatt, Kalender, Belegarchiv (inkl. ZIP-Export und
 Integritätsprüfung), Auswertungen (Gewinn, Lagerbestand, MWST), Einstellungen
 (Betrieb, Logo, QR-IBAN, AutoScout24, Anfragen-Eingang), Benutzer und Hilfe mit
 Einrichtungs-Checkliste. Design: Tiff-Grün/Gold, Barlow, Logo — aus dem Manager

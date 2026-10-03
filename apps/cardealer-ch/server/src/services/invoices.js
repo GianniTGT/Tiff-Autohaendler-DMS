@@ -166,11 +166,14 @@ export async function listInvoices(tenantId) {
       `SELECT d.id, d.number, d.status, d.issue_date, d.due_date, d.total_rappen,
               d.party_id, p.company_name, p.first_name, p.last_name,
               COALESCE(pay.paid, 0) AS paid_rappen,
+              COALESCE(cr.credited, 0) AS credited_rappen,
               (SELECT MAX(reminder_level) FROM documents r WHERE r.predecessor_id = d.id AND r.type = 'reminder') AS last_reminder_level
          FROM documents d
          LEFT JOIN parties p ON p.id = d.party_id
          LEFT JOIN (SELECT document_id, SUM(amount_rappen) AS paid FROM payments GROUP BY document_id) pay
                 ON pay.document_id = d.id
+         LEFT JOIN (SELECT predecessor_id, SUM(total_rappen) AS credited FROM documents WHERE type = 'credit_note' GROUP BY predecessor_id) cr
+                ON cr.predecessor_id = d.id
         WHERE d.type = 'invoice'
         ORDER BY d.number DESC`,
     )

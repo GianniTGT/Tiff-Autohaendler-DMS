@@ -157,6 +157,7 @@ export default function App() {
       {openInvoiceId && (
         <InvoiceDetail
           invoiceId={openInvoiceId}
+          role={session.role}
           onClose={() => setOpenInvoiceId(null)}
           onChanged={() => setRefreshKey((k) => k + 1)}
         />

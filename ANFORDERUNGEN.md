@@ -226,7 +226,10 @@ Phasen wie in `SCHWEIZ-SAAS.md` §5 vorgezeichnet, hier konkretisiert:
   Wartung); ZIP-Export des ganzen Archivs mit Index und Prüfhinweis. **Rollen (entschieden):** Verkauf sieht Preise und Wirtschaftlichkeit
   des einzelnen Fahrzeugs (wie im Manager), Werkstatt nicht und hat kein Rechnungswesen/Archiv/Verträge
   (`canSeePurchasePrices`, `canBill` in `roles.js`; mit dem Piloten zu bestätigen). Anfragen von der
-  Website kommen über einen Schlüssel-geschützten Eingang. **Noch offen:** Fotos
+  Website kommen über einen Schlüssel-geschützten Eingang. **Gutschriften** (GS-JJJJ-NNNNN, ganze Rechnung
+  oder Teilbetrag, mit Pflichtgrund, sofort archiviert; verbucht wie eine Zahlung der Art `credit_note`, senkt so
+  Restbetrag, Mahnwesen und die MWST der Periode der Ausstellung; nur Inhaber/Buchhaltung). Die
+  MWST-Behandlung (Entgeltsminderung) ist Entwurf und vom Treuhänder zu bestätigen. **Noch offen:** Fotos
   an AutoScout24 mitschicken, abweichendes Geschäftsjahr bei der Aufbewahrungsfrist, Export als
   Datenstrom für sehr grosse Archive.
 

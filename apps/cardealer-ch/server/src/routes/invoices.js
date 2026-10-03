@@ -1,6 +1,7 @@
 import { canSeeCompanyTotals } from '@tiff/core-auth'
+import { createCreditNote, getCreditNote, listCreditNotes } from '../services/credit-notes.js'
 import { createInvoice, getInvoice, listInvoices, listRemindersForInvoice } from '../services/invoices.js'
-import { renderInvoicePdfBuffer, renderReminderPdfBuffer, withLogo, describeMissingQrBillData } from '../services/invoice-pdf.js'
+import { renderInvoicePdfBuffer, renderReminderPdfBuffer, renderCreditNotePdfBuffer, withLogo, describeMissingQrBillData } from '../services/invoice-pdf.js'
 import { archivePdf, getArchivedPdf, archiveIfComplete, ArchiveIntegrityError } from '../services/archive.js'
 import { recordPayment, listPayments } from '../services/payments.js'
 import { importCamt054 } from '../services/camt054-import.js'
@@ -75,6 +76,28 @@ export async function registerInvoiceRoutes(app) {
   app.get('/api/reminders/:id/pdf', billing, async (request, reply) =>
     sendArchivedPdf(request, reply, await getReminder(request.tenantId, request.params.id), renderReminderPdfBuffer),
   )
+
+  app.get('/api/credit-notes/:id/pdf', billing, async (request, reply) =>
+    sendArchivedPdf(request, reply, await getCreditNote(request.tenantId, request.params.id), renderCreditNotePdfBuffer),
+  )
+
+  app.get('/api/invoices/:id/credit-notes', billing, async (request) => ({
+    ok: true,
+    data: await listCreditNotes(request.tenantId, request.params.id),
+  }))
+
+  // Gutschriften mindern den Umsatz: nur wer Firmenzahlen sieht (Inhaber, Buchhaltung), stellt sie aus.
+  app.post('/api/invoices/:id/credit-notes', billing, async (request, reply) => {
+    if (!canSeeCompanyTotals(request.role)) {
+      return reply.code(403).send({ ok: false, error: 'Gutschriften stellen nur Inhaber und Buchhaltung aus.' })
+    }
+    try {
+      const creditNote = await createCreditNote(request.tenantId, request.userId, request.params.id, request.body ?? {})
+      return creditNote ? reply.code(201).send({ ok: true, data: creditNote }) : reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
+    } catch (err) {
+      return reply.code(err.statusCode ?? 400).send({ ok: false, error: clientMessage(err) })
+    }
+  })
 
   app.get('/api/invoices/:id/reminders', billing, async (request) => ({
     ok: true,

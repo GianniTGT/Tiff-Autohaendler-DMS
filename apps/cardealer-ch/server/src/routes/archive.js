@@ -3,7 +3,8 @@ import { listArchive, verifyArchived, buildArchiveExport } from '../services/arc
 import { getArchivedPdf, archiveIfComplete } from '../services/archive.js'
 import { getInvoice } from '../services/invoices.js'
 import { getReminder } from '../services/reminders.js'
-import { renderInvoicePdfBuffer, renderReminderPdfBuffer, withLogo } from '../services/invoice-pdf.js'
+import { getCreditNote } from '../services/credit-notes.js'
+import { renderInvoicePdfBuffer, renderReminderPdfBuffer, renderCreditNotePdfBuffer, withLogo } from '../services/invoice-pdf.js'
 import { withTenant } from '@tiff/core-db'
 
 /** Belegarchiv: Liste, Integritätsprüfung und das archivierte PDF eines Dokuments (Verträge; Rechnungen/Mahnungen haben eigene Wege). */
@@ -29,11 +30,11 @@ export async function registerArchiveRoutes(app) {
     )
     if (!row) return reply.code(404).send({ ok: false, error: 'NOT_FOUND' })
     if (row.pdf_hash) return { ok: true, data: { archived: true } }
-    if (row.type !== 'invoice' && row.type !== 'reminder') {
+    if (!['invoice', 'reminder', 'credit_note'].includes(row.type)) {
       return reply.code(400).send({ ok: false, error: 'Dieser Beleg kann nicht nachträglich archiviert werden.' })
     }
-    const load = row.type === 'invoice' ? getInvoice : getReminder
-    const render = row.type === 'invoice' ? renderInvoicePdfBuffer : renderReminderPdfBuffer
+    const load = { invoice: getInvoice, reminder: getReminder, credit_note: getCreditNote }[row.type]
+    const render = { invoice: renderInvoicePdfBuffer, reminder: renderReminderPdfBuffer, credit_note: renderCreditNotePdfBuffer }[row.type]
     const document = await withLogo(request.tenantId, await load(request.tenantId, request.params.id))
     return { ok: true, data: await archiveIfComplete(request.tenantId, request.userId, document, render) }
   })

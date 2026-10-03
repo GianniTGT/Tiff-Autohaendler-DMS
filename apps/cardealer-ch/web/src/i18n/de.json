@@ -407,13 +407,15 @@
       "status": {
         "issued": "Offen",
         "paid": "Bezahlt",
-        "overdue": "Überfällig"
+        "overdue": "Überfällig",
+        "credited": "Gutgeschrieben"
       },
       "filter": {
         "all": "Alle",
         "open": "Offen",
         "overdue": "Überfällig",
-        "paid": "Bezahlt"
+        "paid": "Bezahlt",
+        "credited": "Gutgeschrieben"
       },
       "paidAmount": "Bezahlt",
       "outstanding": "Offen",
@@ -443,7 +445,24 @@
         "dueOn": "Fällig am"
       },
       "notArchived": "Rechnung {number} erstellt, aber noch nicht archiviert: {reason}",
-      "archivedOk": "Rechnung {number} erstellt und archiviert."
+      "archivedOk": "Rechnung {number} erstellt und archiviert.",
+      "partiallyCredited": "Teilgutschrift",
+      "credit": {
+        "title": "Gutschriften",
+        "none": "Noch keine Gutschrift.",
+        "hint": "Eine ausgestellte Rechnung wird nie überschrieben. Ein Fehler oder Nachlass wird mit einer Gutschrift ausgeglichen; sie senkt den offenen Betrag und die MWST der Periode.",
+        "remaining": "Noch gutschreibbar: {amount}",
+        "fully": "Diese Rechnung ist vollständig gutgeschrieben.",
+        "mode": "Art",
+        "full": "Ganze Rechnung",
+        "partial": "Teilbetrag",
+        "amount": "Betrag inkl. MWST (CHF)",
+        "reason": "Grund (Pflicht)",
+        "submit": "Gutschrift ausstellen",
+        "confirm": "Gutschrift {what} ausstellen? Sie wird unveränderlich archiviert und kann nicht rückgängig gemacht werden.",
+        "created": "Gutschrift {number} ausgestellt.",
+        "notArchived": "Gutschrift {number} ausgestellt, aber noch nicht archiviert: {reason}"
+      }
     },
     "createSaleContract": "Kaufvertrag erstellen",
     "createPurchaseContract": "Ankaufsvertrag erstellen",
@@ -570,7 +589,9 @@
         "d61_90": "61–90 Tage",
         "d91_plus": "über 90 Tage"
       }
-    }
+    },
+    "credits": "davon Gutschriften (inkl. MWST)",
+    "creditVat": "MWST-Minderung durch Gutschriften"
   },
   "workshop": {
     "title": "Werkstatt",
@@ -804,7 +825,8 @@
       "invoice": "Rechnung",
       "reminder": "Mahnung",
       "sale_contract": "Kaufvertrag",
-      "purchase_contract": "Ankaufsvertrag"
+      "purchase_contract": "Ankaufsvertrag",
+      "credit_note": "Gutschrift"
     },
     "filter": {
       "all": "Alle",
@@ -812,7 +834,8 @@
       "reminder": "Mahnungen",
       "sale_contract": "Kaufverträge",
       "purchase_contract": "Ankaufsverträge",
-      "open": "Nicht archiviert"
+      "open": "Nicht archiviert",
+      "credit_note": "Gutschriften"
     },
     "cols": {
       "number": "Nummer",
@@ -904,6 +927,10 @@
       "contracts": {
         "title": "Verträge",
         "body": "Kauf- und Ankaufsvertrag sind Entwürfe und von einem Schweizer Anwalt zu prüfen, bevor der erste echte Vertrag unterschrieben wird. Die Vorschau hat keine Nummer; «Ausstellen und archivieren» vergibt die Nummer und legt das PDF ab."
+      },
+      "credit": {
+        "title": "Gutschriften",
+        "body": "Ausgestellte Rechnungen sind archiviert und unveränderlich. Ein Fehler oder ein Preisnachlass wird mit einer Gutschrift (GS-…) ausgeglichen: ganze Rechnung oder ein Teilbetrag, immer mit Grund. Die Gutschrift senkt den offenen Betrag (und stoppt damit Mahnungen) sowie Umsatz und MWST in der Periode, in der sie ausgestellt wird. Ausstellen dürfen Inhaber und Buchhaltung.\n\nDie MWST-Behandlung ist ein Entwurf und von einem Treuhänder zu bestätigen."
       }
     },
     "contact": "Fragen oder Probleme? Tiff Software Solutions — info@tiff-software-solutions.com"

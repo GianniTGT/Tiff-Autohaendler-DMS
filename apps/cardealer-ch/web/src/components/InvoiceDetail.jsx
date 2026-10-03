@@ -7,21 +7,29 @@ import { Drawer, Panel, Tag, Notice, formatDay, todayIso } from './ui.jsx'
 
 const MAX_REMINDER_LEVEL = 3
 
-export default function InvoiceDetail({ invoiceId, onClose, onChanged }) {
+// Gutschriften stellen nur Inhaber und Buchhaltung aus (roles.js: canSeeCompanyTotals); der Server prüft selbst.
+const CAN_CREDIT = ['inhaber', 'buchhaltung']
+
+export default function InvoiceDetail({ invoiceId, role, onClose, onChanged }) {
   const [invoice, setInvoice] = useState(null)
   const [payments, setPayments] = useState([])
   const [reminders, setReminders] = useState([])
+  const [creditNotes, setCreditNotes] = useState([])
+  const [creditForm, setCreditForm] = useState({ mode: 'full', amount: '', reason: '' })
+  const [notice, setNotice] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [payForm, setPayForm] = useState({ amount: '', date: todayIso() })
 
   async function load() {
     try {
-      const [inv, pay, rem] = await Promise.all([
+      const [inv, pay, rem, cn] = await Promise.all([
         api.get(`/api/invoices/${invoiceId}`),
         api.get(`/api/invoices/${invoiceId}/payments`),
         api.get(`/api/invoices/${invoiceId}/reminders`),
+        api.get(`/api/invoices/${invoiceId}/credit-notes`),
       ])
+      setCreditNotes(cn)
       setInvoice(inv)
       setPayments(pay)
       setReminders(rem)
@@ -54,6 +62,22 @@ export default function InvoiceDetail({ invoiceId, onClose, onChanged }) {
     e.preventDefault()
     return run(() => api.post(`/api/invoices/${invoiceId}/payments`, { amountRappen: francsToRappen(payForm.amount), paidAt: payForm.date }))
   }
+  const issueCreditNote = (event) => {
+    event.preventDefault()
+    const what = creditForm.mode === 'full' ? t('documents.invoices.credit.full').toLowerCase() : `${formatMoney(francsToRappen(creditForm.amount) ?? 0)}`
+    if (!window.confirm(t('documents.invoices.credit.confirm', { what }))) return
+    return run(async () => {
+      const created = await api.post(`/api/invoices/${invoiceId}/credit-notes`, {
+        mode: creditForm.mode,
+        reason: creditForm.reason,
+        amountRappen: creditForm.mode === 'partial' ? francsToRappen(creditForm.amount) : undefined,
+      })
+      setNotice(created.archive?.archived
+        ? { tone: 'green', text: t('documents.invoices.credit.created', { number: created.number }) }
+        : { tone: 'amber', text: t('documents.invoices.credit.notArchived', { number: created.number, reason: created.archive?.reason ?? '' }) })
+      setCreditForm({ mode: 'full', amount: '', reason: '' })
+    })
+  }
   const createReminder = () => run(() => api.post(`/api/invoices/${invoiceId}/reminders`, { asOfDate: todayIso() }))
 
   if (!invoice) {
@@ -69,6 +93,8 @@ export default function InvoiceDetail({ invoiceId, onClose, onChanged }) {
   const outstanding = Math.max(0, total - paid)
   const overdue = outstanding > 0 && String(invoice.due_date).slice(0, 10) < todayIso()
   const level = reminders.length ? Math.max(...reminders.map((r) => r.reminder_level)) : 0
+  const credited = creditNotes.reduce((s, c) => s + c.totalRappen, 0)
+  const creditable = Math.max(0, total - credited)
 
   return (
     <Drawer
@@ -77,6 +103,7 @@ export default function InvoiceDetail({ invoiceId, onClose, onChanged }) {
       onClose={onClose}
     >
       {error && <Notice>{error}</Notice>}
+      {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
       {!invoice.tenant?.qr_iban && <Notice tone="amber">{t('documents.invoices.detail.noQr')}</Notice>}
 
       <div className="flex flex-wrap items-center gap-2">
@@ -158,6 +185,56 @@ export default function InvoiceDetail({ invoiceId, onClose, onChanged }) {
             </button>
           </form>
         )}
+      </Panel>
+
+      <Panel title={t('documents.invoices.credit.title')}>
+        {creditNotes.length === 0 ? (
+          <p className="text-sm text-steel">{t('documents.invoices.credit.none')}</p>
+        ) : (
+          <ul className="divide-y divide-line text-sm">
+            {creditNotes.map((c) => (
+              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                <span>
+                  <b>{c.number}</b> · {formatDay(c.issueDate)} · {c.reason}
+                </span>
+                <span className="flex items-center gap-3">
+                  <span className="num">{formatMoney(c.totalRappen)}</span>
+                  <a className="text-brand underline" href={`/api/credit-notes/${c.id}/pdf`} target="_blank" rel="noreferrer">
+                    {t('documents.invoices.pdf')}
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-xs text-steel">{creditable > 0 ? t('documents.invoices.credit.remaining', { amount: formatMoney(creditable) }) : t('documents.invoices.credit.fully')}</p>
+        {CAN_CREDIT.includes(role) && creditable > 0 && (
+          <form onSubmit={issueCreditNote} className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label>
+              <span className="field-label">{t('documents.invoices.credit.mode')}</span>
+              <select className="field" value={creditForm.mode} onChange={(e) => setCreditForm({ ...creditForm, mode: e.target.value })}>
+                <option value="full" disabled={credited > 0}>
+                  {t('documents.invoices.credit.full')}
+                </option>
+                <option value="partial">{t('documents.invoices.credit.partial')}</option>
+              </select>
+            </label>
+            {creditForm.mode === 'partial' && (
+              <label>
+                <span className="field-label">{t('documents.invoices.credit.amount')}</span>
+                <input required className="field" inputMode="decimal" value={creditForm.amount} onChange={(e) => setCreditForm({ ...creditForm, amount: e.target.value })} />
+              </label>
+            )}
+            <label className="sm:col-span-2">
+              <span className="field-label">{t('documents.invoices.credit.reason')}</span>
+              <input required className="field" value={creditForm.reason} onChange={(e) => setCreditForm({ ...creditForm, reason: e.target.value })} />
+            </label>
+            <button type="submit" disabled={busy} className="btn sm:col-span-2">
+              {t('documents.invoices.credit.submit')}
+            </button>
+          </form>
+        )}
+        <p className="mt-3 text-xs text-steel">{t('documents.invoices.credit.hint')}</p>
       </Panel>
 
       <Panel

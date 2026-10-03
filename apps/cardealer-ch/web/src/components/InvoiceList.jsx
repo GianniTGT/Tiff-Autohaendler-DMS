@@ -6,14 +6,15 @@ import { partyName } from './CustomerList.jsx'
 import { PageHeader, Tag, Notice, formatDay, todayIso } from './ui.jsx'
 
 const EMPTY_FORM = { partyId: '', vehicleId: '', description: '', price: '' }
-const FILTERS = ['all', 'open', 'overdue', 'paid']
+const FILTERS = ['all', 'open', 'overdue', 'paid', 'credited']
 
 /** Anzeigestatus: 'overdue' gibt es nicht in der DB, sondern ergibt sich aus Fälligkeit und Restbetrag. */
 export function invoiceState(invoice, today = todayIso()) {
+  if (Number(invoice.credited_rappen) > 0 && Number(invoice.credited_rappen) >= Number(invoice.total_rappen)) return 'credited'
   if (invoice.status === 'paid' || invoice.outstanding_rappen <= 0) return 'paid'
   return String(invoice.due_date).slice(0, 10) < today ? 'overdue' : 'issued'
 }
-const STATE_TONE = { issued: 'amber', paid: 'green', overdue: 'red' }
+const STATE_TONE = { issued: 'amber', paid: 'green', overdue: 'red', credited: 'gray' }
 
 export default function InvoiceList({ onOpenInvoice }) {
   const [invoices, setInvoices] = useState(null)
@@ -96,7 +97,7 @@ export default function InvoiceList({ onOpenInvoice }) {
   const today = todayIso()
   const visible = invoices.filter((i) => {
     const state = invoiceState(i, today)
-    if (filter === 'open') return state !== 'paid'
+    if (filter === 'open') return state !== 'paid' && state !== 'credited'
     return filter === 'all' || state === filter
   })
 
@@ -232,6 +233,7 @@ export default function InvoiceList({ onOpenInvoice }) {
                     <td className="p-3">{formatDay(i.due_date)}</td>
                     <td className="space-x-1 p-3">
                       <Tag tone={STATE_TONE[state]}>{t(`documents.invoices.status.${state}`)}</Tag>
+                      {Number(i.credited_rappen) > 0 && state !== 'credited' && <Tag tone="gray">{t('documents.invoices.partiallyCredited')}</Tag>}
                       {i.last_reminder_level != null && <Tag tone="gray">{t('documents.invoices.detail.reminderLevel', { n: i.last_reminder_level })}</Tag>}
                     </td>
                     <td className="num p-3 text-right">{formatMoney(Number(i.total_rappen))}</td>

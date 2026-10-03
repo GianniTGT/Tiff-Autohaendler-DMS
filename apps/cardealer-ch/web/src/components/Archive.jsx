@@ -3,11 +3,17 @@ import { api } from '../api.js'
 import { t } from '../i18n/index.js'
 import { PageHeader, Tag, Notice, formatDay } from './ui.jsx'
 
-const FILTERS = ['all', 'invoice', 'reminder', 'sale_contract', 'purchase_contract', 'open']
+const FILTERS = ['all', 'invoice', 'reminder', 'credit_note', 'sale_contract', 'purchase_contract', 'open']
 
 /** PDF-Adresse je Belegart: Rechnungen und Mahnungen haben eigene Wege, Verträge kommen aus dem Archiv. */
 const pdfUrl = (row) =>
-  row.type === 'invoice' ? `/api/invoices/${row.id}/pdf` : row.type === 'reminder' ? `/api/reminders/${row.id}/pdf` : `/api/documents/${row.id}/pdf`
+  row.type === 'invoice'
+    ? `/api/invoices/${row.id}/pdf`
+    : row.type === 'reminder'
+      ? `/api/reminders/${row.id}/pdf`
+      : row.type === 'credit_note'
+        ? `/api/credit-notes/${row.id}/pdf`
+        : `/api/documents/${row.id}/pdf`
 
 const SEES_TOTALS = ['inhaber', 'buchhaltung']
 

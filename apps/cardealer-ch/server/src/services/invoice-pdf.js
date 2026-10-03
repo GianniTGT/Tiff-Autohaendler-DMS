@@ -8,7 +8,7 @@
  * muss trotzdem gedruckt werden können, während das aussteht.
  */
 import PDFDocument from 'pdfkit'
-import { PAGE, letterhead, sectionBar, fieldRow, needSpace, footers, contentWidth, INK, MUTED, LINE } from '@tiff/core-docs'
+import { PAGE, letterhead, sectionBar, fieldRow, needSpace, footers, contentWidth, shortDate, INK, MUTED, LINE } from '@tiff/core-docs'
 import { formatMoney } from '@tiff/core-billing'
 import { buildQrBill } from '@tiff/core-billing/src/qr-invoice.js'
 import { REMINDER_LABEL } from './reminders.js'
@@ -109,7 +109,7 @@ export function renderReminderPdf(reminder) {
   return renderBillPdf(reminder, { title: REMINDER_LABEL[reminder.reminder_level]?.toUpperCase() ?? 'MAHNUNG' })
 }
 
-function renderBillPdf(invoice, { title }) {
+function renderBillPdf(invoice, { title, credit = false }) {
   const doc = new PDFDocument({
     size: PAGE.size,
     margins: PAGE.margins,
@@ -136,6 +136,13 @@ function renderBillPdf(invoice, { title }) {
   if (tenant.uid) {
     fieldRow(doc, [{ label: 'UID', value: tenant.uid }])
   }
+  if (credit) {
+    sectionBar(doc, 'Bezug')
+    fieldRow(doc, [
+      { label: 'Zu Rechnung', value: [invoice.invoiceNumber, invoice.invoiceIssueDate && shortDate(invoice.invoiceIssueDate)].filter(Boolean).join(' vom ') },
+      { label: 'Grund der Gutschrift', value: invoice.note ?? '' },
+    ])
+  }
 
   sectionBar(doc, 'Positionen')
   drawLineItems(doc, invoice.lines)
@@ -146,10 +153,13 @@ function renderBillPdf(invoice, { title }) {
   fieldRow(doc, [
     { label: 'Zwischensumme (exkl. MWST)', value: formatMoney(invoice.subtotal_rappen) },
     { label: 'MWST', value: formatMoney(invoice.vat_rappen) },
-    { label: 'Total (inkl. MWST)', value: formatMoney(invoice.total_rappen) },
+    { label: credit ? 'Gutschrift (inkl. MWST)' : 'Total (inkl. MWST)', value: formatMoney(invoice.total_rappen) },
   ])
 
   footers(doc, { dealer, docNo: invoice.number })
+
+  // Eine Gutschrift ist keine Zahlungsaufforderung: kein QR-Zahlteil.
+  if (credit) return doc
 
   const missingQrBillReason = describeMissingQrBillData(tenant, invoice.party, invoice)
 
@@ -191,6 +201,15 @@ function renderBillPdf(invoice, { title }) {
 /** Wie renderInvoicePdf(), aber fertig eingesammelt — für Hash/Archiv, wo die volle Länge vorher feststehen muss. */
 export function renderInvoicePdfBuffer(invoice) {
   return collect(renderInvoicePdf(invoice))
+}
+
+/** Gutschrift: dasselbe Layout wie die Rechnung, ohne Zahlteil, mit Bezug auf die Rechnung und Grund. */
+export function renderCreditNotePdf(creditNote) {
+  return renderBillPdf(creditNote, { title: 'GUTSCHRIFT', credit: true })
+}
+
+export function renderCreditNotePdfBuffer(creditNote) {
+  return collect(renderCreditNotePdf(creditNote))
 }
 
 export function renderReminderPdfBuffer(reminder) {
