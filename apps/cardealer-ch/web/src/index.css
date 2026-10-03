@@ -79,12 +79,17 @@
     @apply text-xs font-semibold uppercase tracking-wider text-steel;
   }
 
-  /* Anmeldeseite: gezeichnet statt fotografiert (keine Bildlizenz), Grün und Gold der Marke. */
+  /* Anmeldeseite wie im Manager: dunkle Bühne mit goldenem Licht von rechts oben und grünem Schimmer links.
+     Liegt ein Foto unter web/public/login-bg.jpg, wird es als Bühne gezeigt (dunkel abgetönt); fehlt es,
+     bleibt die gezeichnete Bühne — ohne Bildlizenz, ohne Platzhalter. */
   .login-bg {
-    background-color: #08301c;
-    background-image: radial-gradient(120% 80% at 18% 108%, rgb(22 101 60 / 0.55) 0%, transparent 62%),
-      radial-gradient(80% 62% at 95% -6%, rgb(201 160 83 / 0.38) 0%, transparent 58%),
-      linear-gradient(108deg, transparent 38%, rgb(255 255 255 / 0.05) 50%, transparent 62%),
-      linear-gradient(158deg, #1b6b44 0%, #0f4a2c 46%, #08301c 100%);
+    background-color: #0b100d;
+    background-image: linear-gradient(180deg, rgb(11 16 13 / 0.55) 0%, rgb(11 16 13 / 0.35) 55%, rgb(11 16 13 / 0.8) 100%),
+      radial-gradient(70% 55% at 100% 0%, rgb(201 160 83 / 0.35) 0%, transparent 60%),
+      radial-gradient(90% 70% at 0% 100%, rgb(22 101 60 / 0.45) 0%, transparent 62%),
+      url('/login-bg.jpg'),
+      linear-gradient(160deg, #142a1e 0%, #0b100d 55%, #070a08 100%);
+    background-size: cover, cover, cover, cover, cover;
+    background-position: center;
   }
 }

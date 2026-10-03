@@ -109,6 +109,11 @@
     "submit": "Anmelden",
     "invalid": "Anmeldename oder Passwort ist falsch.",
     "forgot": "Passwort vergessen?",
+    "forgotHint": "Der Inhaber Ihres Betriebs setzt unter «Benutzer» ein neues Passwort. Sind Sie der Inhaber, hilft der Support: {phone}.",
+    "tenantPlaceholder": "Kurzname Ihres Betriebs",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "secure": "Sicherer Zugang",
     "tenant": "Betrieb",
     "tagline": "Dealer-Management für Schweizer Occasionshändler",
     "connectionFailed": "Verbindung fehlgeschlagen."
