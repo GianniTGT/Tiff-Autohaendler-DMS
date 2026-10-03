@@ -16,6 +16,9 @@ Die Anmeldung braucht drei Angaben: **Betrieb** (der Kurzname, z. B. `demo`), **
 | Werkstatt | Fahrzeuge ohne Einkaufspreise, Aufträge, Kosten, Kalender — kein Rechnungswesen |
 
 Benutzer legt der Inhaber unter **Benutzer** an. Wer gesperrt wird, ist sofort abgemeldet.
+**Passwort vergessen?** Auf der Anmeldeseite Betrieb und E-Mail eingeben; der Link in der E-Mail
+gilt eine Stunde und führt zu «Neues Passwort». Der Inhaber kann ein Passwort auch unter Benutzer
+von Hand setzen.
 
 ## Einrichtung (einmal, vor der ersten Rechnung)
 

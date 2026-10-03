@@ -1,4 +1,5 @@
 import { login, logout, LoginError, encodeSessionCookie } from '../services/auth.js'
+import { requestPasswordReset, resetPassword } from '../services/password-reset.js'
 import { SESSION_COOKIE_NAME } from '../plugins/auth.js'
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -32,6 +33,26 @@ export async function registerAuthRoutes(app) {
     await logout(request.cookies[SESSION_COOKIE_NAME])
     reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' })
     return { ok: true }
+  })
+
+  /** «Passwort vergessen?» — antwortet immer ok (kein Rückschluss auf Konten); Link kommt per E-Mail. */
+  app.post('/api/auth/forgot', async (request, reply) => {
+    const { tenantSlug, email } = request.body ?? {}
+    if (!tenantSlug || !email) return reply.code(400).send({ ok: false, error: 'MISSING_FIELDS' })
+    // Adresse der App für den Link: APP_BASE_URL im Betrieb; lokal der Host der Anfrage (Vite-Proxy → 5173).
+    const baseUrl = process.env.APP_BASE_URL ?? `${request.protocol}://${request.headers.host}`
+    await requestPasswordReset({ tenantSlug, email, baseUrl })
+    return { ok: true }
+  })
+
+  app.post('/api/auth/reset', async (request, reply) => {
+    const { token, password } = request.body ?? {}
+    try {
+      await resetPassword({ token, password })
+      return { ok: true }
+    } catch (err) {
+      return reply.code(400).send({ ok: false, error: err.message })
+    }
   })
 
   app.get('/api/auth/me', { preHandler: app.requireAuth }, async (request) => ({

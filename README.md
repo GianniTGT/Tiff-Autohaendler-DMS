@@ -127,6 +127,7 @@ Siehe `.env.example`. Zusätzlich zu den Datenbank-URLs:
   Datenbank (AutoScout24-Client-Secret, AES-256-GCM). **Im Betrieb Pflicht**
   (`NODE_ENV=production`), lokal reicht ein fester Entwicklungsschlüssel.
 - `OBJECT_STORAGE_*`: S3-kompatibler Speicher für Belege, Fotos und Logo.
+- `SMTP_URL`, `MAIL_FROM`, `APP_BASE_URL`: E-Mail für «Passwort vergessen?» (ohne SMTP_URL nur ins Protokoll).
   Ohne diese Angaben liegt alles unter `data/objects` — nur für die Entwicklung.
 
 **Anfragen von der Website:** unter Einstellungen einen Schlüssel erzeugen (wird

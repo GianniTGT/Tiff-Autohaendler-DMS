@@ -3,6 +3,7 @@ import { api } from './api.js'
 import { Dialog, VendorFooter } from './components/ui.jsx'
 import { t } from './i18n/index.js'
 import Login from './components/Login.jsx'
+import ResetPassword from './components/ResetPassword.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import VehicleList from './components/VehicleList.jsx'
 import VehicleDetail from './components/VehicleDetail.jsx'
@@ -123,6 +124,20 @@ export default function App() {
     return <p className="p-6 text-steel">{t('common.loading')}</p>
   }
   if (session === null) {
+    // Link aus der E-Mail «Passwort vergessen?»: /?reset=<tenantId>.<token>
+    const resetToken = new URLSearchParams(window.location.search).get('reset')
+    if (resetToken) {
+      return (
+        <ResetPassword
+          token={resetToken}
+          onDone={() => {
+            window.history.replaceState(null, '', '/')
+            setSession(null)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
+      )
+    }
     return <Login onLoggedIn={setSession} />
   }
 

@@ -13,7 +13,7 @@ export default function Login({ onLoggedIn }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [forgot, setForgot] = useState(false)
+  const [forgot, setForgot] = useState(false) // false | 'form' | 'sent'
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
@@ -33,11 +33,25 @@ export default function Login({ onLoggedIn }) {
 
   const phone = t('app.footer.phone')
 
+  async function handleForgot(event) {
+    event.preventDefault()
+    setError(null)
+    setBusy(true)
+    try {
+      await api.post('/api/auth/forgot', { tenantSlug, email })
+      setForgot('sent')
+    } catch {
+      setError(t('login.connectionFailed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="login-bg flex min-h-full flex-col">
       <div className="h-1.5 bg-brand" aria-hidden="true" />
       <div className="grid flex-1 place-items-center p-4">
-        <form onSubmit={handleSubmit} className="w-full max-w-[360px] space-y-4 rounded-tiff bg-white p-7 shadow-2xl">
+        <form onSubmit={forgot === 'form' ? handleForgot : handleSubmit} className="w-full max-w-[360px] space-y-4 rounded-tiff bg-white p-7 shadow-2xl">
           <img src={lockup} alt={t('app.vendor')} className="h-12 w-auto" />
           <h1 className="font-display text-[26px] font-bold uppercase leading-tight tracking-wide text-brand">{t('app.name')}</h1>
 
@@ -72,6 +86,10 @@ export default function Login({ onLoggedIn }) {
             />
           </div>
 
+          {forgot === 'form' && <p className="text-sm text-steel">{t('login.forgotIntro')}</p>}
+          {forgot === 'sent' && <p className="rounded-lg bg-profit-bg px-3 py-2 text-sm text-profit">{t('login.forgotSent')}</p>}
+
+          {!forgot && (
           <div>
             <label className="field-label" htmlFor="password">
               {t('login.password')}
@@ -101,18 +119,27 @@ export default function Login({ onLoggedIn }) {
               </button>
             </div>
           </div>
+          )}
 
           {error && <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>}
 
-          <button type="submit" disabled={busy} className="btn w-full">
-            {t('login.submit')}
-          </button>
+          {forgot !== 'sent' && (
+            <button type="submit" disabled={busy} className="btn w-full">
+              {forgot === 'form' ? t('login.forgotSubmit') : t('login.submit')}
+            </button>
+          )}
 
           <div className="text-center">
-            <button type="button" className="text-xs text-brand underline" onClick={() => setForgot((v) => !v)}>
-              {t('login.forgot')}
-            </button>
-            {forgot && <p className="mt-2 text-left text-xs text-steel">{t('login.forgotHint', { phone })}</p>}
+            {!forgot ? (
+              <button type="button" className="text-xs text-brand underline" onClick={() => setForgot('form')}>
+                {t('login.forgot')}
+              </button>
+            ) : (
+              <button type="button" className="text-xs text-brand underline" onClick={() => setForgot(false)}>
+                {t('login.backToLogin')}
+              </button>
+            )}
+            {forgot === 'form' && <p className="mt-2 text-left text-xs text-steel">{t('login.forgotHint', { phone })}</p>}
           </div>
         </form>
       </div>

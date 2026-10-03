@@ -109,7 +109,11 @@
     "submit": "Anmelden",
     "invalid": "Anmeldename oder Passwort ist falsch.",
     "forgot": "Passwort vergessen?",
-    "forgotHint": "Der Inhaber Ihres Betriebs setzt unter «Benutzer» ein neues Passwort. Sind Sie der Inhaber, hilft der Support: {phone}.",
+    "forgotIntro": "Betrieb und E-Mail angeben — wir schicken einen Link, mit dem Sie ein neues Passwort wählen. Er gilt eine Stunde.",
+    "forgotSubmit": "Link schicken",
+    "forgotSent": "Wenn es dieses Konto gibt, ist die E-Mail unterwegs. Bitte auch den Spam-Ordner prüfen.",
+    "backToLogin": "Zurück zur Anmeldung",
+    "forgotHint": "Keine E-Mail erhalten? Der Inhaber Ihres Betriebs setzt unter «Benutzer» ein neues Passwort; sonst hilft der Support: {phone}.",
     "tenantPlaceholder": "Kurzname Ihres Betriebs",
     "showPassword": "Passwort anzeigen",
     "hidePassword": "Passwort verbergen",
@@ -118,16 +122,74 @@
     "tagline": "Dealer-Management für Schweizer Occasionshändler",
     "connectionFailed": "Verbindung fehlgeschlagen."
   },
+  "reset": {
+    "title": "Neues Passwort",
+    "intro": "Wählen Sie ein neues Passwort mit mindestens 10 Zeichen. Danach melden Sie sich damit an; alte Anmeldungen sind beendet.",
+    "password": "Neues Passwort",
+    "repeat": "Passwort wiederholen",
+    "mismatch": "Die beiden Passwörter stimmen nicht überein.",
+    "submit": "Passwort setzen",
+    "done": "Das Passwort ist gesetzt. Sie können sich jetzt anmelden.",
+    "toLogin": "Zur Anmeldung"
+  },
   "dashboard": {
     "title_hinweis": "Bildschirmname wie im Manager: Dashboard.",
+    "intro": "Wo der Betrieb steht. Die vollständige Liste der Fahrzeuge steht unter Fahrzeuge.",
+    "outstanding": "{n} offen",
+    "money": {
+      "title": "Wo das Geld steckt",
+      "lotValue": "Lagerwert",
+      "purchase": "Einkauf",
+      "costs": "Teile, Arbeit und Übriges",
+      "margin": "Marge, wenn alles verkauft wird",
+      "loss": "Verlust zum Angebotspreis"
+    },
+    "cars": {
+      "title": "Wo die Fahrzeuge stehen",
+      "soldThisYear": "dieses Jahr verkauft",
+      "inspectionDue": "MFK fällig",
+      "inspectionDueSub": "abgelaufen oder in 30 Tagen",
+      "nothingOverdue": "nichts überfällig",
+      "ageing": "über 60 Tage",
+      "ageingSub": "lange auf Lager",
+      "nothingStanding": "nichts steht lange"
+    },
+    "tags": {
+      "listing": "Inserat",
+      "owed": "Offen",
+      "inspection": "MFK",
+      "lead": "Anfrage",
+      "workshop": "Werkstatt",
+      "data": "Daten",
+      "ageing": "Standzeit"
+    },
+    "todo": {
+      "overdueInvoices": "{n} Rechnung(en) überfällig — {amount} ausstehend",
+      "inspectionExpired": "MFK abgelaufen am {date} — seit {n} Tagen",
+      "inspectionDueSoon": "MFK fällig am {date} — in {n} Tagen",
+      "newLeads": "{n} neue Anfrage(n) sind nicht beantwortet.",
+      "jobsOverdue": "{n} Werkstattauftrag/-aufträge über der Frist."
+    },
+    "actions": {
+      "listings": "Inserate",
+      "invoices": "Rechnungen",
+      "openVehicle": "Öffnen",
+      "answer": "Beantworten",
+      "workshop": "Werkstatt",
+      "complete": "Ergänzen"
+    },
     "emptyTitle": "Noch keine Fahrzeuge",
     "emptyBody": "Erfassen Sie das erste Fahrzeug über die Fahrgestellnummer oder die Stammnummer.",
     "addVehicle": "+ Fahrzeug erfassen",
     "kpi": {
       "onLot": "Fahrzeuge auf Lager",
       "cashTiedUp": "Kapital gebunden",
+      "cashTiedUpSub": "in unverkauften Fahrzeugen",
       "projectedProfit": "Erwarteter Gewinn",
+      "projectedProfitSub": "wenn alles zum Angebotspreis verkauft wird",
+      "onLotSub": "über alle Stufen",
       "soldThisYear": "Dieses Jahr verkauft",
+      "soldThisYearSub": "abgeschlossene Geschäfte",
       "overdue": "Überfällige Rechnungen",
       "soldThisYearProfit": "Gewinn daraus",
       "newLeads": "Neue Anfragen",
