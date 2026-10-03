@@ -306,13 +306,32 @@ export default function VehicleDetail({ vehicleId, role, onClose, onChanged }) {
                     label={economics.realized ? t('vehicle.detail.economics.price') : t('vehicle.detail.economics.priceAsking')}
                     value={formatMoney(economics.priceRappen)}
                   />
-                  <Row
-                    label={t('vehicle.detail.economics.profit')}
-                    value={`${formatMoney(economics.profitRappen)} (${economics.marginPct} %)`}
-                    strong
-                    tone={economics.health === 'loss' ? 'loss' : economics.health === 'good' ? 'good' : undefined}
-                  />
-                  <p className="mt-1 text-xs text-steel">{t(`vehicle.detail.health.${economics.health}`)}</p>
+                  {/* Gewinn oder Verlust auf einen Blick — farbiger Block wie «Projected profit» im Manager. */}
+                  {(() => {
+                    const tone = economics.health === 'loss' ? 'bg-danger-bg text-danger' : economics.health === 'good' ? 'bg-profit-bg text-profit' : 'bg-warn-bg text-warn'
+                    const invested = Number(economics.totalInvestedRappen)
+                    const roi = invested > 0 ? Math.round((Number(economics.profitRappen) / invested) * 1000) / 10 : null
+                                        return (
+                      <div className={`mt-3 rounded-lg px-4 py-3 ${tone}`}>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="font-display text-base font-bold uppercase tracking-wider">
+                            {economics.realized ? t('vehicle.detail.economics.profit') : t('vehicle.detail.economics.projectedProfit')}
+                          </span>
+                          <span className="num font-display text-2xl font-bold">{formatMoney(economics.profitRappen)}</span>
+                        </div>
+                        <div className="mt-0.5 flex items-baseline justify-between gap-3 text-sm">
+                          <span>{t(`vehicle.detail.health.${economics.health}`)}</span>
+                          <span className="num">
+                            {t('vehicle.detail.economics.marginPct', { pct: economics.marginPct })}
+                            {roi != null && ` · ${t('vehicle.detail.economics.roi', { pct: roi })}`}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  {!economics.realized && Number(economics.totalInvestedRappen) > 0 && (
+                    <p className="mt-2 text-xs text-steel">{t('vehicle.detail.economics.priceFor20', { price: formatMoney(Math.ceil(Number(economics.totalInvestedRappen) / 0.8 / 100) * 100) })}</p>
+                  )}
                 </>
               )}
               {vehicle.notionalInputTaxRappen > 0 && (

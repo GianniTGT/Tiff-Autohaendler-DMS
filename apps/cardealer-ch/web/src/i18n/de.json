@@ -293,7 +293,11 @@
         "price": "Verkaufspreis",
         "priceAsking": "Angebotspreis (geplant)",
         "profit": "Gewinn",
-        "margin": "Marge"
+        "projectedProfit": "Erwarteter Gewinn",
+        "margin": "Marge",
+        "marginPct": "{pct} % Marge",
+        "roi": "Rendite {pct} %",
+        "priceFor20": "Für 20 % Marge: Angebotspreis {price}"
       },
       "vatScheme": "MWST-Schema",
       "purchaseFrom": "Einkauf von",
