@@ -36,6 +36,7 @@ import { createReminder, getReminder } from '../src/services/reminders.js'
 import { createCreditNote } from '../src/services/credit-notes.js'
 import { archiveIfComplete } from '../src/services/archive.js'
 import { renderInvoicePdfBuffer, renderReminderPdfBuffer, withLogo } from '../src/services/invoice-pdf.js'
+import { issueContract } from '../src/services/contracts.js'
 
 // ---------------------------------------------------------------------------------------------
 // Argumente
@@ -249,8 +250,9 @@ try {
   const sarah = await party({ kind: 'person', firstName: 'Sarah', lastName: 'Brunner', email: 'sarah.brunner@gmail.com', phone: '076 301 55 90', addressStreet: 'Kirchbergstrasse 9', addressZip: '3400', addressCity: 'Burgdorf' })
   const taxi = await party({ kind: 'company', companyName: 'Taxi Zentrale Bern GmbH', uid: 'CHE-234.567.891', email: 'disposition@taxi-bern.ch', phone: '031 331 33 13', addressStreet: 'Güterstrasse 6', addressZip: '3008', addressCity: 'Bern' })
   const marco = await party({ kind: 'person', firstName: 'Marco', lastName: 'Hug', email: 'marco.hug@hotmail.com', phone: '079 880 12 45', addressStreet: 'Seevorstadt 17', addressZip: '2502', addressCity: 'Biel/Bienne' })
+  const rolf = await party({ kind: 'person', firstName: 'Rolf', lastName: 'Steiner', phone: '031 829 55 10', addressStreet: 'Bernstrasse 102', addressZip: '3072', addressCity: 'Ostermundigen', idDocumentType: 'Identitätskarte', idDocumentNumber: 'C1234567', notes: 'Hat uns den Golf verkauft (Eintausch).' })
   await party({ kind: 'company', companyName: 'Autohandel Müller AG', uid: 'CHE-345.678.912', email: 'einkauf@autohandel-mueller.ch', phone: '062 822 71 00', addressStreet: 'Industriestrasse 44', addressZip: '4600', addressCity: 'Olten', notes: 'Lieferant — Occasionen ab Platz, Zahlung 10 Tage' })
-  step('7 Kunden und Lieferanten')
+  step('8 Kunden und Lieferanten')
 
   // --- Fahrzeuge
   const base = { vehicleCategory: 'car', conditionType: 'used', warrantyType: 'from-delivery' }
@@ -268,7 +270,7 @@ try {
     bodyColor: 'grey', bodyColorText: 'Dolphin Grey Metallic', interiorColor: 'black', doors: 5, seats: 5, powerKw: 110, displacementCcm: 1498, cylinders: 4,
     mileageKm: 48500, ownersCount: 1, lastInspectionDate: '2024-09-12', inspectionValidUntil: inDays(43), energyLabel: 'B', co2Emission: 125, consumptionCombined: 5.5,
     purchasePriceRappen: chf(18500), askingPriceRappen: chf(23900), vatScheme: 'notional_input_tax', purchaseFrom: 'private', purchasedAt: daysAgo(35),
-    notes: 'Eintausch von Familie Steiner. Serviceheft lückenlos, zweiter Schlüssel vorhanden.',
+    notes: 'Eintausch von Rolf Steiner. Serviceheft lückenlos, zweiter Schlüssel vorhanden.', sellerPartyId: rolf.id,
   }, 4)
   await car('octavia', {
     vin: 'TMBJJ7NX1L0234567', serialNumber: '234.567.891', make: 'Skoda', model: 'Octavia Combi', trim: '2.0 TDI 4x4 Style DSG', modelYear: 2020,
@@ -451,15 +453,18 @@ try {
   // Zubehör-Rechnung ohne Fahrzeug an Peter Keller: offen, noch nicht fällig
   await invoice({
     partyId: peter.id,
-    lines: [
-      { description: 'Satz Winterreifen 205/55 R16 Continental, montiert und gewuchtet', quantity: 4, unitPriceRappen: net(chf(185)) },
-      { description: 'Arbeit Radwechsel', quantity: 1, unitPriceRappen: net(chf(60)) },
-    ],
+    // Eine Zeile mit rundem Bruttobetrag: mehrere Netto-Zeilen ergäben durch die MWST-Rundung Totale wie 800.01.
+    lines: [{ description: '4 Winterreifen 205/55 R16 Continental, montiert und gewuchtet, inkl. Radwechsel', quantity: 1, unitPriceRappen: net(chf(800)) }],
     issueDate: daysAgo(5),
   })
   // Tucson von Hand als verkauft abgeschlossen (Barzahlung, Vertrag auf Papier)
   await sellVehicle(tenantId, vehicles.tucson.id, { soldPriceRappen: chf(27500), soldAt: daysAgo(12), buyerPartyId: sarah.id })
   step('3 Rechnungen (bezahlt mit Teilgutschrift, überfällig mit Mahnung, offen), 1 Verkauf von Hand')
+
+  // --- Verträge: Kaufvertrag zum Verkauf von Hand, Ankaufsvertrag zum Eintausch
+  await issueContract(tenantId, ownerId, vehicles.tucson.id, 'sale', { partyId: sarah.id, warrantyMonths: 12 })
+  await issueContract(tenantId, ownerId, vehicles.golf.id, 'purchase', { partyId: rolf.id })
+  step('Kaufvertrag (Tucson) und Ankaufsvertrag (Golf) im Archiv')
 
   console.log(`
 Fertig. Anmelden unter http://localhost:5173
