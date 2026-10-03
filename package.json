@@ -16,7 +16,8 @@
     "dev:server": "npm run dev --workspace apps/cardealer-ch/server",
     "dev:web": "npm run dev --workspace apps/cardealer-ch/web",
     "test": "npm run test --workspaces --if-present",
-    "test:boundary": "npm run test:boundary --workspace apps/cardealer-ch/server --if-present"
+    "test:boundary": "npm run test:boundary --workspace apps/cardealer-ch/server --if-present",
+    "seed:demo": "npm run seed:demo --workspace apps/cardealer-ch/server --"
   },
   "license": "UNLICENSED"
 }
