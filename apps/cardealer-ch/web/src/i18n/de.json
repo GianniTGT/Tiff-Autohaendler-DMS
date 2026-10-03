@@ -948,9 +948,13 @@
         "title": "QR-Rechnung",
         "body": "Rechnungen erhalten einen QR-Zahlteil mit Referenz, sobald eine QR-IBAN hinterlegt ist und Betrieb und Kunde eine vollständige Adresse haben. Zahlungen lesen Sie als camt.054-Datei Ihrer Bank unter Rechnungen ein; das System ordnet sie über die QR-Referenz zu und bucht sie. Dieselbe Datei zweimal einzulesen bucht nichts doppelt.\n\nAb der 3. Mahnung entscheidet ein Mensch (Betreibung)."
       },
+      "listings": {
+        "title": "Inserate und Fotos",
+        "body": "Ein Fahrzeug wird einmal hier erfasst und unter Inserate gezielt an AutoScout24 übertragen; Einkaufspreis, Verkaufspreis und Käuferdaten gehen nie hinauf. Die Fotos des Fahrzeugs gehen mit, das Titelbild zuerst. Hochgeladen wird nur, was bei AutoScout24 noch fehlt; Umsortieren, Löschen oder ein neues Titelbild gelten als «ausstehend», bis «Fotos übertragen» oder «Aktualisieren» die Reihenfolge dort neu setzt.\n\nScheitert ein Foto, bleiben die Fahrzeugdaten übertragen; der Grund steht in der Inserate-Übersicht. Beim Verkauf wird das Inserat automatisch deaktiviert. Die Zugangsdaten für AutoScout24 trägt der Inhaber unter Einstellungen ein; ohne sie zeigt die Seite, was zu einem Inserat noch fehlt, überträgt aber nichts."
+      },
       "archive": {
         "title": "Belegarchiv",
-        "body": "Rechnungen, Mahnungen und Verträge werden als PDF mit SHA-256-Hash unveränderlich abgelegt und 10 Jahre aufbewahrt (OR 958f). Archivierte Belege können nicht gelöscht oder umgehängt werden. Unter Archiv prüfen Sie jederzeit, ob eine Datei noch dem Hash entspricht, und exportieren alles als ZIP.\n\nFehlen QR-IBAN oder Adressen, wird der Beleg noch nicht archiviert — damit nicht ein unvollständiges PDF für immer festgeschrieben wird."
+        "body": "Rechnungen, Mahnungen und Verträge werden als PDF mit SHA-256-Hash unveränderlich abgelegt und 10 Jahre ab Ende des Geschäftsjahres aufbewahrt (OR 958f; das Geschäftsjahr-Ende steht in den Einstellungen). Archivierte Belege können nicht gelöscht oder umgehängt werden. Unter Archiv prüfen Sie jederzeit, ob eine Datei noch dem Hash entspricht, und exportieren alles als ZIP.\n\nFehlen QR-IBAN oder Adressen, wird der Beleg noch nicht archiviert — damit nicht ein unvollständiges PDF für immer festgeschrieben wird."
       },
       "roles": {
         "title": "Rollen",
