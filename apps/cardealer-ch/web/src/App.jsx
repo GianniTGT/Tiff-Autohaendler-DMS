@@ -62,6 +62,7 @@ export default function App() {
   useEffect(() => {
     const onExpired = () => {
       setSession(null)
+      setCompany(null)
       setOpenVehicleId(null)
       setOpenInvoiceId(null)
     }
@@ -81,6 +82,8 @@ export default function App() {
     await api.post('/api/auth/logout')
     setSession(null)
     setTab('dashboard')
+    // Sonst zeigt die nächste Anmeldung (anderer Betrieb) kurz das alte Logo und fragt es mit alter Version ab (404).
+    setCompany(null)
   }
 
   if (session === undefined) {

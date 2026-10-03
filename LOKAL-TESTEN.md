@@ -83,6 +83,22 @@ npm run seed:dev-tenant --workspace packages/core-db -- \
   --slug=mein-betrieb --name="Mein Betrieb AG" --email=ich@example.com --password="EinPasswort"
 ```
 
+## Demo-Betrieb für Vorführungen
+
+Statt eines leeren Betriebs: ein Mandant mit 12 Fahrzeugen (Platzhalter-Fotos), Kunden,
+Anfragen, Werkstatt-Aufträgen, Terminen, Offerte/Auftrag/Lieferschein, Rechnungen (bezahlt,
+überfällig mit Mahnung, offen) und einer Gutschrift — damit Übersicht, Kalender und Archiv
+beim ersten Blick gefüllt sind.
+
+```bash
+npm run seed:demo -- --slug=demo --password="Demo-Bern-2026"
+```
+
+Login: Betrieb `demo`, Inhaber `chef@demo.ch` (dazu `sandra.frei@demo.ch` Verkauf und
+`marco.bieri@demo.ch` Werkstatt), alle mit dem angegebenen Passwort (mindestens 10 Zeichen).
+Fristen und Standzeiten sind relativ zum Ausführungstag; wer die Vorführung verschiebt, legt den
+Betrieb mit neuem Slug einfach nochmals an.
+
 ## Starten
 
 Zwei Terminal-Fenster:

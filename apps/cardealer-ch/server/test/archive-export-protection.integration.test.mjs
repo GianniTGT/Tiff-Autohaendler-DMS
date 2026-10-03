@@ -15,11 +15,11 @@ const storeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tiff-export-'))
 process.env.OBJECT_STORAGE_LOCAL_DIR = storeDir
 
 const { closePool, withTenant } = await import('@tiff/core-db')
-const { createZip } = await import('../src/services/zip.js')
+const { createZip, createZipStream } = await import('../src/services/zip.js')
 const { createVehicle } = await import('../src/services/vehicles.js')
 const { createParty } = await import('../src/services/parties.js')
 const { issueContract } = await import('../src/services/contracts.js')
-const { buildArchiveExport } = await import('../src/services/archive-browser.js')
+const { buildArchiveExport, listArchive, retainUntil } = await import('../src/services/archive-browser.js')
 const { createInvoice } = await import('../src/services/invoices.js')
 
 /** Liest unser ZIP über das zentrale Verzeichnis zurück — unabhängig vom Schreiber. */
@@ -45,17 +45,39 @@ function readZip(zip) {
   return out
 }
 
-test('ZIP-Schreiber: Namen mit Umlauten, Ordner, leere Datei, Prüfsummen', () => {
-  const zip = createZip([
+test('ZIP-Schreiber: Namen mit Umlauten, Ordner, leere Datei, Prüfsummen', async () => {
+  const input = [
     { name: 'Rechnungen/RE-1.pdf', data: Buffer.from('%PDF-1.4 inhalt') },
     { name: 'Übersicht ä.txt', data: Buffer.from('Grüezi') },
     { name: 'leer.txt', data: Buffer.alloc(0) },
-  ])
+  ]
+  const now = new Date('2026-10-03T12:00:00')
+  const zip = await createZip(input, now)
   const files = readZip(zip)
   assert.deepEqual([...files.keys()], ['Rechnungen/RE-1.pdf', 'Übersicht ä.txt', 'leer.txt'])
   assert.equal(files.get('Übersicht ä.txt').toString(), 'Grüezi')
   assert.equal(files.get('leer.txt').length, 0)
-  assert.equal(readZip(createZip([])).size, 0)
+  assert.equal(readZip(await createZip([])).size, 0)
+
+  // Der Datenstrom liefert Byte für Byte dasselbe wie die Speicher-Variante — auch aus einer asynchronen Quelle.
+  async function* source() {
+    for (const f of input) yield f
+  }
+  const parts = []
+  for await (const chunk of createZipStream(source(), now)) parts.push(chunk)
+  assert.ok(Buffer.concat(parts).equals(zip))
+})
+
+test('Aufbewahrungsfrist: Ende des Geschäftsjahres + 10 Jahre', () => {
+  assert.equal(retainUntil('2026-03-15'), '2036-12-31', 'Standard: Kalenderjahr')
+  assert.equal(retainUntil('2026-03-15', 12), '2036-12-31')
+  assert.equal(retainUntil('2026-03-15', 6), '2036-06-30', 'Beleg vor dem Abschluss: gleiches Geschäftsjahr')
+  assert.equal(retainUntil('2026-09-01', 6), '2037-06-30', 'Beleg nach dem Abschluss: nächstes Geschäftsjahr')
+  assert.equal(retainUntil('2026-06-30', 6), '2036-06-30', 'Abschlusstag selbst gehört noch dazu')
+  assert.equal(retainUntil('2025-02-10', 2), '2035-02-28', 'Monatsletzter des Zieljahres')
+  assert.equal(retainUntil('2026-01-10', 2), '2036-02-29', 'Schaltjahr im Zieljahr')
+  assert.equal(retainUntil(new Date('2026-03-15T00:00:00Z'), 6), '2036-06-30', 'auch als Date')
+  assert.equal(retainUntil('2026-03-15', 0), '2036-12-31', 'Unsinn fällt auf das Kalenderjahr zurück')
 })
 
 test('Export und Löschschutz', { skip: !hasDb }, async (t) => {
@@ -106,6 +128,20 @@ test('Export und Löschschutz', { skip: !hasDb }, async (t) => {
     const empty = await buildArchiveExport(B)
     assert.equal(empty.count, 0, 'Mandant B hat kein Archiv')
     assert.deepEqual([...readZip(empty.zip).keys()], ['index.csv', 'LIESMICH.txt'])
+  })
+
+  await t.test('Geschäftsjahr-Ende des Betriebs bestimmt die Aufbewahrungsfrist in Archiv und Export', async () => {
+    const before = (await listArchive(A)).find((r) => r.id === sale.id)
+    assert.equal(before.retainUntil, retainUntil(before.issueDate, 12))
+    await adminPool.query('UPDATE tenants SET fiscal_year_end_month = 6 WHERE id = $1', [A])
+    const after = (await listArchive(A)).find((r) => r.id === sale.id)
+    assert.equal(after.retainUntil, retainUntil(after.issueDate, 6))
+    assert.notEqual(after.retainUntil, before.retainUntil)
+    const { zip } = await buildArchiveExport(A)
+    const files = readZip(zip)
+    assert.ok(files.get('LIESMICH.txt').toString().includes('endet im Juni'))
+    assert.ok(files.get('index.csv').toString('utf8').includes(`"${after.retainUntil}"`))
+    await adminPool.query('UPDATE tenants SET fiscal_year_end_month = 12 WHERE id = $1', [A])
   })
 
   await t.test('Export markiert veränderte und fehlende Dateien, statt sie als gut auszugeben', async () => {

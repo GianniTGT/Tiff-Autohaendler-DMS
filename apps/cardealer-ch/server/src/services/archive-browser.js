@@ -4,29 +4,44 @@
  * abgelegten Bytes noch zum gespeicherten Hash passen.
  *
  * Aufbewahrung: 10 Jahre (OR 958f, GeBüV), gezählt ab Ende des
- * Geschäftsjahres, in dem der Beleg entstand (OR 958f Abs. 1). Ohne
- * Geschäftsjahres-Angabe im System rechnet diese Sicht mit dem
- * Kalenderjahr: Ende des Belegjahres + 10 Jahre. Das ist die vorsichtige
- * Lesart; abweichende Geschäftsjahre kann ein Treuhänder nur länger machen.
+ * Geschäftsjahres, in dem der Beleg entstand (OR 958f Abs. 1). Wann das
+ * Geschäftsjahr endet, steht am Betrieb (`tenants.fiscal_year_end_month`,
+ * Migration 21; Standard Dezember = Kalenderjahr).
  */
 import { createHash } from 'node:crypto'
 import { withTenant } from '@tiff/core-db'
 import { createObjectStore } from '../integrations/object-storage/store.js'
-import { createZip } from './zip.js'
+import { createZipStream } from './zip.js'
 
 export const RETENTION_YEARS = 10
 export const ARCHIVE_TYPES = Object.freeze(['offer', 'order', 'delivery_note', 'invoice', 'reminder', 'credit_note', 'sale_contract', 'purchase_contract'])
 
 const store = createObjectStore()
 
-/** Letzter Aufbewahrungstag: 31.12. des Belegjahres + 10 Jahre. */
-export function retainUntil(issueDate) {
-  const year = Number(String(issueDate).slice(0, 4))
-  return `${year + RETENTION_YEARS}-12-31`
+/**
+ * Letzter Aufbewahrungstag: Ende des Geschäftsjahres, in dem der Beleg entstand, plus 10 Jahre.
+ * Endet das Geschäftsjahr im Juni, gehört ein Beleg vom September schon zum Geschäftsjahr, das im
+ * Juni des Folgejahres endet. Der Monatsletzte wird für das Zieljahr bestimmt (Schaltjahr-Februar).
+ */
+export function retainUntil(issueDate, fiscalYearEndMonth = 12) {
+  const text = String(issueDate instanceof Date ? issueDate.toISOString() : issueDate)
+  const year = Number(text.slice(0, 4))
+  const month = Number(text.slice(5, 7))
+  const endMonth = Number.isInteger(fiscalYearEndMonth) && fiscalYearEndMonth >= 1 && fiscalYearEndMonth <= 12 ? fiscalYearEndMonth : 12
+  const fiscalYearEnd = month <= endMonth ? year : year + 1
+  const targetYear = fiscalYearEnd + RETENTION_YEARS
+  const lastDay = new Date(Date.UTC(targetYear, endMonth, 0)).getUTCDate() // Tag 0 des Folgemonats = Monatsletzter
+  return `${targetYear}-${String(endMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+}
+
+async function fiscalYearEndMonthOf(client, tenantId) {
+  const row = (await client.query('SELECT fiscal_year_end_month FROM tenants WHERE id = $1', [tenantId])).rows[0]
+  return row?.fiscal_year_end_month ?? 12
 }
 
 export async function listArchive(tenantId) {
   return withTenant(tenantId, async (client) => {
+    const endMonth = await fiscalYearEndMonthOf(client, tenantId)
     const rows = (
       await client.query(
         `SELECT d.id, d.type, d.number, d.issue_date, d.pdf_hash, d.pdf_storage_key, d.reminder_level,
@@ -50,7 +65,7 @@ export async function listArchive(tenantId) {
       reminderLevel: r.reminder_level,
       archived: Boolean(r.pdf_hash && r.pdf_storage_key),
       hash: r.pdf_hash,
-      retainUntil: retainUntil(r.issue_date),
+      retainUntil: retainUntil(r.issue_date, endMonth),
     }))
   })
 }
@@ -88,53 +103,76 @@ export const csvCell = (v) => {
   return `"${text.replace(/"/g, '""')}"`
 }
 
-/**
- * Das ganze Belegarchiv als ZIP: alle archivierten PDFs nach Art geordnet,
- * dazu `index.csv` (Nummer, Art, Datum, Partei, SHA-256, Aufbewahrung bis,
- * Prüfergebnis) und `LIESMICH.txt`. Jede Datei wird beim Export gegen ihren
- * Hash geprüft — ein verändertes oder fehlendes PDF wird nicht stillschweigend
- * mitgeliefert, sondern im Index als solches gekennzeichnet.
- * Alles liegt im Arbeitsspeicher; für das Archiv eines Kleinbetriebs genügt
- * das, bei sehr grossen Beständen müsste der Export streamen.
- */
-export async function buildArchiveExport(tenantId, now = new Date()) {
-  const rows = await listArchive(tenantId)
-  const keys = await withTenant(tenantId, async (client) =>
-    new Map((await client.query('SELECT id, pdf_storage_key FROM documents WHERE pdf_storage_key IS NOT NULL')).rows.map((r) => [r.id, r.pdf_storage_key])),
-  )
+const MONTH_NAMES = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
 
-  const files = []
-  const lines = ['Nummer;Art;Datum;Partei;Fahrzeug;SHA-256;Aufbewahren bis;Pruefung']
-  let problems = 0
-  for (const row of rows) {
-    let check = 'NICHT_ARCHIVIERT'
-    if (row.archived) {
-      const bytes = await store.getObject(keys.get(row.id))
-      if (!bytes) check = 'DATEI_FEHLT'
-      else if (createHash('sha256').update(bytes).digest('hex') !== row.hash) check = 'HASH_ABWEICHEND'
-      else check = 'OK'
-      if (bytes) files.push({ name: `${FOLDER[row.type]}/${row.number}.pdf`, data: bytes })
+/**
+ * Das ganze Belegarchiv als ZIP-Datenstrom: alle archivierten PDFs nach Art
+ * geordnet, dazu `index.csv` (Nummer, Art, Datum, Partei, SHA-256,
+ * Aufbewahrung bis, Prüfergebnis) und `LIESMICH.txt`. Jede Datei wird beim
+ * Export gegen ihren Hash geprüft — ein verändertes oder fehlendes PDF wird
+ * nicht stillschweigend mitgeliefert, sondern im Index als solches
+ * gekennzeichnet.
+ *
+ * Streamt: im Speicher liegt immer nur das PDF, das gerade geschrieben wird,
+ * plus der Index (eine Zeile pro Beleg). Index und Liesmich kommen zuletzt,
+ * weil sie das Prüfergebnis aller Dateien zusammenfassen. `stats` ist
+ * vollständig, sobald der Strom zu Ende ist.
+ *
+ * @returns {Promise<{stream: import('node:stream').Readable, stats: {count: number, problems: number, total: number}}>}
+ */
+export async function createArchiveExport(tenantId, now = new Date()) {
+  const rows = await listArchive(tenantId)
+  const { keys, endMonth } = await withTenant(tenantId, async (client) => ({
+    keys: new Map((await client.query('SELECT id, pdf_storage_key FROM documents WHERE pdf_storage_key IS NOT NULL')).rows.map((r) => [r.id, r.pdf_storage_key])),
+    endMonth: await fiscalYearEndMonthOf(client, tenantId),
+  }))
+  const stats = { count: 0, problems: 0, total: rows.length }
+  const CRLF = '\r\n'
+
+  async function* files() {
+    const lines = ['Nummer;Art;Datum;Partei;Fahrzeug;SHA-256;Aufbewahren bis;Pruefung']
+    for (const row of rows) {
+      let check = 'NICHT_ARCHIVIERT'
+      if (row.archived) {
+        const bytes = await store.getObject(keys.get(row.id))
+        if (!bytes) check = 'DATEI_FEHLT'
+        else if (createHash('sha256').update(bytes).digest('hex') !== row.hash) check = 'HASH_ABWEICHEND'
+        else check = 'OK'
+        if (bytes) {
+          stats.count += 1
+          yield { name: `${FOLDER[row.type]}/${row.number}.pdf`, data: bytes }
+        }
+      }
+      if (check !== 'OK') stats.problems += 1
+      lines.push([row.number, row.type, row.issueDate, row.partyName, row.vehicleLabel, row.hash, row.retainUntil, check].map(csvCell).join(';'))
     }
-    if (check !== 'OK') problems += 1
-    lines.push([row.number, row.type, row.issueDate, row.partyName, row.vehicleLabel, row.hash, row.retainUntil, check].map(csvCell).join(';'))
+
+    const readme = [
+      'Belegarchiv-Export',
+      `Erstellt: ${now.toISOString()}`,
+      `Belege insgesamt: ${rows.length}, davon mit Auffälligkeit: ${stats.problems}`,
+      '',
+      'Jede Datei in den Ordnern ist das PDF, das bei der Ausstellung unveränderlich abgelegt wurde.',
+      'Prüfen: SHA-256 der Datei berechnen und mit der Spalte "SHA-256" in index.csv vergleichen',
+      '(Windows: certutil -hashfile Datei.pdf SHA256; Mac/Linux: shasum -a 256 Datei.pdf).',
+      '',
+      `Aufbewahrungsfrist: ${RETENTION_YEARS} Jahre ab Ende des Geschäftsjahres, in dem der Beleg entstand (OR 958f, GeBueV).`,
+      `Geschäftsjahr dieses Betriebs endet im ${MONTH_NAMES[endMonth - 1]}${endMonth === 12 ? ' (Kalenderjahr)' : ''}.`,
+      'Prüfung "NICHT_ARCHIVIERT": Beleg ausgestellt, PDF aber noch nicht abgelegt — kein PDF im Export.',
+    ].join(CRLF)
+
+    // UTF-8-BOM, damit Excel Umlaute in der CSV richtig öffnet.
+    yield { name: 'index.csv', data: Buffer.from(`\uFEFF${lines.join(CRLF)}${CRLF}`, 'utf8') }
+    yield { name: 'LIESMICH.txt', data: Buffer.from(`${readme}${CRLF}`, 'utf8') }
   }
 
-  const CRLF = '\r\n'
-  const readme = [
-    'Belegarchiv-Export',
-    `Erstellt: ${now.toISOString()}`,
-    `Belege insgesamt: ${rows.length}, davon mit Auffälligkeit: ${problems}`,
-    '',
-    'Jede Datei in den Ordnern ist das PDF, das bei der Ausstellung unveränderlich abgelegt wurde.',
-    'Prüfen: SHA-256 der Datei berechnen und mit der Spalte "SHA-256" in index.csv vergleichen',
-    '(Windows: certutil -hashfile Datei.pdf SHA256; Mac/Linux: shasum -a 256 Datei.pdf).',
-    '',
-    `Aufbewahrungsfrist: Ende des Belegjahres + ${RETENTION_YEARS} Jahre (OR 958f, GeBueV).`,
-    'Prüfung "NICHT_ARCHIVIERT": Beleg ausgestellt, PDF aber noch nicht abgelegt — kein PDF im Export.',
-  ].join(CRLF)
+  return { stream: createZipStream(files(), now), stats }
+}
 
-  // UTF-8-BOM, damit Excel Umlaute in der CSV richtig öffnet.
-  files.push({ name: 'index.csv', data: Buffer.from(`﻿${lines.join(CRLF)}${CRLF}`, 'utf8') })
-  files.push({ name: 'LIESMICH.txt', data: Buffer.from(`${readme}${CRLF}`, 'utf8') })
-  return { zip: createZip(files, now), count: files.length - 2, problems }
+/** Derselbe Export, vollständig im Speicher — für Tests und kleine Archive. */
+export async function buildArchiveExport(tenantId, now = new Date()) {
+  const { stream, stats } = await createArchiveExport(tenantId, now)
+  const parts = []
+  for await (const chunk of stream) parts.push(chunk)
+  return { zip: Buffer.concat(parts), count: stats.count, problems: stats.problems }
 }

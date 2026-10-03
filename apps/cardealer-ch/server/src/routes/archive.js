@@ -1,5 +1,5 @@
 import { canSeeCompanyTotals } from '@tiff/core-auth'
-import { listArchive, verifyArchived, buildArchiveExport } from '../services/archive-browser.js'
+import { listArchive, verifyArchived, createArchiveExport } from '../services/archive-browser.js'
 import { getArchivedPdf, archiveIfComplete, archivePdf } from '../services/archive.js'
 import { getInvoice } from '../services/invoices.js'
 import { getReminder } from '../services/reminders.js'
@@ -18,10 +18,11 @@ export async function registerArchiveRoutes(app) {
     if (!canSeeCompanyTotals(request.role)) {
       return reply.code(403).send({ ok: false, error: 'Der Archiv-Export ist nur für Inhaber und Buchhaltung.' })
     }
-    const { zip } = await buildArchiveExport(request.tenantId)
+    // Als Datenstrom: auch ein Archiv mit tausenden PDFs belegt nie mehr Speicher als eine Datei.
+    const { stream } = await createArchiveExport(request.tenantId)
     reply.type('application/zip')
     reply.header('Content-Disposition', `attachment; filename="belegarchiv-${new Date().toISOString().slice(0, 10)}.zip"`)
-    return reply.send(zip)
+    return reply.send(stream)
   })
 
   /** "Jetzt archivieren": legt Rechnung oder Mahnung ab, wenn sie vollständig ist, und sagt sonst, was fehlt. */
